@@ -1,5 +1,12 @@
 # Verification record
 
+## Provider lock validation checkpoint
+
+- The default suite passes 1,463 tests with 228 optional/native/platform cases skipped. Ruff checks and formatting pass across 83 Python files; JavaScript syntax passes.
+- Four additional runner cases verify read-only initialization only when a provider lock exists, no upgrade/writable retry, validation skipped on init failure and source lock preservation.
+- Real AzureRM 4.81 initialization/validation and TFLint pass with matching reviewed dependency requirements while both source and copied lock bytes remain unchanged. An incompatible 4.0 selection fails initialization and skips Terraform validation without modifying the source lock. A previously recorded constraint change also correctly fails read-only init even when the selected version fits the new constraint.
+- No apply or cloud read was run. Missing locks remain unpinned, remote module contents are not locked by this control and provider/plugin execution still requires trust.
+
 ## Validation copy input checkpoint
 
 - The default suite passes 1,459 tests with 228 optional/native/platform cases skipped. Ruff checks and formatting pass across 83 Python files; JavaScript syntax passes.

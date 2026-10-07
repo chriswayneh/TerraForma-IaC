@@ -71,6 +71,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Add local policy review for Terraform plan JSON: destructive changes, broad network access, missing protections, and unresolved policy coverage.
 - Initial managed disk access review covers Azure remote import/export and public network settings. Effective permissions, private endpoints, encryption and backup/recovery still require separate review.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
+- Preserve existing provider locks during validation with read-only initialization. Missing locks, remote module content trust and independently reviewed dependency upgrades remain explicit boundaries.
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.
 - Specify artifact permissions, log redaction, state ownership, dependency trust, and recovery behavior before adding apply.

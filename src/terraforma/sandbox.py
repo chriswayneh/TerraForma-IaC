@@ -214,11 +214,14 @@ class ValidationSandbox:
                 'plugin "terraform" {\n  enabled = true\n  preset = "recommended"\n}\n',
                 encoding="utf-8",
             )
+        init_arguments = [tools["terraform"], "init", "-backend=false", "-input=false", "-no-color"]
+        if (Path(self.temp_dir) / ".terraform.lock.hcl").exists():
+            init_arguments.append("-lockfile=readonly")
         commands = [
             (
                 "terraform_validate",
                 "terraform init",
-                [tools["terraform"], "init", "-backend=false", "-input=false", "-no-color"],
+                init_arguments,
             ),
             (
                 "terraform_validate",

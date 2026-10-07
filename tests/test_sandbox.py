@@ -36,6 +36,40 @@ def test_missing_dependencies_cannot_report_success(monkeypatch):
     assert {item["tool"] for item in result["errors"]} == {"terraform_validate", "tflint"}
 
 
+@pytest.mark.parametrize("locked", [False, True])
+@pytest.mark.parametrize("init_success", [False, True])
+def test_existing_provider_locks_are_readonly_without_an_upgrade_or_retry(
+    tmp_path, monkeypatch, locked, init_success
+):
+    (tmp_path / "main.tf").write_text("terraform {}", encoding="utf-8")
+    lock = tmp_path / ".terraform.lock.hcl"
+    if locked:
+        lock.write_bytes(b"reviewed-provider-selection\r\n")
+    calls = []
+    monkeypatch.setattr("terraforma.sandbox.shutil.which", lambda name: f"/tools/{name}")
+
+    def run(arguments, **kwargs):
+        calls.append(arguments)
+        if arguments[1] == "init":
+            assert ("-lockfile=readonly" in arguments) is locked
+            assert "-upgrade" not in arguments
+            assert "-backend=false" in arguments
+            if locked:
+                assert (Path(kwargs["cwd"]) / lock.name).read_bytes() == lock.read_bytes()
+            return CommandResult(0 if init_success else 1, b"", b"lock selection requires review")
+        return CommandResult(0, b"", b"")
+
+    monkeypatch.setattr("terraforma.sandbox.run_bounded", run)
+    result = ValidationSandbox(target_dir=tmp_path).validate()
+    assert result["is_valid"] is init_success
+    assert sum(arguments[1] == "init" for arguments in calls) == 1
+    assert any(arguments[1] == "validate" for arguments in calls) is init_success
+    if locked:
+        assert lock.read_bytes() == b"reviewed-provider-selection\r\n"
+    else:
+        assert not lock.exists()
+
+
 def test_init_failure_skips_validate_and_preserves_both_streams(monkeypatch):
     monkeypatch.setattr("terraforma.sandbox.shutil.which", lambda name: f"/tools/{name}")
     calls = []
