@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- AWS standalone VM size preflight now checks reported EBS encryption support when the generated root or data disk requires encryption. Missing or unsupported capabilities remain unresolved and prevent a subsequent zone offering read; no extra cloud request is added.
+
 - The optional AWS VM metadata preflight now reads the selected availability zone's instance-type offering after target and CPU checks pass. Incomplete, malformed and failed responses remain unresolved; an offering does not verify capacity, quotas, deployment permissions or grant approval.
 
 - Added optional AWS standard availability zone placement for standalone Linux/Windows VMs, preserving automatic placement when blank. Subnet guards require two standard zones and reported membership; Local Zones/Wavelength Zones/zone IDs are unsupported. Regeneration or placement changes can replace resources and lose data; zone capacity remains unverified.

@@ -20,7 +20,11 @@ TARGETS = {
 MACHINES = {
     "aws": {
         "InstanceTypes": [
-            {"InstanceType": "t3.micro", "ProcessorInfo": {"SupportedArchitectures": ["x86_64"]}}
+            {
+                "InstanceType": "t3.micro",
+                "ProcessorInfo": {"SupportedArchitectures": ["x86_64"]},
+                "EbsInfo": {"EncryptionSupport": "supported"},
+            }
         ]
     },
     "azure": [

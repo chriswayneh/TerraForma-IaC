@@ -83,6 +83,7 @@ def machine_report(
     require_trusted_launch: bool = False,
     require_accelerated_networking: bool = False,
     require_host_encryption: bool = False,
+    require_ebs_encryption: bool = False,
     availability_zone: str | None = None,
 ) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
@@ -90,6 +91,7 @@ def machine_report(
     boot_compatible = None
     networking_compatible = None
     encryption_compatible = None
+    ebs_compatible = None
     zone_compatible = None
     if provider == "aws":
         entries = data.get("InstanceTypes") if isinstance(data, dict) else None
@@ -133,6 +135,15 @@ def machine_report(
         ):
             raise ValueError("Unsupported architecture metadata.")
         compatible = "x86_64" in architectures if architectures else None
+        if require_ebs_encryption:
+            ebs = machine.get("EbsInfo")
+            if ebs is not None and not isinstance(ebs, dict):
+                raise TypeError("Unsupported EBS metadata.")
+            support = ebs.get("EncryptionSupport") if isinstance(ebs, dict) else None
+            if support is not None and support not in {"supported", "unsupported"}:
+                raise ValueError("Unsupported EBS encryption capability.")
+            ebs_compatible = support == "supported" if support is not None else None
+            report["ebs_encryption_compatible"] = ebs_compatible
     elif provider == "azure":
         locations = machine.get("locations")
         if not isinstance(locations, list) or any(
@@ -207,6 +218,8 @@ def machine_report(
         if require_trusted_launch and boot_compatible is False
         else "encryption_features_incompatible"
         if require_host_encryption and encryption_compatible is False
+        else "ebs_encryption_incompatible"
+        if require_ebs_encryption and ebs_compatible is False
         else "network_features_incompatible"
         if require_accelerated_networking and networking_compatible is False
         else "zone_incompatible"
@@ -215,6 +228,8 @@ def machine_report(
         if require_trusted_launch and boot_compatible is None
         else "encryption_features_unknown"
         if require_host_encryption and encryption_compatible is None
+        else "ebs_encryption_unknown"
+        if require_ebs_encryption and ebs_compatible is None
         else "network_features_unknown"
         if require_accelerated_networking and networking_compatible is None
         else "zone_unknown"
@@ -362,6 +377,14 @@ def inspect_machine(specification, executable, environment, timeout):
             ),
             require_host_encryption=(
                 provider == "azure" and specification.recipe.enable_encryption
+            ),
+            require_ebs_encryption=(
+                provider == "aws"
+                and specification.recipe.architecture_type
+                in {"virtual_machine", "windows_virtual_machine"}
+                and (
+                    specification.recipe.enable_encryption or values.get("enable_data_disk") is True
+                )
             ),
             availability_zone=(
                 values["availability_zone"]

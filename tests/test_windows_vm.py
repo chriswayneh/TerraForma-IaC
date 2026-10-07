@@ -89,6 +89,7 @@ def test_windows_machine_preflight_is_opt_in_and_checks_x86(monkeypatch, archite
                 {
                     "InstanceType": "t3.small",
                     "ProcessorInfo": {"SupportedArchitectures": architectures},
+                    "EbsInfo": {"EncryptionSupport": "supported"},
                 }
             ]
         },

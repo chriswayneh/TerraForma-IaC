@@ -1,5 +1,11 @@
 # Verification record
 
+## AWS EBS encryption capability checkpoint
+
+- The default suite passes 1,569 tests with 240 optional/native/platform cases skipped. Ruff checks and formatting pass across 86 Python files; JavaScript syntax passes.
+- Twenty-five new mocked regressions pass for Linux/Windows supported, unsupported, missing and malformed EBS metadata; encrypted root/data disk requirements; CPU failure priority; and no subsequent zone read when disk capability is unresolved. Existing CLI/API zone regressions retain the additional capability field.
+- The size metadata read is unchanged and no extra cloud request is added. No live cloud read or apply was run; KMS access, account encryption policy, volume limits and deployment remain unverified.
+
 ## AWS zone offering preflight checkpoint
 
 - The default suite passes 1,541 tests with 240 optional/native/platform cases skipped. Three additional unresolved-machine gating cases were then added; all 50 new offering regressions pass. Ruff checks/formatting and JavaScript syntax pass.

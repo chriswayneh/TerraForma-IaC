@@ -18,7 +18,7 @@ The next stages turn that workflow into a guided provisioning platform. Users de
 
 - Extend the initial shared project specification to account/environment identity and resource dependencies.
 - Extend the implemented recipe input contracts as the resource catalog grows.
-- Extend account-specific capability preflight beyond the implemented target identity, optional VM size metadata and selected AWS zone offering checks. Capacity, quotas, image compatibility and Terraform credential equivalence remain unverified.
+- Extend account-specific capability preflight beyond the implemented target identity, optional VM size metadata, AWS standalone disk encryption capability and selected AWS zone offering checks. Capacity, quotas, image compatibility and Terraform credential equivalence remain unverified.
 - Artifact, credential, state, and execution controls needed before adding apply.
 
 The current release does not collect every VM setting or execute plan/apply/destroy operations. Cloud deployment and live OpenAI requests remain unverified.
