@@ -206,9 +206,16 @@ def build_azure(builder: TerraformGenerator) -> None:
         "Standard_LRS",
         choices=("Standard_LRS", "StandardSSD_LRS", "Premium_LRS"),
     )
+    if standalone:
+        builder.variable(
+            "boot_disk_caching",
+            "Azure OS disk host cache mode. ReadWrite is the default; None disables the cache, and ReadOnly caches reads. ReadWrite can acknowledge writes before they reach the managed disk, so review guest/application flush behavior and recovery. VM and disk capabilities, performance and safe cache changes require separate verification.",
+            "ReadWrite",
+            choices=("None", "ReadOnly", "ReadWrite"),
+        )
     disk = block(
         "os_disk",
-        caching="ReadWrite",
+        caching=ref("var.boot_disk_caching") if standalone else "ReadWrite",
         storage_account_type=ref("var.boot_disk_type"),
         disk_size_gb=ref("var.boot_disk_size_gb"),
     )
@@ -445,7 +452,7 @@ def build_azure(builder: TerraformGenerator) -> None:
             managed_disk_id=ref("azurerm_managed_disk.data[0].id"),
             virtual_machine_id=ref(f"{vm_resource}.this.id"),
             lun=0,
-            caching="None",
+            caching=ref("var.data_disk_caching"),
         )
         builder.output(
             "data_disk_id",

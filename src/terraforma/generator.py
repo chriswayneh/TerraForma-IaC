@@ -361,6 +361,14 @@ class TerraformGenerator:
             choices=disk_types,
             visible_when={"enable_data_disk": True},
         )
+        if self.config.provider == "azure":
+            self.variable(
+                "data_disk_caching",
+                "Azure data disk host cache mode. None is the default. ReadOnly caches reads; ReadWrite can acknowledge writes before they reach the managed disk. Choose only after reviewing application durability, flush behavior and supported VM/disk capabilities. Stop affected applications and follow Azure's safe cache-change procedure before changing an attached disk. No guest flush, backup or recovery is performed by this recipe.",
+                "None",
+                choices=("None", "ReadOnly", "ReadWrite"),
+                visible_when={"enable_data_disk": True},
+            )
         if self.config.provider == "aws":
             self._gp3_inputs("data_disk", {"enable_data_disk": True, "data_disk_type": "gp3"})
 

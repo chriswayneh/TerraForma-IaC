@@ -711,3 +711,14 @@ def test_native_azure_windows_vm_validation_and_lint(native_directories, public,
 
     spec = specification(public, enable_data_disk=True, enable_secure_boot=secure_boot)
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("mode", ["None", "ReadOnly", "ReadWrite"])
+def test_native_azure_disk_cache_modes(native_directories, mode):
+    from terraforma.project import compile_project
+    from tests.test_azure_disk_caching import specification
+
+    spec = specification(
+        True, enable_data_disk=True, boot_disk_caching=mode, data_disk_caching=mode
+    )
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])

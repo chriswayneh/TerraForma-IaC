@@ -1,5 +1,12 @@
 # Verification record
 
+## Azure disk caching development checkpoint
+
+- The default suite passes 1,295 tests with 216 optional native cases skipped; Ruff checks and formatting pass across 76 Python files.
+- Sixteen cache-input cases cover Azure Linux/Windows generated bindings, preserved specification values, accepted modes, malformed answers, defaults and inactive-disk rejection. Seven enabled native cases pass: three cache modes plus four Windows public/private and Secure Boot combinations.
+- The existing cache defaults are retained. Tests do not verify cached I/O performance, VM/disk support in an account, guest flush behavior, safe cache changes or recovery.
+- The Azure Windows and terminal guidance checkpoints passed all GitHub Actions jobs: [Azure Windows](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37590641781), [terminal guidance](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37590963794).
+
 ## Azure Windows VM development checkpoint
 
 The subsequent terminal guidance change passes 142 CLI/project/Windows regression cases and targeted Ruff checks. Field descriptions come from the existing shared input contract; hidden conditional inputs and external secret references retain their existing behavior.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Azure Linux/Windows VM host cache inputs for boot and optional data disks. OS caching defaults to ReadWrite and data caching to None. Unsupported modes and non-default data caching without an enabled disk fail closed; workload durability, capabilities and safe cache changes remain unverified.
+
 - The terminal questionnaire now shows each field's input guidance before the question, including defaults, compatibility limits and external-secret/state handling. Hidden conditional questions remain hidden.
 
 - Added initial Azure Windows Server 2022 generation with restricted RDP, separate guest naming, licensing choices and an external administrator-password reference. Passwords remain outside saved questionnaire files but AzureRM retains them in Terraform state/plans; protected backend setup and live deployment checks remain outstanding. Plan policy `0.7.0` extends Azure Secure Boot/vTPM review to Windows VM resources.

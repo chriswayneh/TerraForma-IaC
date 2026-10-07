@@ -86,12 +86,14 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "enable_data_disk": "Attach a data disk",
                     "data_disk_size_gb": "Data disk size (GiB)",
                     "data_disk_type": "Data disk type",
+                    "data_disk_caching": "Data disk host caching",
                     "enable_workload_identity": "Enable workload identity",
                     "workload_identity": "Existing IAM instance profile name"
                     if config.provider == "aws"
                     else "Existing service account email",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
+                    "boot_disk_caching": "Boot disk host caching",
                     "boot_disk_iops": "Boot disk IOPS (gp3)",
                     "boot_disk_throughput": "Boot disk throughput (MiB/s, gp3)",
                     "data_disk_iops": "Data disk IOPS (gp3)",
@@ -310,6 +312,14 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if (
+        specification.recipe.provider == "azure"
+        and effective.get("data_disk_caching", "None") != "None"
+        and not effective.get("enable_data_disk", False)
+    ):
+        raise ProjectInputError(
+            "data_disk_caching", "Enable a data disk before choosing its host cache mode."
+        )
     if specification.recipe.provider == "aws" and specification.recipe.architecture_type in {
         "virtual_machine",
         "windows_virtual_machine",

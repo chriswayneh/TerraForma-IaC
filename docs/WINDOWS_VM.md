@@ -8,6 +8,7 @@ Development on `main` includes initial **AWS, Azure and Google Cloud Windows Ser
 | --- | --- |
 | Image | MicrosoftWindowsServer / WindowsServer / 2022-datacenter-g2, with latest or an exact marketplace version |
 | Capacity | Standard_D2s_v5 default; configurable size, 128 GiB boot disk default/minimum, optional empty data disk |
+| Disk caching | None, ReadOnly or ReadWrite; boot defaults to ReadWrite and data defaults to None. Review durability and VM/disk support before changing cache modes |
 | Guest naming | Separate 3–15 character computer name and 3–20 character administrator username; reserved usernames rejected |
 | Administration | Restricted RDP on TCP 3389; optional public VM address or an existing private routed access path |
 | Password | External `TF_VAR_admin_password` reference, sensitive variable without a default; no password entry, retrieval or output |
