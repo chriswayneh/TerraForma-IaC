@@ -1,10 +1,17 @@
 # Verification record
 
+## AWS zone offering preflight checkpoint
+
+- The default suite passes 1,541 tests with 240 optional/native/platform cases skipped. Three additional unresolved-machine gating cases were then added; all 50 new offering regressions pass. Ruff checks/formatting and JavaScript syntax pass.
+- Mocked Linux/Windows reads cover exact offerings, absent offerings, incomplete pagination, malformed/duplicate/mismatched records, timeout/output limits and CLI errors. Consent, target mismatch, automatic placement and unresolved CPU metadata prevent the offering read. CLI and API return the same redacted reports without deployment approval.
+- A temporary browser tab imported a synthetic AWS Windows project and displayed the updated questionnaire and consent guidance. Both consent controls remained unchecked; no live cloud read ran. Original sidebar spacing and the user's tab were preserved.
+- AWS offering metadata does not verify capacity, quotas, deployment permissions, image compatibility, a second usable zone or Terraform credential equivalence. Cloud provisioning remains unverified.
+
 ## Native CI coverage checkpoint
 
 - The generator/placement default regression run passes 101 cases with 228 optional native cases skipped. Two separately enabled real AWS provider lock cases pass: matching requirements validate without changing source/copied locks, and conflicting requirements fail initialization without a writable retry.
 - Native CI now includes the six offline AWS placement expression cases and both provider lock cases. Its setup step creates a runner-local provider cache to reuse downloaded plugins; registry checks and lock checksums remain enforced. No cloud API or apply is introduced.
-- GitHub rejected the initial cache configuration before running jobs because `runner.temp` was unavailable at job environment scope. The follow-up uses `RUNNER_TEMP` and `GITHUB_ENV` inside the setup step; check the latest workflow for its execution result.
+- GitHub rejected the initial cache configuration before running jobs because `runner.temp` was unavailable at job environment scope. The follow-up uses `RUNNER_TEMP` and `GITHUB_ENV` inside the setup step; [the corrected workflow passed all jobs](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37613261700).
 
 ## AWS standalone placement checkpoint
 

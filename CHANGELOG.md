@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The optional AWS VM metadata preflight now reads the selected availability zone's instance-type offering after target and CPU checks pass. Incomplete, malformed and failed responses remain unresolved; an offering does not verify capacity, quotas, deployment permissions or grant approval.
+
 - Added optional AWS standard availability zone placement for standalone Linux/Windows VMs, preserving automatic placement when blank. Subnet guards require two standard zones and reported membership; Local Zones/Wavelength Zones/zone IDs are unsupported. Regeneration or placement changes can replace resources and lose data; zone capacity remains unverified.
 
 - Existing provider locks are now read-only during validation initialization. Dependency/lock conflicts are reported without an upgrade or writable retry; projects without a lock retain explicit unpinned-validation guidance.

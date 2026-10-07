@@ -224,6 +224,66 @@ def machine_report(
     return report
 
 
+def aws_zone_offering(data: dict, size: str, zone: str) -> bool | None:
+    if not isinstance(data, dict) or not isinstance(data.get("InstanceTypeOfferings"), list):
+        raise TypeError("Unsupported offering metadata.")
+    offerings = data["InstanceTypeOfferings"]
+    if len(offerings) > 1 or any(
+        not isinstance(item, dict)
+        or item.get("InstanceType") != size
+        or item.get("LocationType") != "availability-zone"
+        or item.get("Location") != zone
+        for item in offerings
+    ):
+        raise ValueError("Ambiguous or mismatched offering metadata.")
+    token = data.get("NextToken")
+    if token is not None and (not isinstance(token, str) or not token):
+        raise ValueError("Malformed pagination metadata.")
+    return True if offerings else None if token else False
+
+
+def inspect_aws_zone(report, executable, environment, timeout, size, region, zone):
+    report = {**report, "availability_zone_offered": None}
+    arguments = [
+        executable,
+        "ec2",
+        "describe-instance-type-offerings",
+        "--location-type",
+        "availability-zone",
+        "--filters",
+        f"Name=instance-type,Values={size}",
+        f"Name=location,Values={zone}",
+        "--region",
+        region,
+        "--output",
+        "json",
+        "--no-cli-pager",
+        "--no-paginate",
+    ]
+    try:
+        with tempfile.TemporaryDirectory(prefix="terraforma_offering_") as directory:
+            result = run_bounded(
+                arguments, cwd=directory, env=environment, timeout=timeout, stream_limit=128 * 1024
+            )
+    except OSError:
+        return {**report, "status": "zone_offering_failed"}
+    if result.failure or result.returncode != 0:
+        return {**report, "status": "zone_offering_failed"}
+    try:
+        offered = aws_zone_offering(strict_json(result.stdout), size, zone)
+    except (ValueError, TypeError, RecursionError):
+        return {**report, "status": "invalid_response"}
+    return {
+        **report,
+        "availability_zone_offered": offered,
+        "status": "metadata_confirmed"
+        if offered
+        else "zone_offering_unknown"
+        if offered is None
+        else "zone_not_offered",
+    }
+
+
 def inspect_machine(specification, executable, environment, timeout):
     provider = specification.recipe.provider
     values = {item["name"]: item["default"] for item in input_contract(specification.recipe)}
@@ -287,7 +347,7 @@ def inspect_machine(specification, executable, environment, timeout):
     if result.failure or result.returncode != 0:
         return {"status": "failed", "architecture_compatible": None}
     try:
-        return machine_report(
+        report = machine_report(
             provider,
             strict_json(result.stdout),
             size,
@@ -311,6 +371,15 @@ def inspect_machine(specification, executable, environment, timeout):
         )
     except (ValueError, TypeError, RecursionError):
         return {"status": "invalid_response", "architecture_compatible": None}
+    if (
+        provider == "aws"
+        and values.get("availability_zone")
+        and report["status"] == "metadata_confirmed"
+    ):
+        return inspect_aws_zone(
+            report, executable, environment, timeout, size, location, values["availability_zone"]
+        )
+    return report
 
 
 def target_preflight(

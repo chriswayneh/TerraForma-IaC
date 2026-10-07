@@ -38,7 +38,7 @@ def build_aws(builder: TerraformGenerator) -> None:
     if standalone:
         builder.variable(
             "availability_zone",
-            "AWS availability zone name, such as us-east-1b. Leave blank to use the first available standard zone reported for the account. Names are account-specific; zone IDs, Local Zones and Wavelength Zones are unsupported. The recipe still creates public/private subnets in two standard zones, with the selected zone first. Changing placement replaces subnets and can replace the VM, delete disks and change addresses. Review backups and the plan. Offline generation and size metadata checks do not confirm zone availability or capacity.",
+            "AWS availability zone name, such as us-east-1b. Leave blank to use the first available standard zone reported for the account. Names are account-specific; zone IDs, Local Zones and Wavelength Zones are unsupported. The recipe still creates public/private subnets in two standard zones, with the selected zone first. Changing placement replaces subnets and can replace the VM, delete disks and change addresses. Review backups and the plan. Optional VM metadata preflight checks the selected zone's reported instance-type offering; capacity and the second usable zone remain unverified. Offline generation does not check cloud availability.",
             "",
             pattern="^$|^[a-z]{2,4}(?:-[a-z0-9]+)+-[0-9]+[a-z]$",
         )

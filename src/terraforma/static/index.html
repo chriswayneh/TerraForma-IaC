@@ -418,7 +418,7 @@
           </label>
           <label class="ai-option" id="target-machine-option" hidden>
             <input type="checkbox" id="target-machine-check" />
-            <span>Also read the selected VM size metadata.<small>Checks reported CPU architecture, Azure SKU restrictions, requested VM features and a selected Azure VM zone. Capacity, quotas, guest drivers, image/disk/network compatibility and provisioning remain unverified. Two bounded reads can take about a minute.</small></span>
+            <span>Also read the selected VM size metadata.<small>Checks reported CPU architecture, Azure SKU restrictions and requested VM features. A selected Azure zone is checked against SKU metadata; a selected AWS zone adds an instance-type offering read. Capacity, quotas, guest drivers, image/disk/network compatibility and provisioning remain unverified. Up to three bounded reads can take about 90 seconds.</small></span>
           </label>
           <button class="button outline" id="target-preflight-button" type="button" disabled>Check cloud target</button>
           <div id="target-preflight-results" role="status" aria-live="polite"></div>
