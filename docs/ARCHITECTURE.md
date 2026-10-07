@@ -30,6 +30,7 @@ flowchart LR
 - `generator.py` validates questionnaire inputs and renders reviewed HCL blocks. User strings are escaped as literal HCL; internal expressions are represented separately.
 - `project.py` validates versioned specifications and derives shared input contracts. Browser and terminal questionnaires use these contracts; manifest imports use bounded strict JSON parsing.
 - `catalog.py` describes recipe scope, fixed choices, unsupported features, and outstanding account checks.
+- `artifacts.py` creates deterministic unsigned generation receipts and checksum lists. Its local comparison command reads only declared artifact filenames with size limits and reports byte mismatches without file contents or deployment approval.
 - `sandbox.py` owns temporary workspaces, tool discovery, command execution, results, and cleanup. It never applies or destroys infrastructure.
 - `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
 - `cli.py` exposes generation, validation, local plan review, and local serving commands.

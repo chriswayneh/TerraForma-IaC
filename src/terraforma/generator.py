@@ -1271,7 +1271,14 @@ def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
     created: list[Path] = []
     try:
         for name, content in files.items():
-            if name not in {"main.tf", "variables.tf", "outputs.tf"}:
+            if name not in {
+                "main.tf",
+                "variables.tf",
+                "outputs.tf",
+                "terraforma.project.json",
+                "terraforma.receipt.json",
+                "SHA256SUMS.txt",
+            }:
                 raise ValueError("Unexpected generated filename.")
             path = destination / name
             with path.open("x", encoding="utf-8", newline="\n") as stream:

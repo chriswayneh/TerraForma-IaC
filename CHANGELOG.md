@@ -15,6 +15,7 @@
 - Pin CI/composite setup actions to verified official commit references and require Python formatting checks in CI.
 - Carry an environment label through the shared questionnaire, project target, generated tags/labels, and export guide with explicit coverage and isolation limits.
 - Remove Terraform variable values and the OpenAI key from native validation subprocess environments.
+- Save project manifests, deterministic generation receipts, and export checksums from both interfaces; add bounded `verify-project` comparisons that detect changed files without disclosing contents or granting deployment approval.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

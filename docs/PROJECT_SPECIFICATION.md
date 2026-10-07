@@ -32,7 +32,7 @@ terraforma project-inputs --spec terraforma.project.json
 terraforma generate --spec terraforma.project.json --dir first-site
 ```
 
-The terminal command writes the three Terraform files and refuses to overwrite an existing Terraform configuration. Browser downloads also include the non-secret specification for reuse. Optional remembered browser choices still save only the original questionnaire selections; additional input answers are not retained in browser storage.
+Terminal generation writes the three Terraform files, the non-secret specification, a generation receipt, and checksums into a fresh output directory. It refuses to overwrite an existing Terraform configuration or metadata file and rolls back partial output on failure. Browser downloads include the same artifacts plus a project guide. See [artifact comparison](ARTIFACTS.md). Optional remembered browser choices still save only the original questionnaire selections; additional input answers are not retained in browser storage.
 
 Replace the example account ID with your intended AWS account. Every AWS recipe now requires a 12-digit `aws_account_id` and writes the provider's [account allowlist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/html) to guard later provider operations against an unintended authenticated account. Azure recipes require a subscription ID; GCP recipes require a project ID. The compiled result records that target and explicitly marks identity unverified. These fields are account references, not credentials; generation does not sign in or prove access. Earlier development AWS manifests need this new input added before they can compile or import.
 

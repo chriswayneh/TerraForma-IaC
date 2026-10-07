@@ -1,6 +1,5 @@
 import asyncio
 import io
-import json
 import os
 import secrets
 import shutil
@@ -18,6 +17,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
+from terraforma.artifacts import checksum_document, project_artifacts
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
@@ -96,6 +96,7 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
     project["files"] = compiled["files"]
     project["specification"] = compiled["specification"]
     project["target"] = compiled["target"]
+    project["receipt"] = compiled["receipt"]
     project["required_inputs"] = [
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
@@ -273,14 +274,23 @@ def create_app() -> FastAPI:
                 "Run `terraform init` and `terraform plan` after reviewing the configuration and supplying required values. Secure state storage; sensitive variables can still appear in state.",
             ]
         )
+        if "receipt" in project:
+            instructions.extend(
+                [
+                    "",
+                    "## Compare exported files",
+                    "",
+                    "Run `terraforma verify-project --dir .` with the matching development CLI to compare Terraform files and the saved questionnaire to the unsigned generation receipt. Matching hashes do not authenticate the receipt or authorize deployment.",
+                ]
+            )
+        artifacts = (
+            project_artifacts(project) if "specification" in project else dict(project["files"])
+        )
+        artifacts["README.md"] = "\n".join(instructions) + "\n"
+        artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
         with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            for name, text in project["files"].items():
+            for name, text in artifacts.items():
                 archive.writestr(name, text)
-            archive.writestr("README.md", "\n".join(instructions) + "\n")
-            if "specification" in project:
-                archive.writestr(
-                    "terraforma.project.json", json.dumps(project["specification"], indent=2) + "\n"
-                )
         return Response(
             stream.getvalue(),
             media_type="application/zip",

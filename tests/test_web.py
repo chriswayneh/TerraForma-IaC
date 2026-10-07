@@ -109,7 +109,13 @@ def test_download_contains_expected_files_only(client):
     assert response.status_code == 200
     assert 'filename="example.zip"' in response.headers["content-disposition"]
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
-        assert set(archive.namelist()) == {"main.tf", "variables.tf", "outputs.tf", "README.md"}
+        assert set(archive.namelist()) == {
+            "main.tf",
+            "variables.tf",
+            "outputs.tf",
+            "README.md",
+            "SHA256SUMS.txt",
+        }
         assert "terraform plan" in archive.read("README.md").decode()
 
 

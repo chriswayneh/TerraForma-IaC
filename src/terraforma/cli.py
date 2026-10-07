@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
+from terraforma.artifacts import checksum_document, project_artifacts, verify_project
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import WizardConfig, write_configuration
 from terraforma.plan_review import load_and_review
@@ -174,7 +175,9 @@ def wizard(target_dir: Path | None):
         )
         specification = collect_recipe_inputs(config)
         project = compile_project(specification)
-        directory = write_configuration(project["files"], target_dir or Path.cwd() / name)
+        artifacts = project_artifacts(project)
+        artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
+        directory = write_configuration(artifacts, target_dir or Path.cwd() / name)
     except OSError as error:
         raise click.ClickException(str(error)) from error
     except (ValueError, ValidationError):
@@ -182,6 +185,9 @@ def wizard(target_dir: Path | None):
             "Project inputs are invalid or incompatible. Review the recipe's input contract; values are omitted from this error."
         ) from None
     click.secho(f"Created main.tf, variables.tf, and outputs.tf in {directory}", fg="green")
+    click.echo(
+        "Saved the non-secret project specification, generation receipt, and checksums alongside them."
+    )
     click.echo(project["verification"])
     click.echo(f'Validate with: terraforma run --dir "{directory}"')
 
@@ -330,7 +336,9 @@ def generate_specification(spec: Path, target_dir: Path):
             "Project inputs are incomplete or invalid. Run project-inputs to inspect the required fields; values are omitted from this error."
         ) from None
     try:
-        directory = write_configuration(result["files"], target_dir)
+        artifacts = project_artifacts(result)
+        artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
+        directory = write_configuration(artifacts, target_dir)
     except (OSError, ValueError):
         raise click.ClickException(
             "Unable to write Terraform files. Choose a new writable project directory."
@@ -341,6 +349,32 @@ def generate_specification(spec: Path, target_dir: Path):
             f"Supply {name} through your environment before planning; its value was not collected or saved."
         )
     click.echo(result["verification"])
+
+
+@main.command("verify-project")
+@click.option(
+    "--dir",
+    "directory",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+)
+@click.option("--json-output", is_flag=True, help="Print the artifact comparison report as JSON.")
+def verify_project_command(directory: Path, json_output: bool):
+    """Compare generated files to an unsigned local generation receipt."""
+    try:
+        report = verify_project(directory)
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "A supported, readable generation receipt is required; receipt values are omitted from this error."
+        ) from None
+    if json_output:
+        click.echo(json.dumps(report, indent=2))
+    else:
+        for item in report["files"]:
+            click.echo(f"{item['file']}: {item['status']}")
+        click.echo(report["limitations"])
+    if report["status"] != "matches_receipt":
+        raise click.exceptions.Exit(1)
 
 
 @main.command()

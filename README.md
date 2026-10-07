@@ -46,6 +46,8 @@ Development on `main` adds a questionnaire for declared recipe inputs, including
 
 Development also adds project import, a recipe capability catalog, and [local plan review in the browser](docs/PLAN_REVIEW.md).
 
+New project exports also include the saved questionnaire, [generation receipt and checksums](docs/ARTIFACTS.md) for reuse and file comparison.
+
 - A three-step browser wizard with guided cloud, workload, and configuration choices.
 - AWS, Azure, and Google Cloud configurations with public/private access choices.
 - Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.

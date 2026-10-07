@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.plan_review import reject_constant, unique_object
@@ -204,6 +205,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
     )
     return {
         "files": files,
+        "receipt": create_receipt(specification.model_dump(), files),
         "specification": specification.model_dump(),
         "input_contract": contract,
         "capabilities": recipe_capabilities(specification.recipe),
