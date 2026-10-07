@@ -411,6 +411,15 @@
           </div>
           <div id="validation-results"></div>
         </section>
+        <section class="plan-review-panel" aria-labelledby="plan-review-heading">
+          <div class="eyebrow">REVIEW CHANGES</div>
+          <h2 id="plan-review-heading">Review an existing plan.</h2>
+          <p>Select a Terraform plan JSON export to check destructive changes and selected security policies locally. Reports show findings and coverage gaps; they never grant approval to apply.</p>
+          <button class="button outline" id="review-plan-button" type="button">Choose plan JSON</button>
+          <input id="plan-file" type="file" accept=".json,application/json" aria-label="Terraform plan JSON file" hidden />
+          <p class="input-help">Up to 8 MiB and 2,000 resources. The file stays on this computer and is not sent to AI. Export it with terraform show -json; plan files can contain secrets.</p>
+          <div id="plan-review-results" role="status" aria-live="polite" hidden></div>
+        </section>
         <div class="bottom-note">
           <span class="dot"></span> A local workspace for learning and building
           <span>Terraform knowledge optional. Curiosity encouraged.</span>

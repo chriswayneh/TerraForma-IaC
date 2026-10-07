@@ -340,6 +340,10 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
 def load_and_review(path: Path) -> dict:
     with path.open("rb") as source:
         raw = source.read(MAX_PLAN_BYTES + 1)
+    return review_bytes(raw)
+
+
+def review_bytes(raw: bytes) -> dict:
     if len(raw) > MAX_PLAN_BYTES:
         raise ValueError("Plan JSON exceeds the 8 MiB review limit.")
     try:

@@ -28,12 +28,14 @@ flowchart LR
 ## Boundaries
 
 - `generator.py` validates questionnaire inputs and renders reviewed HCL blocks. User strings are escaped as literal HCL; internal expressions are represented separately.
+- `project.py` validates versioned specifications and derives shared input contracts. Browser and terminal questionnaires use these contracts; manifest imports use bounded strict JSON parsing.
+- `catalog.py` describes recipe scope, fixed choices, unsupported features, and outstanding account checks.
 - `sandbox.py` owns temporary workspaces, tool discovery, command execution, results, and cleanup. It never applies or destroys infrastructure.
 - `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
 - `cli.py` exposes generation, validation, local plan review, and local serving commands.
 - `plan_review.py` inspects bounded plan JSON exports and produces reports without raw resource values. Its initial rules have limited coverage and never grant apply approval.
-- `request_limits.py` bounds mutation request bodies to 64 KiB before route parsing.
-- `web.py` exposes generation, validation, and ZIP download routes. It accepts questionnaire state, not arbitrary HCL or arbitrary host paths. Slow native checks run off the event loop, with one validation at a time.
+- `request_limits.py` bounds mutation bodies to 64 KiB before route parsing, with an explicit 8 MiB exception for the plan-review route.
+- `web.py` exposes generation, validation, ZIP download, project import, and local plan-review routes. It accepts validated specifications or plan JSON, not arbitrary HCL or arbitrary host paths. Native checks and plan review run off the event loop, with one validation and one review at a time.
 - `static/` contains the buildless browser application. It keeps the current questionnaire in browser memory, optionally saves non-secret choices locally, and displays server-returned text using text nodes.
 
 ## Local API protection

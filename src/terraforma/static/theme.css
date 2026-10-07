@@ -357,3 +357,29 @@ dialog {
   font-size: 12px;
   color: var(--muted);
 }
+.plan-review-panel {
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+}
+
+.plan-review-panel h2 {
+  font-size: 20px;
+  margin: 12px 0;
+}
+
+.plan-review-panel > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 800px;
+}
+
+#plan-review-results pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#plan-review-results p {
+  overflow-wrap: anywhere;
+}

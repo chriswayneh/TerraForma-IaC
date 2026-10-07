@@ -22,6 +22,7 @@ from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
+from terraforma.plan_review import MAX_PLAN_BYTES, review_bytes
 from terraforma.project import (
     ProjectSpecification,
     compile_project,
@@ -110,9 +111,12 @@ def create_app() -> FastAPI:
         openapi_url=None,
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
-    app.add_middleware(RequestSizeLimitMiddleware)
+    app.add_middleware(
+        RequestSizeLimitMiddleware, path_limits={"/api/plans/review": MAX_PLAN_BYTES}
+    )
     token = secrets.token_urlsafe(32)
     validation_lock = asyncio.Lock()
+    plan_review_lock = asyncio.Lock()
     static = Path(__file__).parent / "static"
 
     @app.exception_handler(RequestValidationError)
@@ -147,6 +151,23 @@ def create_app() -> FastAPI:
                 status_code=422,
                 detail="Project file is invalid, incomplete, or uses an unsupported version. Input values are omitted from this error.",
             ) from None
+
+    @app.post("/api/plans/review")
+    async def plan_review(request: Request):
+        if plan_review_lock.locked():
+            raise HTTPException(
+                status_code=409,
+                detail="Another plan review is running. Try again when it finishes.",
+            )
+        async with plan_review_lock:
+            raw = await request.body()
+            try:
+                return await run_in_threadpool(review_bytes, raw)
+            except (ValueError, TypeError, RecursionError):
+                raise HTTPException(
+                    status_code=422,
+                    detail="This file is not a supported Terraform plan JSON export. Plan values are omitted from this error.",
+                ) from None
 
     @app.post("/api/projects/compile")
     async def project_compile(specification: ProjectSpecification):

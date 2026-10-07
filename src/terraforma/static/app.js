@@ -234,6 +234,7 @@ function setBusy(value) {
   byId("download-button").disabled = value || !project;
   byId("ai-option").disabled = value || !aiAvailable;
   byId("load-project-button").disabled = value;
+  byId("review-plan-button").disabled = value;
   form.setAttribute("aria-busy", String(value));
 }
 
@@ -415,6 +416,41 @@ byId("project-file").addEventListener("change", async () => {
     notify(error.message, true);
   } finally {
     byId("project-file").value = "";
+    setBusy(false);
+  }
+});
+
+byId("review-plan-button").addEventListener("click", () => {
+  if (!busy) byId("plan-file").click();
+});
+
+byId("plan-file").addEventListener("change", async () => {
+  const file = byId("plan-file").files[0];
+  if (!file || busy) return;
+  setBusy(true);
+  const results = byId("plan-review-results");
+  results.hidden = false;
+  results.textContent = "Reviewing the plan locally…";
+  try {
+    if (file.size > 8 * 1024 * 1024) throw new Error("Plan JSON files must be at most 8 MiB.");
+    const report = await (await api("/api/plans/review", await file.arrayBuffer(), true)).json();
+    results.replaceChildren(
+      diagnostic(
+        report.status === "blocked" ? "Changes need attention" : "Manual review required",
+        "This report does not approve deployment. " + report.limitations,
+      ),
+      diagnostic("Planned actions", Object.entries(report.actions).map(([action, count]) => `${action}: ${count}`).join("; ") || "No resource changes listed."),
+    );
+    report.findings.forEach((finding) => {
+      results.append(diagnostic(`${finding.severity === "block" ? "Blocked" : "Review"}: ${finding.code.replaceAll("_", " ")}`, `${finding.resource_id}: ${finding.message}`));
+    });
+    results.append(diagnostic("Review record", `Policy ${report.policy_version}\nPlan JSON SHA-256: ${report.artifact_sha256}`, true));
+    notify("Local plan review complete. Review the findings and gaps before any deployment.");
+  } catch (error) {
+    results.textContent = error.message;
+    notify(error.message, true);
+  } finally {
+    byId("plan-file").value = "";
     setBusy(false);
   }
 });

@@ -2,9 +2,10 @@ from starlette.responses import JSONResponse
 
 
 class RequestSizeLimitMiddleware:
-    def __init__(self, app, max_bytes: int = 64 * 1024):
+    def __init__(self, app, max_bytes: int = 64 * 1024, path_limits: dict[str, int] | None = None):
         self.app = app
         self.max_bytes = max_bytes
+        self.path_limits = path_limits or {}
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or scope["method"] in {"GET", "HEAD"}:
@@ -12,14 +13,16 @@ class RequestSizeLimitMiddleware:
             return
         messages = []
         size = 0
+        limit = self.path_limits.get(scope["path"], self.max_bytes)
         while True:
             message = await receive()
             if message["type"] == "http.disconnect":
                 return
             size += len(message.get("body", b""))
-            if size > self.max_bytes:
+            if size > limit:
                 response = JSONResponse(
-                    {"detail": "Request exceeds the 64 KiB local API limit."}, status_code=413
+                    {"detail": f"Request exceeds the {limit // 1024} KiB local API limit."},
+                    status_code=413,
                 )
                 await response(scope, receive, send)
                 return

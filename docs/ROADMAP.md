@@ -62,7 +62,7 @@ The catalog will expand through documented, tested resource patterns. Unsupporte
 
 Target: **v0.3.0**.
 
-Status: in progress. Initial local plan review, bounded API requests, CLI AI opt-in, and the first shared project specification/input contract are implemented. The browser now asks for declared recipe variables and preserves answers through generation, validation, and export. Account/capability metadata and the remaining execution safeguards are still planned.
+Status: in progress. Initial local plan review in both interfaces, bounded API requests, CLI AI opt-in, a shared project specification/input contract, and recipe capability metadata are implemented. Both questionnaires ask for declared recipe variables; the browser preserves answers through generation, validation, export, and project import. Account/environment identity, account-specific preflight, and the remaining execution safeguards are still planned.
 
 - Define a versioned project specification shared by the CLI, UI, generator, and automation API.
 - Record provider, account identity, environment, resource selections, dependencies, and template versions without persisting credentials.
