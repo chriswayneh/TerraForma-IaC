@@ -51,6 +51,8 @@ This protects the local browser workflow; it is not authentication for a shared 
 
 Validation initializes providers and checks configuration structure and configured lint rules. It does not verify cloud account quotas, organization policies, pricing, successful resource creation, or application reachability. Native binaries and plugins execute on the host; temporary files do not contain an untrusted process.
 
+The bounded command runner manages a Windows job or a POSIX session/process group and cleans up associated helpers when the parent finishes or fails. It retains bounded output and the parent's exit status. Windows job attachment happens immediately after launch, leaving a launch/attachment gap; POSIX descendants can detach. This is trusted-tool cleanup rather than containment. See [Windows job semantics](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) and [Python process session options](https://docs.python.org/3/library/subprocess.html).
+
 Validation removes `TF_VAR_*` values, `OPENAI_API_KEY`, injected Terraform CLI arguments, and selected tool/log overrides from child-process environments. This matches the exclusion of variable-value files: structural checks use the generated defaults and unresolved required variables, rather than externally supplied secrets. Other host settings and credential sources can remain available, including files in the user profile; this filtering is not credential containment or a process sandbox.
 
 Cloud credentials are needed for planning/deployment, not questionnaire generation. Required variables are declared in the generated `variables.tf`. Some values can remain unknown during structural validation. Cloud runtime verification is a later roadmap phase.

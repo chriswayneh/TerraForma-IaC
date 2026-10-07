@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added managed command cleanup with Windows jobs and POSIX process groups, including helper cleanup after normal completion, timeout and output overflow. Trusted-tool limitations and the Windows launch/attachment gap remain explicit.
+
 - Added standalone VM reference outputs across AWS/Azure/GCP: resource ID, name and placement, plus Azure resource group. AWS Name tags are explicitly described as non-unique.
 
 - Extended plan policy to `0.6.0` with GCP interactive serial-console checks on instances/templates. Enabled access and removal of an explicit disable are blocked; missing/inherited settings require review, and malformed metadata fails closed.

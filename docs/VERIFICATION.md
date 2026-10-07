@@ -16,6 +16,8 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
+- Managed command cleanup passes controlled child/grandchild tests for normal exit, timeout and output overflow on Windows, plus short commands, launch failure and attachment failure. The full local suite passes 1,027 tests with 149 native cases skipped. Windows uses the launched process's retained handle rather than reopening its PID. The Windows launch/attachment gap and detached POSIX children remain outside cleanup guarantees; this is not an untrusted-code sandbox.
+
 - Standalone VM reference outputs pass 15 provider/workload-scope checks and 12 native provider/access/encryption combinations. The installed wheel exports the correct definitions across all providers. No live resource IDs were retrieved and no cloud operation was authorized.
 
 - Policy `0.6.0` adds 42 GCP serial-console cases for instances/templates, documented boolean spellings, inheritance gaps, removed disable settings and malformed before/after values. The installed CLI blocks enabled access and retains `approval_granted: false`. Cloud access and project/organization metadata are not queried.

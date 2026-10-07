@@ -1,9 +1,12 @@
 import math
+import os
 import subprocess
 import threading
 import time
 from dataclasses import dataclass
 from typing import BinaryIO
+
+from terraforma.process_group import ProcessGroup
 
 
 @dataclass(frozen=True)
@@ -30,16 +33,32 @@ def run_bounded(
     ):
         raise ValueError("Command timeout and output limit must be positive.")
     deadline = time.monotonic() + timeout
-    process = subprocess.Popen(
-        arguments,
-        cwd=cwd,
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=0,
-        shell=False,
-    )
+    group = ProcessGroup()
+    process = None
+    try:
+        process = subprocess.Popen(
+            arguments,
+            cwd=cwd,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0,
+            shell=False,
+            start_new_session=os.name != "nt",
+        )
+        group.attach(process)
+    except BaseException:
+        try:
+            group.close()
+        finally:
+            if process is not None:
+                if process.poll() is None:
+                    process.kill()
+                process.wait(timeout=5)
+                process.stdout.close()
+                process.stderr.close()
+        raise
     buffers = [bytearray(), bytearray()]
     finished = [threading.Event(), threading.Event()]
     overflow = threading.Event()
@@ -80,14 +99,24 @@ def run_bounded(
             if read_failed.is_set():
                 failure = "Unable to capture complete command output."
                 break
-            if all(event.is_set() for event in finished) and process.poll() is not None:
-                break
+            if process.poll() is not None:
+                try:
+                    group.close()
+                except OSError:
+                    failure = "Unable to clean up the command process group."
+                    break
+                if all(event.is_set() for event in finished):
+                    break
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 failure = f"Command timed out after {timeout:g} seconds."
                 break
             stop.wait(min(0.02, remaining))
     finally:
+        try:
+            group.close()
+        except OSError:
+            failure = "Unable to clean up the command process group."
         stop.set()
         if process.poll() is None:
             process.kill()
