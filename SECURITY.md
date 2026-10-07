@@ -12,6 +12,8 @@ The supported UI launcher binds to loopback. Mutation endpoints require a local 
 
 The validation sandbox isolates temporary files. Native tools and provider/linter plugins still execute on the host with its environment and network access. It is not a containment boundary for untrusted code. CLI validation should only be used with trusted configurations and plugins.
 
+Validation captures at most 512 KiB from each command output stream. Output overflow, capture failure, and timeout cause validation failure, even if a tool otherwise reports success. Commands receive no terminal input. Timeout/overflow termination targets the launched process; descendant plugins are not contained or guaranteed to stop. These bounds protect diagnostic capture, not the host from untrusted execution.
+
 Generation never applies or destroys infrastructure. Generated templates still require cloud-specific review, secure state storage, appropriate network rules, and a reviewed Terraform plan before deployment.
 
 ## AI diagnostics

@@ -1,8 +1,8 @@
-import subprocess
 from pathlib import Path
 
 import pytest
 
+from terraforma.process import CommandResult
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -42,12 +42,11 @@ def test_init_failure_skips_validate_and_preserves_both_streams(monkeypatch):
 
     def run(arguments, **kwargs):
         calls.append(arguments)
-        assert kwargs["shell"] is False
         if "init" in arguments:
-            return subprocess.CompletedProcess(arguments, 1, "stdout error", "stderr error")
-        return subprocess.CompletedProcess(arguments, 0, "ok", "")
+            return CommandResult(1, b"stdout error", b"stderr error")
+        return CommandResult(0, b"ok", b"")
 
-    monkeypatch.setattr("terraforma.sandbox.subprocess.run", run)
+    monkeypatch.setattr("terraforma.sandbox.run_bounded", run)
     result = ValidationSandbox("terraform {}").validate()
     assert not result["is_valid"]
     assert "stdout error" in result["logs"] and "stderr error" in result["logs"]
@@ -59,11 +58,9 @@ def test_timeout_is_a_failure(monkeypatch):
     monkeypatch.setattr("terraforma.sandbox.shutil.which", lambda name: f"/tools/{name}")
 
     def run(arguments, **kwargs):
-        raise subprocess.TimeoutExpired(
-            arguments, 1, output=b"partial stdout", stderr=b"partial stderr"
-        )
+        return CommandResult(-1, b"partial stdout", b"partial stderr", "Command timed out.")
 
-    monkeypatch.setattr("terraforma.sandbox.subprocess.run", run)
+    monkeypatch.setattr("terraforma.sandbox.run_bounded", run)
     result = ValidationSandbox("terraform {}", timeout=1).validate()
     assert not result["is_valid"]
     assert "timed out" in result["logs"]
@@ -82,9 +79,9 @@ def test_environment_overrides_cannot_change_commands(monkeypatch):
         assert "TF_VAR_database_password" not in kwargs["env"]
         assert "OPENAI_API_KEY" not in kwargs["env"]
         assert Path(kwargs["env"]["TF_DATA_DIR"]).parent == Path(kwargs["cwd"])
-        return subprocess.CompletedProcess(arguments, 0, "", "")
+        return CommandResult(0, b"", b"")
 
-    monkeypatch.setattr("terraforma.sandbox.subprocess.run", run)
+    monkeypatch.setattr("terraforma.sandbox.run_bounded", run)
     assert ValidationSandbox("terraform {}").validate()["is_valid"]
 
 

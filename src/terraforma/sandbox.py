@@ -1,10 +1,12 @@
+import math
 import os
 import re
 import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any, ClassVar
+
+from terraforma.process import run_bounded
 
 
 class ValidationSandbox:
@@ -34,8 +36,8 @@ class ValidationSandbox:
     ):
         if sum(value is not None for value in (raw_main_hcl, target_dir, generated_files)) != 1:
             raise ValueError("Supply exactly one of raw_main_hcl, target_dir, or generated_files.")
-        if timeout <= 0:
-            raise ValueError("Timeout must be positive.")
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("Timeout must be finite and positive.")
         self.raw_main_hcl = raw_main_hcl
         self.generated_files = generated_files
         self.target_dir = Path(target_dir).resolve() if target_dir is not None else None
@@ -147,27 +149,18 @@ class ValidationSandbox:
             TF_IN_AUTOMATION="1", TF_INPUT="0", TF_DATA_DIR=str(Path(self.temp_dir) / ".terraform")
         )
         try:
-            result = subprocess.run(
+            result = run_bounded(
                 arguments,
                 cwd=self.temp_dir,
                 env=environment,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
                 timeout=self.timeout,
-                shell=False,
-                check=False,
             )
             output = "\n".join(
                 part for part in (self._clean(result.stdout), self._clean(result.stderr)) if part
             )
+            if result.failure:
+                output = f"{result.failure}\n{output}".strip()
             return result.returncode, output
-        except subprocess.TimeoutExpired as error:
-            output = "\n".join(
-                part for part in (self._clean(error.stdout), self._clean(error.stderr)) if part
-            )
-            return -1, f"Command timed out after {self.timeout:g} seconds.\n{output}".strip()
         except OSError as error:
             return -1, f"Unable to launch {Path(arguments[0]).name}: {error.strerror}"
 
