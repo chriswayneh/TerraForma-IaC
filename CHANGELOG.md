@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Raised the Azure Windows provider floor to AzureRM 4.81 within 4.x, matching validated automatic-update argument names. Older 4.0 locks require a reviewed upgrade; non-Windows Azure constraints remain unchanged.
+
 - Grouped browser inputs into cloud target, image/capacity, network/access, storage, operations/identity and workload sections. All declared questions remain visible when applicable; section headings do not hide required inputs or change the saved specification.
 
 - Azure Secure Boot guidance now explicitly identifies AzureRM's VM replacement and potential OS-disk deletion behavior when that setting changes.

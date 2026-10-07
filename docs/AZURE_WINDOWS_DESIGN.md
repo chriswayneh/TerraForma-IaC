@@ -8,7 +8,7 @@ The adapter uses a native Windows VM resource and the shared questionnaire contr
 
 Native schema inspection with AzureRM 4.81.0 found `admin_password` marked sensitive, with no write-only password argument. The [provider documentation](https://github.com/hashicorp/terraform-provider-azurerm/blob/v4.81.0/website/docs/r/windows_virtual_machine.html.markdown) explains that VM arguments, including the password, are stored in Terraform state. A sensitive variable hides ordinary display; it does not remove the value from state. Supplying `TF_VAR_admin_password` externally prevents a literal password in generated files, but cannot establish protected state storage.
 
-Do not invent `admin_password_wo` or mark the normal field as an ephemeral value. Provider support and the minimum Terraform version must be verified before adopting either mechanism. The generated projects currently permit Terraform 1.6 and use AzureRM 4.x.
+Do not invent `admin_password_wo` or mark the normal field as an ephemeral value. Provider support and the minimum Terraform version must be verified before adopting either mechanism. Generated projects permit Terraform 1.6. The Windows recipe requires AzureRM 4.81 or later within 4.x (`~> 4.81`), matching the validated argument names. AzureRM 4.0 used `enable_automatic_updates`; the generated `automatic_updates_enabled` argument is verified with 4.81. Existing non-Windows Azure recipes retain their prior `~> 4.0` constraint. Review and update an older dependency lock before initializing the Windows recipe.
 
 ## Delivery boundary
 

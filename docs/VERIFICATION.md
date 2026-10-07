@@ -1,5 +1,9 @@
 # Verification record
 
+## Azure Windows provider floor checkpoint
+
+The Windows/provider generator regression run passes 93 cases with 208 optional native cases skipped. A separately initialized AzureRM 4.81 workspace passes Terraform validation and TFLint with the new Windows provider constraint. Official versioned provider documentation confirms the older 4.0 automatic-update argument name differs; non-Windows Azure constraints remain unchanged. Native test configuration files explicitly use UTF-8.
+
 ## Grouped questionnaire checkpoint
 
 - Web/project regression checks pass 76 cases; JavaScript syntax and patch whitespace checks pass.

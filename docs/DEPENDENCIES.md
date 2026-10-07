@@ -1,5 +1,16 @@
 # Dependency trust and updates
 
+## Generated provider constraints
+
+| Recipe | Constraint | Compatibility boundary |
+| --- | --- | --- |
+| AWS | `~> 6.0` | Existing AWS template family |
+| Azure Windows VM | `~> 4.81` | Validated Windows argument names, including `automatic_updates_enabled` |
+| Other Azure recipes | `~> 4.0` | Existing non-Windows template family |
+| Google Cloud | `~> 7.0` | Existing Google template family |
+
+The Azure Windows floor excludes AzureRM 4.0's older `enable_automatic_updates` argument name. Compare the provider's [4.0 documentation](https://github.com/hashicorp/terraform-provider-azurerm/blob/v4.0.0/website/docs/r/windows_virtual_machine.html.markdown) with [4.81 documentation](https://github.com/hashicorp/terraform-provider-azurerm/blob/v4.81.0/website/docs/r/windows_virtual_machine.html.markdown). Review a lockfile upgrade before using that recipe with an older provider selection. Constraints do not establish package trust or replace the dependency lockfile.
+
 CI and the reusable Action reference setup actions by full commit SHA. The following commits were resolved through GitHub's API from tags in the official repositories on October 6, 2026. Annotated tags were dereferenced to their underlying commit.
 
 | Action | Selected tag | Pinned commit |

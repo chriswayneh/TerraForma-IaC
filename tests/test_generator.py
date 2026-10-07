@@ -166,7 +166,9 @@ def assert_native_files(directory, files):
 
     assert json.loads(result.stdout)["valid"]
     config = directory / ".tflint.hcl"
-    config.write_text('plugin "terraform" {\n  enabled = true\n  preset = "recommended"\n}\n')
+    config.write_text(
+        'plugin "terraform" {\n  enabled = true\n  preset = "recommended"\n}\n', encoding="utf-8"
+    )
     result = subprocess.run(
         [shutil.which("tflint"), "--format=json", f"--config={config}"],
         cwd=directory,

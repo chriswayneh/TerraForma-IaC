@@ -170,6 +170,11 @@ class TerraformGenerator:
             raise RuntimeError("Create a new generator for each configuration.")
         provider = {"aws": "aws", "azure": "azurerm", "gcp": "google"}[self.config.provider]
         versions = {"aws": "~> 6.0", "azure": "~> 4.0", "gcp": "~> 7.0"}
+        if (
+            self.config.provider == "azure"
+            and self.config.architecture_type == "windows_virtual_machine"
+        ):
+            versions["azure"] = "~> 4.81"
         providers = {
             provider: {"source": f"hashicorp/{provider}", "version": versions[self.config.provider]}
         }

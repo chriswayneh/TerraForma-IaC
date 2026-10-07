@@ -113,6 +113,20 @@ def test_windows_contract_defaults_and_secret_boundary():
         compile_project(spec)
 
 
+def test_windows_provider_floor_excludes_older_argument_names():
+    from terraforma.generator import TerraformGenerator
+
+    windows = compile_project(specification())["files"]["main.tf"]
+    linux = TerraformGenerator(
+        WizardConfig(
+            provider="azure", project_name="linux-floor", architecture_type="virtual_machine"
+        )
+    ).generate()["main.tf"]
+    assert '"version" = "~> 4.81"' in windows
+    assert '"version" = "~> 4.0"' in linux
+    assert "automatic_updates_enabled = true" in windows
+
+
 def test_windows_terminal_never_reads_password_value(monkeypatch):
     from terraforma.cli import collect_recipe_inputs
 
