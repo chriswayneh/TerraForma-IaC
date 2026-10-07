@@ -3,7 +3,8 @@
 ## Native CI coverage checkpoint
 
 - The generator/placement default regression run passes 101 cases with 228 optional native cases skipped. Two separately enabled real AWS provider lock cases pass: matching requirements validate without changing source/copied locks, and conflicting requirements fail initialization without a writable retry.
-- Native CI now includes the six offline AWS placement expression cases and both provider lock cases. Its job creates a private runner-local provider cache to reuse downloaded plugins; registry checks and lock checksums remain enforced. No cloud API or apply is introduced.
+- Native CI now includes the six offline AWS placement expression cases and both provider lock cases. Its setup step creates a runner-local provider cache to reuse downloaded plugins; registry checks and lock checksums remain enforced. No cloud API or apply is introduced.
+- GitHub rejected the initial cache configuration before running jobs because `runner.temp` was unavailable at job environment scope. The follow-up uses `RUNNER_TEMP` and `GITHUB_ENV` inside the setup step; check the latest workflow for its execution result.
 
 ## AWS standalone placement checkpoint
 
