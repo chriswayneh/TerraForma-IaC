@@ -13,7 +13,12 @@ from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
 from terraforma.catalog import recipe_capabilities, recipe_catalog
-from terraforma.generator import WizardConfig, project_destination, write_configuration
+from terraforma.generator import (
+    ArtifactCleanupError,
+    WizardConfig,
+    project_destination,
+    write_configuration,
+)
 from terraforma.network_inputs import usable_vm_address, vm_subnet
 from terraforma.plan_review import load_and_review
 from terraforma.preflight import target_preflight
@@ -339,6 +344,8 @@ def wizard(target_dir: Path | None):
         artifacts = project_artifacts(project)
         artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
         directory = write_configuration(artifacts, target_dir or Path.cwd() / name)
+    except ArtifactCleanupError as error:
+        raise click.ClickException(str(error)) from None
     except (OSError, ValueError):
         raise click.ClickException(
             "Unable to write project files. Choose a fresh, writable project directory."
@@ -500,6 +507,8 @@ def generate_specification(spec: Path, target_dir: Path):
         artifacts = project_artifacts(result)
         artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
         directory = write_configuration(artifacts, target_dir)
+    except ArtifactCleanupError as error:
+        raise click.ClickException(str(error)) from None
     except (OSError, ValueError):
         raise click.ClickException(
             "Unable to write Terraform files. Choose a new writable project directory."

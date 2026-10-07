@@ -1,5 +1,11 @@
 # Verification record
 
+## Artifact recovery checkpoint
+
+- The default suite passes 1,302 tests with 216 optional native cases skipped. Ruff checks and formatting pass across 76 Python files.
+- Failure-injection tests cover write errors and keyboard interruption, continued cleanup after a denied removal, preservation of unrelated files, refusal to regenerate over leftover Terraform, and a nonzero CLI error identifying only leftover filenames. The original exception remains the internal cause; its details are absent from console output.
+- These checks establish handled-failure behavior, not crash atomicity, power-loss durability, Windows ACL privacy or protection from concurrent filesystem changes. No Terraform, cloud or AI execution behavior changes.
+
 ## Azure Windows assessment checkpoint
 
 - The default suite passes 1,298 tests with 216 optional native cases skipped. Ruff checks/formatting and JavaScript syntax checks pass.

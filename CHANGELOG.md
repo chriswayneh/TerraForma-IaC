@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improved recovery from failed or interrupted terminal generation. Cleanup attempts all newly created artifacts even when one removal fails, and the CLI identifies leftovers requiring review without exposing underlying error details.
+
 - Added an Azure Windows automatic patch-assessment question. It preserves automatic OS installation and the enabled VM Agent; platform assessment, agent health and patch completion remain unverified.
 
 - Raised the Azure Windows provider floor to AzureRM 4.81 within 4.x, matching validated automatic-update argument names. Older 4.0 locks require a reviewed upgrade; non-Windows Azure constraints remain unchanged.

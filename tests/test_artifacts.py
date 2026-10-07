@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
 from terraforma.cli import main
-from terraforma.generator import WizardConfig, write_configuration
+from terraforma.generator import ArtifactCleanupError, WizardConfig, write_configuration
 from terraforma.project import ProjectSpecification, compile_project
 from terraforma.web import create_app
 
@@ -223,6 +223,74 @@ def test_failed_write_rolls_back_only_new_files(tmp_path, monkeypatch):
         write_configuration(project_artifacts(project()), tmp_path)
     assert note.read_text() == "existing note"
     assert list(tmp_path.iterdir()) == [note]
+
+
+@pytest.mark.parametrize("failure_type", [OSError, KeyboardInterrupt])
+def test_cleanup_continues_after_one_removal_fails(tmp_path, monkeypatch, failure_type):
+    note = tmp_path / "note.txt"
+    note.write_text("existing note")
+    original_open = open
+    original_unlink = Path.unlink
+    failure = failure_type("private-failure-marker")
+
+    def fail_third_write(path, mode="r", *args, **kwargs):
+        if Path(path).name == "outputs.tf" and mode == "x":
+            raise failure
+        return original_open(path, mode, *args, **kwargs)
+
+    def deny_first_removal(path, *args, **kwargs):
+        if path.name == "main.tf":
+            raise PermissionError("private-cleanup-marker")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", fail_third_write)
+    monkeypatch.setattr(Path, "unlink", deny_first_removal)
+    with pytest.raises(ArtifactCleanupError) as captured:
+        write_configuration(project_artifacts(project()), tmp_path)
+    assert captured.value.filenames == ("main.tf",)
+    assert captured.value.__cause__ is failure
+    assert "private-" not in str(captured.value)
+    assert "Inspect these partial artifacts" in str(captured.value)
+    assert {path.name for path in tmp_path.iterdir()} == {"note.txt", "main.tf"}
+    assert note.read_text() == "existing note"
+    with pytest.raises(ValueError, match="fresh project directory"):
+        write_configuration(project_artifacts(project()), tmp_path)
+
+
+def test_interrupted_write_removes_new_files_and_preserves_original_interrupt(
+    tmp_path, monkeypatch
+):
+    original_open = open
+    failure = KeyboardInterrupt()
+
+    def interrupt_second_write(path, mode="r", *args, **kwargs):
+        if Path(path).name == "variables.tf" and mode == "x":
+            raise failure
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", interrupt_second_write)
+    with pytest.raises(KeyboardInterrupt) as captured:
+        write_configuration(project_artifacts(project()), tmp_path)
+    assert captured.value is failure
+    assert not list(tmp_path.iterdir())
+
+
+def test_cli_explains_incomplete_cleanup_without_exposing_failure_details(tmp_path, monkeypatch):
+    source = tmp_path / "source.json"
+    source.write_text(json.dumps(project()["specification"]))
+
+    def fail_write(*args, **kwargs):
+        raise ArtifactCleanupError(["variables.tf", "main.tf"]) from OSError("private-marker")
+
+    monkeypatch.setattr("terraforma.cli.write_configuration", fail_write)
+    result = CliRunner().invoke(
+        main, ["generate", "--spec", str(source), "--dir", str(tmp_path / "output")]
+    )
+    assert result.exit_code == 1
+    assert "cleanup was incomplete" in result.output
+    assert "main.tf, variables.tf" in result.output
+    assert "private-marker" not in result.output
+    assert "Created Terraform" not in result.output
 
 
 @pytest.mark.skipif(os.name != "posix", reason="Unix permission semantics")

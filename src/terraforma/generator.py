@@ -460,6 +460,15 @@ def project_destination(directory: str | Path) -> Path:
     return destination
 
 
+class ArtifactCleanupError(OSError):
+    def __init__(self, filenames: list[str]):
+        self.filenames = tuple(sorted(filenames))
+        super().__init__(
+            "Generation failed and cleanup was incomplete. Inspect these partial artifacts in "
+            "the selected output directory before retrying: " + ", ".join(self.filenames) + "."
+        )
+
+
 def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
     if not files or not set(files) <= GENERATED_FILENAMES:
         raise ValueError("Unexpected or empty generated filename set.")
@@ -478,8 +487,14 @@ def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
             ) as stream:
                 created.append(path)
                 stream.write(content)
-    except BaseException:
+    except BaseException as failure:
+        remaining = []
         for path in created:
-            path.unlink(missing_ok=True)
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                remaining.append(path.name)
+        if remaining:
+            raise ArtifactCleanupError(remaining) from failure
         raise
     return destination

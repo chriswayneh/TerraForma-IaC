@@ -27,6 +27,14 @@ Windows access depends on the Python runtime, destination ACLs and filesystem. T
 
 Browser downloads and extracted copies follow the browser, download-folder and extraction tool's permissions. Keep generated projects, later variable files, state and plan exports in folders with appropriate access controls. These creation defaults do not encrypt files or protect them from administrators, backups, cloud sync or an already accessible directory.
 
+## Recover from interrupted generation
+
+Terminal generation refuses to overwrite an existing project. If writing fails or a keyboard interrupt occurs, it attempts to remove every file created by that invocation, preserving pre-existing files and directories. A failed removal does not prevent the remaining cleanup attempts. Incomplete cleanup returns an error naming the partial artifacts that could not be removed; it does not report successful generation.
+
+Inspect the selected output directory before retrying. Preserve any work you need, then use a fresh directory or remove only the identified partial artifacts after review. Existing Terraform files prevent regeneration into that directory. The original write failure is retained internally as the exception cause; console recovery messages omit its details and file contents.
+
+This is best-effort recovery from handled failures, not an atomic multi-file transaction. Forced process termination, power loss, filesystem failures and concurrent changes can leave partial output without a recovery message. No existing directory is deleted or permission-adjusted, and no state or cloud operation is rolled back.
+
 ## Compare a project
 
 Extract the ZIP or use a directory created by `terraforma wizard` or `terraforma generate`, then run:
