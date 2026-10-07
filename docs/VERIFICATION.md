@@ -1,5 +1,12 @@
 # Verification record
 
+## Azure managed disk policy checkpoint
+
+- The default suite passes 1,428 tests with 227 optional/native/platform cases skipped. Ruff checks and formatting pass across 82 Python files; JavaScript syntax passes.
+- Forty-eight disk policy cases cover unrestricted/private exports, public-network flags, reopening an existing deny-all boundary, absent/null/unknown settings, malformed values and unknown markers, destructive actions and data sources. CLI and API return the same redacted report without exposing disk values or resource addresses.
+- A temporary browser tab imported a synthetic disk plan and displayed the blocked export finding, policy 0.8.0, JSON digest and no-approval guidance. The user's tab was preserved. No cloud read, plan execution or deployment was performed.
+- These rules inspect declared plan values only. Effective permissions/connectivity, disk encryption, backup/recovery, private endpoint correctness and complete resource policy coverage remain unverified.
+
 ## Azure data disk access checkpoint
 
 - The default suite passes 1,380 tests with 227 optional/native/platform cases skipped. Ruff checks and formatting pass across 81 Python files; JavaScript syntax passes.

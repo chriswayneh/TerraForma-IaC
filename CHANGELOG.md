@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Local plan policy 0.8.0 now reviews Azure managed disk remote import/export and public network controls. Unrestricted exports/public access and reopening a deny-all boundary are blocked; private export and unknown settings require review. No provisioning approval is granted.
+
 - Newly generated optional Azure managed data disks deny remote import/export and disable public network access. The recipe retains empty-disk attachment; exports, private endpoints and backup/recovery workflows remain unsupported.
 
 - The existing opt-in Azure VM size read now checks a selected availability zone against reported SKU location metadata. Unsupported, unknown and malformed zone results remain distinct; no extra cloud read or deployment approval is added.

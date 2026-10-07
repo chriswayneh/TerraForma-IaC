@@ -69,6 +69,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Add explicit capability metadata so supported, unsupported, and unverified configurations are distinguishable.
 - Maintain one input contract per catalog entry: each configurable field has a plain-language question, type, validation, conditional dependencies, an explained default or required answer, and a sensitive-value handling rule. The UI and generated variables use this same contract so questions cannot drift from output.
 - Add local policy review for Terraform plan JSON: destructive changes, broad network access, missing protections, and unresolved policy coverage.
+- Initial managed disk access review covers Azure remote import/export and public network settings. Effective permissions, private endpoints, encryption and backup/recovery still require separate review.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.

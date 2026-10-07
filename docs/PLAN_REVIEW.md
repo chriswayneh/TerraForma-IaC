@@ -24,6 +24,7 @@ Standalone VM generation accepts a private IPv4 administrator network or one pub
 - Incomplete/failed plans and failed or unresolved Terraform checks are blocked.
 - AWS security-group rules, standalone AWS ingress rules, Azure network security rules, and GCP firewall rules are checked for inbound SSH, RDP, and Windows remote-management ports from outside RFC1918/ULA private ranges.
 - AWS EC2/EBS disks explicitly disabling encryption are blocked.
+- Azure managed disks permitting unrestricted remote import/export (`AllowAll`) or enabling public network access are blocked. Private export (`AllowPrivate`) requires separate review; changing an existing `DenyAll` boundary to private export is blocked. Missing or unknown access settings remain review gaps. These checks do not establish effective connectivity, export authorization, disk encryption, private endpoint correctness or backup/recovery.
 - AWS EC2 metadata endpoints permitting tokenless IMDSv1 requests are blocked. Missing endpoint/token settings are review gaps; an explicitly disabled endpoint does not require tokens.
 - Attached AWS instance profiles and GCP service accounts are reported as permission review gaps. This reviewer does not resolve their IAM policies, trust, or attachment authorization, and OAuth scopes do not establish least privilege.
 - GCP instance Secure Boot, vTPM and integrity monitoring disabled in a planned resource are flagged for review. Removing an existing enabled control is blocked pending separate review; missing settings remain review gaps. The reviewer does not certify image/driver compatibility or alert routing.
@@ -37,9 +38,11 @@ Standalone VM generation accepts a private IPv4 administrator network or one pub
 
 These initial checks are intentionally limited. They do not account for the complete routing graph, every IAM condition, provider defaults, organization policy, TLS, or every resource attribute. Even recognized resource types have partial policy coverage. The report always states `approval_granted: false`; no report authorizes provisioning.
 
-Development policy version `0.7.0` extends Azure Secure Boot/vTPM review to Windows VM resources alongside GCP serial-console and Shielded VM checks. Azure VM locks, Azure/GCP disk-specific encryption policy, guest filesystem state, password/state handling, and backup/recovery policy remain outside these rules. Provider references: [EC2 termination protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html), [GCP deletion protection](https://docs.aws.amazon.com/compute/docs/instances/preventing-accidental-vm-deletion), and [EBS detach precautions](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-detaching-volume.html).
+Development policy version `0.8.0` adds Azure managed disk import/export network controls alongside Azure Linux/Windows Secure Boot/vTPM and GCP serial-console/Shielded VM checks. Azure VM locks, Azure/GCP disk-specific encryption policy, guest filesystem state, password/state handling, and backup/recovery policy remain outside these rules. Provider references: [EC2 termination protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html), [GCP deletion protection](https://docs.aws.amazon.com/compute/docs/instances/preventing-accidental-vm-deletion), and [EBS detach precautions](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-detaching-volume.html).
 
 Metadata and identity references: [EC2 metadata options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html), [EC2 instance profiles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html), and [GCP service account access](https://docs.cloud.google.com/compute/docs/access/service-accounts). Azure identities remain subject to the generic resource policy coverage gap.
+
+Managed disk attribute reference: [AzureRM managed disk](https://registry.terraform.io/providers/hashicorp/azurerm/4.81.0/docs/resources/managed_disk). This reviewer checks declared plan values and never queries live disk access permissions.
 
 ## Results and automation
 

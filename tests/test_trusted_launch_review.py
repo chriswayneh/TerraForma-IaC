@@ -23,7 +23,7 @@ def test_disabled_azure_boot_control_and_removal(field, previous, vm_type):
     code = "vm_boot_protection_removed" if previous is True else "vm_boot_protection_disabled"
     finding = next(item for item in report["findings"] if item["code"] == code)
     assert finding["severity"] == ("block" if previous is True else "review")
-    assert report["policy_version"] == "0.7.0"
+    assert report["policy_version"] == "0.8.0"
     assert report["approval_granted"] is False
 
 

@@ -11,7 +11,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.7.0"
+POLICY_VERSION = "0.8.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -123,6 +123,7 @@ POLICY_TYPES = NETWORK_TYPES | {
     "aws_ebs_volume",
     "aws_volume_attachment",
     "aws_db_instance",
+    "azurerm_managed_disk",
     "google_compute_instance",
     "google_compute_instance_template",
 }
@@ -150,6 +151,77 @@ def planned_boolean(values: dict, field: str) -> bool | None:
     if value is not None and not isinstance(value, bool):
         raise TypeError("Policy control must be boolean.")
     return value
+
+
+def azure_disk_access_findings(change: dict) -> list[tuple[str, str, str]]:
+    after = change["after"]
+    before = change.get("before")
+    unknown = change.get("after_unknown", {})
+    if before is not None and not isinstance(before, dict):
+        raise TypeError("Previous disk values must be an object.")
+    if not isinstance(unknown, dict):
+        raise TypeError("Unknown disk values must be an object.")
+    for values in (before or {}, after):
+        policy = values.get("network_access_policy")
+        if policy is not None and (
+            not isinstance(policy, str) or policy not in {"DenyAll", "AllowPrivate", "AllowAll"}
+        ):
+            raise ValueError("Unsupported disk network access policy.")
+        planned_boolean(values, "public_network_access_enabled")
+    for field in ("network_access_policy", "public_network_access_enabled"):
+        if not isinstance(unknown.get(field, False), bool):
+            raise TypeError("Unknown disk access markers must be boolean.")
+    policy = None if unknown.get("network_access_policy") else after.get("network_access_policy")
+    public = (
+        None
+        if unknown.get("public_network_access_enabled")
+        else planned_boolean(after, "public_network_access_enabled")
+    )
+    findings = []
+    if policy == "AllowAll":
+        findings.append(
+            (
+                "managed_disk_export_unrestricted",
+                "block",
+                "The managed disk permits unrestricted remote import/export. Restrict its network access before provisioning; this review does not establish export authorization or effective connectivity.",
+            )
+        )
+    elif policy == "AllowPrivate":
+        removed = (before or {}).get("network_access_policy") == "DenyAll"
+        findings.append(
+            (
+                "managed_disk_export_protection_removed"
+                if removed
+                else "managed_disk_private_export",
+                "block" if removed else "review",
+                "The managed disk permits private remote import/export. Review the change from disabled export when applicable, its disk access binding, private endpoint, permissions and recovery workflow separately.",
+            )
+        )
+    elif policy is None:
+        findings.append(
+            (
+                "managed_disk_export_unknown",
+                "review",
+                "The plan does not establish the managed disk remote import/export network policy.",
+            )
+        )
+    if public is True:
+        findings.append(
+            (
+                "managed_disk_public_network",
+                "block",
+                "The managed disk enables public network access for permitted import/export operations. Disable this setting; other policy settings may restrict effective access but do not resolve this finding.",
+            )
+        )
+    elif public is None:
+        findings.append(
+            (
+                "managed_disk_public_network_unknown",
+                "review",
+                "The plan does not establish whether managed disk public network access is disabled.",
+            )
+        )
+    return findings
 
 
 def review_plan(data: dict, *, artifact_sha256: str) -> dict:
@@ -283,6 +355,9 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
             "Only the documented initial checks are implemented; manual review remains required.",
         )
         try:
+            if resource_type == "azurerm_managed_disk":
+                for code, severity, message in azure_disk_access_findings(change):
+                    add(code, severity, resource_id, message)
             if resource_type in {"google_compute_instance", "google_compute_instance_template"}:
                 enabled = metadata_boolean(after.get("metadata"), "serial-port-enable")
                 before = change.get("before")
