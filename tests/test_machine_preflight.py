@@ -28,7 +28,10 @@ MACHINES = {
             "name": "Standard_B1s",
             "resourceType": "virtualMachines",
             "locations": ["eastus"],
-            "capabilities": [{"name": "CpuArchitectureType", "value": "x64"}],
+            "capabilities": [
+                {"name": "CpuArchitectureType", "value": "x64"},
+                {"name": "EncryptionAtHostSupported", "value": "True"},
+            ],
             "restrictions": [],
         }
     ],
@@ -80,6 +83,7 @@ def test_machine_metadata_requires_opt_in_and_a_matching_target(provider, monkey
     assert report["machine_check"] == {
         "status": "metadata_confirmed",
         "architecture_compatible": True,
+        **({"host_encryption_compatible": True} if provider == "azure" else {}),
     }
     assert len(calls) == 2
     args, options = calls[1]
@@ -135,6 +139,7 @@ def test_arm_metadata_is_incompatible_with_current_x86_templates(provider, monke
     assert report["machine_check"] == {
         "status": "architecture_incompatible",
         "architecture_compatible": False,
+        **({"host_encryption_compatible": True} if provider == "azure" else {}),
     }
 
 

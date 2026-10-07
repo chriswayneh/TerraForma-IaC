@@ -702,13 +702,15 @@ byId("target-preflight-button").addEventListener("click", async () => {
     );
     if (report.machine_check?.status && !["not_checked", "not_applicable"].includes(report.machine_check.status)) {
       const machineMessages = {
-        metadata_confirmed: "The selected size passes this recipe's requested CPU, boot and networking metadata checks. Capacity, quotas, guest drivers, image and disk compatibility still need review.",
+        metadata_confirmed: "The selected size passes this recipe's requested CPU, boot, encryption and networking metadata checks. Subscription feature registration, capacity, quotas, guest drivers, image and disk compatibility still need review.",
         architecture_incompatible: "This size reports a CPU architecture that does not support the current x86 image templates. Choose a compatible size before planning.",
         architecture_unknown: "The metadata does not establish CPU architecture. Verify it against the selected x86 image before planning.",
         boot_features_incompatible: "This Azure size reports missing Gen2 or Trusted Launch support needed by the generated VM. Choose a supported size before planning.",
         boot_features_unknown: "The Azure metadata does not establish Gen2 support needed for this VM. Verify Gen2 and Trusted Launch support before planning; CPU compatibility alone is insufficient.",
         network_features_incompatible: "This Azure size reports no accelerated networking support. Disable that option or choose a supported size before planning.",
         network_features_unknown: "The Azure metadata does not establish accelerated networking support. Verify the selected size and guest-driver support before planning.",
+        encryption_features_incompatible: "This Azure size reports no encryption-at-host support requested by the recipe. Choose a supported size and verify subscription feature registration before planning.",
+        encryption_features_unknown: "The Azure metadata does not establish encryption-at-host support. Verify size support and subscription feature registration before planning.",
         restricted: "The selected size reports restrictions or deprecation. Review those in your cloud tools before planning.",
         not_found: "The selected size was not found in the returned metadata for this region or zone.",
         failed: "The VM-size read failed or exceeded its limits. Check CLI authentication, permissions and the selected size separately.",

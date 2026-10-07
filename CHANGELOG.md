@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Azure encryption-at-host support checks to the existing opt-in compute-size read when encryption is requested. Incompatible and unknown capabilities require review; malformed metadata fails closed, with subscription feature registration left for separate verification.
+
 - Added optional accelerated networking for standalone Azure Linux VMs, off by default, with shared questionnaire/export handling and support metadata in the existing opt-in size check. Incompatible, unknown and malformed capability responses remain distinct from deployment approval.
 
 - Added managed command cleanup with Windows jobs and POSIX process groups, including helper cleanup after normal completion, timeout and output overflow. Trusted-tool limitations and the Windows launch/attachment gap remain explicit.

@@ -16,6 +16,8 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
+- Azure encryption-at-host size metadata checks pass 18 supported/unsupported/missing/malformed/opt-out/API/CLI cases across standalone VMs and both web-tier recipes. These use mocked SKU responses and add no cloud request. Subscription feature registration and actual deployment remain unverified.
+
 - Optional Azure accelerated networking passes 16 contract/export/import/capability/API/CLI cases and four native OS/setting combinations. The shared size preflight reports support only when requested; missing, incompatible and malformed metadata remain visible. Guest drivers, capacity, cloud deployment and stop/deallocation operations were not exercised.
 
 - Managed command cleanup passes controlled child/grandchild tests for normal exit, timeout and output overflow on Windows, plus short commands, launch failure and attachment failure. The full local suite passes 1,027 tests with 149 native cases skipped. Windows uses the launched process's retained handle rather than reopening its PID. The Windows launch/attachment gap and detached POSIX children remain outside cleanup guarantees; this is not an untrusted-code sandbox.
