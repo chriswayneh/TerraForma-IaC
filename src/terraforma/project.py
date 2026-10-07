@@ -55,6 +55,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
             "subscription_id": "uuid",
             "index_html": "multiline",
         }.get(name, "text")
+        if name == "availability_zone" and config.provider == "aws":
+            kind = "optional_zone"
         contract.append(
             {
                 "name": name,
@@ -81,7 +83,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "windows_username": "Windows username for separate credential setup",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
-                    "availability_zone": "Azure availability zone",
+                    "availability_zone": "AWS availability zone (optional)"
+                    if config.provider == "aws"
+                    else "Azure availability zone",
                     "host_maintenance_policy": "GCP host maintenance behavior",
                     "automatic_restart": "Restart the VM after host failures or maintenance",
                     "enable_secure_boot": "Verify signed boot components (Secure Boot)",
@@ -176,7 +180,7 @@ def validate_ssh_public_key(value: str) -> None:
 
 
 def validate_input(name: str, value: str, kind: str):
-    if kind == "optional_ipv4_address" and value == "":
+    if kind in {"optional_ipv4_address", "optional_zone"} and value == "":
         return
     if not value or len(value.encode("utf-8")) > 16384:
         raise ValueError("Input must be nonempty and at most 16 KiB.")
@@ -237,6 +241,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
                 "ipv4_address": "Enter a valid IPv4 client address.",
                 "optional_ipv4_address": "Enter a valid IPv4 address, or leave it blank for cloud allocation.",
+                "optional_zone": "Enter a standard AWS availability zone name in the selected region, or leave it blank for automatic placement.",
                 "uuid": "Enter a valid subscription UUID.",
                 "ssh_public_key": "Enter a structurally valid OpenSSH Ed25519 or RSA public key; private keys are unsupported.",
             }.get(
@@ -329,6 +334,12 @@ def compile_project(specification: ProjectSpecification) -> dict:
         "virtual_machine",
         "windows_virtual_machine",
     }:
+        zone = effective["availability_zone"]
+        if zone and not re.fullmatch(re.escape(effective["region"]) + r"[a-z]", zone):
+            raise ProjectInputError(
+                "availability_zone",
+                "Choose a standard AWS availability zone name in the selected region, or leave it blank for automatic placement.",
+            )
         for prefix in ("boot_disk", "data_disk"):
             active = (prefix == "boot_disk" or effective["enable_data_disk"]) and effective[
                 f"{prefix}_type"
@@ -441,6 +452,8 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
             display = "Website page content provided"
         elif name == "private_ip_address" and value == "":
             display = "Allocated by the cloud provider"
+        elif definition["kind"] == "optional_zone" and value == "":
+            display = "Automatic placement (resolved at planning)"
         elif type(value) is bool:
             display = "Enabled" if value else "Disabled"
         else:

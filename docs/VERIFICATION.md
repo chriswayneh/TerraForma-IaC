@@ -1,5 +1,13 @@
 # Verification record
 
+## AWS standalone placement checkpoint
+
+- The default suite passes 1,494 tests with 238 optional/native/platform cases skipped. Ruff checks and formatting pass across 84 Python files; JavaScript syntax passes.
+- Thirty-one new regression cases cover Linux/Windows public/private placement, generation/import preservation, automatic defaults, reported-standard-zone filtering and subnet guards, region matching, unsupported inputs and exclusion from other workloads.
+- Four separately enabled Linux/Windows automatic/selected-zone configurations pass native provider validation and TFLint. Six cloud-free native Terraform console cases evaluate the generated ordering and guard expressions against mocked available-zone lists, including an absent requested zone and too few zones.
+- A temporary browser tab imported an AWS Windows project, generated successfully with blank automatic placement, selected `us-east-1b` and generated again. The summary retained the selected answer; the user's tab was preserved.
+- These checks establish expression/schema behavior only. Live zone availability, account mappings, capacity, deployment and replacement/recovery remain unverified. No cloud read, apply or provisioning was performed.
+
 ## Provider lock validation checkpoint
 
 - The default suite passes 1,463 tests with 228 optional/native/platform cases skipped. Ruff checks and formatting pass across 83 Python files; JavaScript syntax passes.

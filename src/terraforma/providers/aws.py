@@ -32,7 +32,50 @@ def build_aws(builder: TerraformGenerator) -> None:
     if builder.config.architecture_type == "static_site":
         build_static(builder)
         return
-    builder.main.append(block("data", "aws_availability_zones", "available", state="available"))
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+    zone_expression = "data.aws_availability_zones.available.names[count.index]"
+    zone_checks = []
+    if standalone:
+        builder.variable(
+            "availability_zone",
+            "AWS availability zone name, such as us-east-1b. Leave blank to use the first available standard zone reported for the account. Names are account-specific; zone IDs, Local Zones and Wavelength Zones are unsupported. The recipe still creates public/private subnets in two standard zones, with the selected zone first. Changing placement replaces subnets and can replace the VM, delete disks and change addresses. Review backups and the plan. Offline generation and size metadata checks do not confirm zone availability or capacity.",
+            "",
+            pattern="^$|^[a-z]{2,4}(?:-[a-z0-9]+)+-[0-9]+[a-z]$",
+        )
+        zone_expression = (
+            'var.availability_zone == "" ? data.aws_availability_zones.available.names[count.index] : '
+            "concat([var.availability_zone], [for zone in data.aws_availability_zones.available.names : zone if zone != var.availability_zone])[count.index]"
+        )
+        zone_checks = [
+            block(
+                "lifecycle",
+                children=[
+                    block(
+                        "precondition",
+                        condition=ref("length(data.aws_availability_zones.available.names) >= 2"),
+                        error_message="This network recipe requires two available standard AWS availability zones.",
+                    ),
+                    block(
+                        "precondition",
+                        condition=ref(
+                            'var.availability_zone == "" || contains(data.aws_availability_zones.available.names, var.availability_zone)'
+                        ),
+                        error_message="Choose a standard availability zone available to the authenticated account in the selected region, or leave placement blank.",
+                    ),
+                ],
+            )
+        ]
+    builder.main.append(
+        block(
+            "data",
+            "aws_availability_zones",
+            "available",
+            state="available",
+            children=[block("filter", name="opt-in-status", values=["opt-in-not-required"])]
+            if standalone
+            else [],
+        )
+    )
     builder.resource(
         "aws_vpc",
         cidr_block=ref("var.network_cidr")
@@ -48,8 +91,9 @@ def build_aws(builder: TerraformGenerator) -> None:
         count=2,
         vpc_id=ref("aws_vpc.this.id"),
         cidr_block=ref("cidrsubnet(aws_vpc.this.cidr_block, 8, count.index)"),
-        availability_zone=ref("data.aws_availability_zones.available.names[count.index]"),
+        availability_zone=ref(zone_expression),
         map_public_ip_on_launch=True,
+        children=zone_checks,
     )
     builder.resource(
         "aws_subnet",
@@ -57,7 +101,8 @@ def build_aws(builder: TerraformGenerator) -> None:
         count=2,
         vpc_id=ref("aws_vpc.this.id"),
         cidr_block=ref("cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)"),
-        availability_zone=ref("data.aws_availability_zones.available.names[count.index]"),
+        availability_zone=ref(zone_expression),
+        children=zone_checks,
     )
     builder.resource("aws_internet_gateway", vpc_id=ref("aws_vpc.this.id"))
     builder.resource(

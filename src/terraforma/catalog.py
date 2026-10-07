@@ -135,6 +135,13 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     else "Custom disk IOPS/throughput",
                 ]
             )
+        if standalone and config.provider == "aws":
+            fixed.append(
+                "The VM and optional data disk use the first generated subnet's zone. An optional standard availability zone name sets that first zone; a second standard zone is still required. AWS zone names are account-specific, and live availability/capacity remain unverified."
+            )
+            unsupported.extend(
+                ["AWS Local Zones", "AWS Wavelength Zones", "AWS availability zone IDs"]
+            )
         if standalone and config.provider == "azure":
             fixed.append(
                 "Optional managed data disks deny remote import/export and disable public network access. This recipe creates empty disks for attachment, not an export or private-endpoint workflow. OS disk access and backup policy require separate review."

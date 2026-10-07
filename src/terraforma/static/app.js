@@ -123,7 +123,7 @@ async function loadRecipeInputs() {
         input.max = definition.maximum;
         input.step = 1;
       }
-      input.required = !["boolean", "optional_ipv4_address"].includes(definition.kind);
+      input.required = !["boolean", "optional_ipv4_address", "optional_zone"].includes(definition.kind);
       input.maxLength = 16384;
       if (definition.pattern) input.pattern = definition.pattern;
       if (definition.kind === "boolean") {
@@ -137,6 +137,8 @@ async function loadRecipeInputs() {
         definition.description +
         (definition.kind === "optional_ipv4_address"
           ? " Optional; leave blank for cloud allocation."
+          : definition.kind === "optional_zone"
+          ? " Optional; leave blank for automatic placement."
           : definition.required_when
           ? " Required when this option is enabled."
           : definition.default !== null

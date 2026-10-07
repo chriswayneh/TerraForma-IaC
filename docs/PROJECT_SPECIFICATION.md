@@ -193,3 +193,7 @@ The public Azure database recipe accepts one client IPv4 address and rejects `0/
 The Configure step includes an expandable **Recipe defaults and limits** section. It identifies supported operating systems, fixed initialization/network layouts, capacity limits, and features outside the selected recipe. ZIP project guides include the same information.
 
 Use `terraforma catalog` for a readable catalog or `terraforma catalog --json-output` for structured metadata. The local API exposes the same catalog at `/api/catalog` and includes selected capabilities in input contracts and compiled project responses. Account and deployment checks remain explicitly unverified until a future account preflight workflow establishes them.
+
+## AWS standalone zone input
+
+`availability_zone` is optional for AWS Linux/Windows standalone VMs: an empty string keeps automatic placement, or a standard zone name must match the selected region. The shared form, terminal validation, saved specification and choice summary preserve both answers. The generated subnet preconditions check the account-reported available zone list and require two standard zones during planning. VM-size preflight remains regional and does not check the selected AWS zone. See [placement behavior and replacement limits](LINUX_VM.md#aws-availability-zone-placement).

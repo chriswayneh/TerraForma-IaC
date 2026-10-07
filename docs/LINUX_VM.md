@@ -23,7 +23,7 @@ Azure standalone VMs also offer **Enable Azure accelerated networking**, off by 
 | Decision | What you provide | What stays fixed |
 | --- | --- | --- |
 | Target | AWS account ID, Azure subscription UUID, or Google Cloud project ID; environment label | Credentials use the cloud provider's normal credential chain; identity remains unverified offline |
-| Placement | Region/location, plus zone for GCP; new private network address range | Subnet layout is derived by the recipe; existing-network attachment is not supported |
+| Placement | Region/location; optional AWS standard zone, Azure regional/zone 1–3, or GCP zone; new private network address range | Subnet layout is derived by the recipe; existing-network attachment is not supported |
 | Operating system | Supported provider-specific Linux choice; Azure version may be `latest` or an exact `Major.Minor.Build` | x86_64/AMD64 only; AWS accepts a matching AMI ID; GCP accepts a matching exact published name; latest remains available |
 | Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no autoscaling, custom images, or custom initialization |
 | AWS gp3 performance | Boot/data disk IOPS and throughput, shown for enabled gp3 disks | Defaults to included 3,000 IOPS/125 MiB/s; this template supports up to 16,000 IOPS/1,000 MiB/s and validates size/performance ratios |
@@ -131,3 +131,9 @@ For standalone GCP VMs, **Verify signed boot components (Secure Boot)** is enabl
 Secure Boot can prevent unsigned kernel modules or drivers from loading. Review your workload before changing the setting. Shielded configuration changes require a stopped VM; the recipe keeps automatic stopping disabled, so arrange a maintenance window in your Terraform workflow. Integrity monitoring does not configure an alert destination or a recovery procedure.
 
 The supported Debian 12 and Ubuntu 24.04 image families support Shielded VM according to Google's [operating system matrix](https://docs.cloud.google.com/compute/docs/images/os-details). Image versions resolve at planning time; account policy and workload compatibility remain unverified. See [Shielded VM behavior](https://docs.cloud.google.com/compute/shielded-vm/docs/shielded-vm) and the [Terraform resource settings](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance).
+
+## AWS availability zone placement
+
+Standalone Linux and Windows VMs accept an optional standard AWS availability zone name, such as `us-east-1b`. Leave it blank for the first available standard zone reported to the account. The selected name must match the entered region; names map differently between AWS accounts, and zone IDs, Local Zones and Wavelength Zones are unsupported. The VM and optional EBS disk use the first generated subnet zone. Public/private subnet pairs still require two standard zones; the selected zone comes first and another reported zone is used second.
+
+Terraform checks reported membership and the two-zone requirement when planning. Offline generation and the optional regional VM-size preflight do not verify zone availability or capacity. Changing placement can replace subnets, the VM and disks, lose data and change addresses. Regenerating an older project can also change placement if enabled Local Zones previously appeared in its zone list. Review the plan, backups and recovery before deploying. See the [AWS provider zone lookup](https://github.com/hashicorp/terraform-provider-aws/blob/v6.0.0/website/docs/d/availability_zones.html.markdown).

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added optional AWS standard availability zone placement for standalone Linux/Windows VMs, preserving automatic placement when blank. Subnet guards require two standard zones and reported membership; Local Zones/Wavelength Zones/zone IDs are unsupported. Regeneration or placement changes can replace resources and lose data; zone capacity remains unverified.
+
 - Existing provider locks are now read-only during validation initialization. Dependency/lock conflicts are reported without an upgrade or writable retry; projects without a lock retain explicit unpinned-validation guidance.
 
 - Validation copies now omit saved plans/plan JSON, backend configuration, local Terraform CLI configuration and crash logs using case-insensitive filename rules. Bounded regular-file reads enforce limits against actual copied bytes; raw HCL receives the same per-file limit. Other assets still require review.

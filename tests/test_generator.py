@@ -753,3 +753,12 @@ def test_native_azure_standalone_placement(native_directories, windows, zone):
     spec.recipe.is_public = True
     spec.inputs["allowed_cidr"] = "10.20.0.0/24"
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["", "us-east-1b"])))
+def test_native_aws_standalone_placement(native_directories, windows, zone):
+    from terraforma.project import compile_project
+    from tests.test_aws_placement import specification
+
+    spec = specification(windows, availability_zone=zone, enable_data_disk=True)
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])

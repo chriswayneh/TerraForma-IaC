@@ -33,6 +33,7 @@ The computer name is an explicit input, independent of the longer project/resour
 | Image | Amazon-published Windows Server 2022 English Full Base, x86_64/HVM |
 | Image version | Latest matching image at planning time, or a matching AMI ID in the selected region |
 | VM size | Configurable; defaults to `t3.small`. Memory, availability, licensing and price require review |
+| Placement | Optional standard AWS zone name; blank uses automatic placement. Two standard zones are required; changes can replace subnets, the VM and disks |
 | Boot disk | 50 GiB default, 30–2,048 GiB; gp3 or gp2 |
 | gp3 performance | Same guided IOPS/throughput limits and ratio checks as the Linux recipe |
 | Data disk | One optional new empty disk; initialization, formatting, backup and retention stay separate |
