@@ -2,16 +2,16 @@
 
 # TerraForma-IaC
 
-### Build cloud configuration by answering questions.
+### Answer questions. Get a clearer cloud blueprint.
 
-TerraForma-IaC helps IT professionals create Terraform files without having to learn Terraform syntax first. Run it on your own computer, choose the cloud system you need, and review the configuration it produces.
+TerraForma turns your answers into cloud setup files, explains what they describe, and helps check them before use. It makes a complicated, manual process easier and more repeatable.
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE)
 [![Status](https://img.shields.io/badge/release-v0.2.0-7ce2fe)](docs/ROADMAP.md)
 
-**First release:** [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0). A guided generator and local reviewer; full VM provisioning and automation are planned on the roadmap.
+**Available release:** [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0). Create, understand, and check setup files locally. Building cloud resources is planned.
 
 [Quick Start](#install-and-use) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Documentation](docs/README.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
@@ -21,15 +21,19 @@ TerraForma-IaC helps IT professionals create Terraform files without having to l
 
 ## What does it actually do?
 
-Terraform describes servers, networks, storage, and access rules in text files so a cloud setup can be reviewed, repeated, and kept in version control. TerraForma helps you write those files through a guided questionnaire. It is for people who understand IT infrastructure but are still learning how to express it in Terraform.
+Setting up a cloud system means deciding which servers, networks, storage, and access rules you need. TerraForma turns answers to straightforward questions into **cloud setup files**, explains what they describe, and helps you check them before use. The goal is to make a complicated, manual process easier and more repeatable.
 
-**Example:** you want a small web server on AWS. Choose AWS and “single web server,” give the project a name, and choose whether it should be reachable from the internet and which encryption options to use. TerraForma generates the Terraform configuration for the server, its network, and its access rules, and explains the resources involved. Azure and Google Cloud have their own supported templates.
+**For example:** you need a small server to host a website. Choose a supported cloud service, name the project, and decide whether people should be able to reach it from the internet. TerraForma produces files describing the server and its supporting network, shows an explanation, and lets you download the result for review.
 
-You can use a **local browser interface** or a **command-line questionnaire**. The output is ordinary, editable `main.tf`, `variables.tf`, and `outputs.tf` files; the browser can download them as a ZIP. With Terraform and TFLint installed, you can check the configuration's structure and common mistakes before taking it further.
+**Available now:** a guided interface that runs in your browser on your own computer, downloadable setup files, resource explanations, and optional local checks for configuration errors. You can also use it from a terminal.
 
-**What happens next is still your decision.** TerraForma currently generates, explains, exports, and validates configuration. It can also review a Terraform plan JSON file that you created separately. It does **not** run Terraform plan, apply, or destroy, and it does not create or delete cloud resources. Passing local checks does not prove that a setup will deploy successfully in your cloud account.
+**Planned:** broader setup choices and an approved workflow for building and managing cloud resources. TerraForma **does not create or delete cloud resources yet**. Passing its checks does not guarantee that a setup will work in a particular cloud account.
 
-The released **v0.2.0** provides the guided generator and local review tools. Development on `main` adds richer configuration questions, saved project specifications, project import, export receipts, and initial standalone Linux VM templates. Complete Linux/Windows VM configuration and an approved cloud-deployment workflow are future [roadmap milestones](docs/ROADMAP.md).
+### The technical details
+
+The setup files use **Terraform**, a tool that describes infrastructure in text files so a setup can be reviewed, reused, and tracked over time. TerraForma exports `main.tf`, `variables.tf`, and `outputs.tf` for AWS, Microsoft Azure, and Google Cloud. The terminal interface is a command-line interface (CLI); installed Terraform and TFLint tools provide local validation. An existing Terraform plan JSON can also be reviewed, but TerraForma does not run plan, apply, or destroy.
+
+The released **v0.2.0** provides guided generation and local review. Development on `main` adds richer configuration questions, saved project specifications, import, export receipts, and initial Linux virtual-machine templates. Complete Linux/Windows configuration and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
 
 ## Screenshots
 
