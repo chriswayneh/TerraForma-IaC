@@ -18,7 +18,7 @@ The next stages turn that workflow into a guided provisioning platform. Users de
 
 - Extend the initial shared project specification to account/environment identity and resource dependencies.
 - Extend the implemented recipe input contracts as the resource catalog grows.
-- Account/environment identity, capability metadata, and explicit unsupported choices.
+- Account/environment identity and account-specific capability preflight; the initial recipe catalog now discloses fixed and unsupported choices.
 - Artifact, credential, state, and execution controls needed before adding apply.
 
 The current release does not collect every VM setting or execute plan/apply/destroy operations. Cloud deployment and live OpenAI requests remain unverified.

@@ -18,6 +18,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
+from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
@@ -71,6 +72,7 @@ def generate_project(config: WizardConfig) -> dict:
         "required_inputs": inputs,
         "notes": notes,
         "guide": infrastructure_guide(config),
+        "capabilities": recipe_capabilities(config),
     }
 
 
@@ -123,7 +125,12 @@ def create_app() -> FastAPI:
             "schema_version": 1,
             "template_version": ProjectSpecification.model_fields["template_version"].default,
             "inputs": input_contract(config),
+            "capabilities": recipe_capabilities(config),
         }
+
+    @app.get("/api/catalog")
+    async def catalog():
+        return {"recipes": recipe_catalog()}
 
     @app.post("/api/projects/compile")
     async def project_compile(specification: ProjectSpecification):
@@ -204,6 +211,11 @@ def create_app() -> FastAPI:
         instructions.extend(["", "## What the configuration creates", ""])
         for component in project["guide"]["components"]:
             instructions.append(f"- {component['name']}: {component['explanation']}")
+        instructions.extend(["", "## Recipe defaults and limits", ""])
+        instructions.extend(f"- {choice}" for choice in project["capabilities"]["fixed_choices"])
+        instructions.append(
+            "Unsupported: " + ", ".join(project["capabilities"]["unsupported"]) + "."
+        )
         instructions.extend(
             [
                 "",

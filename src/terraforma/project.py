@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from terraforma.catalog import recipe_capabilities
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.plan_review import reject_constant, unique_object
 
@@ -109,10 +110,7 @@ def validate_input(name: str, value: str, kind: str):
 
 def validate_answer(definition: dict, value: str | int) -> None:
     if definition["kind"] == "integer":
-        if (
-            type(value) is not int
-            or not definition["minimum"] <= value <= definition["maximum"]
-        ):
+        if type(value) is not int or not definition["minimum"] <= value <= definition["maximum"]:
             raise ValueError("Numeric input is outside the supported whole-number range.")
     else:
         if not isinstance(value, str):
@@ -164,6 +162,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
         "files": files,
         "specification": specification.model_dump(),
         "input_contract": contract,
+        "capabilities": recipe_capabilities(specification.recipe),
         "required_secret_environment_variables": required_secrets,
         "verification": "Generated offline. Account permissions, region/image/SKU availability, quotas, and deployment remain unverified.",
     }

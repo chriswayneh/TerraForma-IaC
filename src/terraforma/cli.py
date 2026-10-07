@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
+from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import WizardConfig, write_configuration
 from terraforma.plan_review import load_and_review
 from terraforma.project import (
@@ -39,6 +40,9 @@ def ask(prompt):
 def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
     inputs = {}
     references = {}
+    click.echo("Recipe defaults and limits:")
+    for choice in recipe_capabilities(config)["fixed_choices"]:
+        click.echo(f"- {choice}")
     for definition in input_contract(config):
         if not definition["editable"]:
             continue
@@ -79,6 +83,22 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             )
         inputs[definition["name"]] = int(answer) if definition["kind"] == "integer" else answer
     return ProjectSpecification(recipe=config, inputs=inputs, secret_references=references)
+
+
+@main.command("catalog")
+@click.option("--json-output", is_flag=True, help="Print capability metadata as JSON.")
+def catalog_command(json_output: bool):
+    """List supported recipes and their fixed choices and limitations."""
+    recipes = recipe_catalog()
+    if json_output:
+        click.echo(json.dumps({"recipes": recipes}, indent=2))
+        return
+    for recipe in recipes:
+        click.secho(f"{recipe['id']} — {recipe['name']}", fg="cyan")
+        for choice in recipe["fixed_choices"]:
+            click.echo(f"  {choice}")
+        click.echo("  Unsupported: " + ", ".join(recipe["unsupported"]))
+    click.echo("Generation is offline. Account capabilities and deployment remain unverified.")
 
 
 @main.command()

@@ -60,6 +60,16 @@ async function loadRecipeInputs() {
   const result = await (await api("/api/input-contract", config)).json();
   contract = result.inputs;
   templateVersion = result.template_version;
+  byId("recipe-fixed-choices").replaceChildren(
+    ...result.capabilities.fixed_choices.map((choice) => {
+      const item = document.createElement("li");
+      item.textContent = choice;
+      return item;
+    }),
+  );
+  byId("recipe-unsupported").textContent =
+    "Not available in this recipe: " + result.capabilities.unsupported.join(", ") + ".";
+  byId("recipe-capabilities").hidden = false;
   const container = byId("recipe-inputs");
   container.replaceChildren();
   contract.forEach((definition) => {
