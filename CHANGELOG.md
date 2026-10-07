@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Administrator-network questions now explain the distinction between accepted generation inputs and the stricter local plan policy: a public `/32` can generate files but remains a blocking administrator-access finding during plan review.
+
 - Updated terminal provider/workload prompts to direct selection wording. Standalone VM guidance now explains administrator access and routing; HTTP/TLS guidance appears only for web-server recipes.
 
 - Improved recovery from failed or interrupted terminal generation. Cleanup attempts all newly created artifacts even when one removal fails, and the CLI identifies leftovers requiring review without exposing underlying error details.

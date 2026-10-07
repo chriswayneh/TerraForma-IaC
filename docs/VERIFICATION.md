@@ -1,5 +1,10 @@
 # Verification record
 
+## Administrator access guidance checkpoint
+
+- Network-input, plan-review and AWS/Azure/GCP Windows regression tests pass 234 cases with one optional native case skipped. Existing input acceptance and policy decisions are unchanged; question descriptions explain that a public `/32` accepted for generation remains blocked by local administrator-access policy.
+- Generation still does not approve deployment or establish a private routed access path.
+
 ## Terminal workload guidance checkpoint
 
 - The CLI/artifact regression run passes 38 cases with two Unix permission cases skipped on Windows. Linux and Windows VM questionnaire tests generate real project files and verify routed-access guidance without a claim that the VM serves HTTP. The existing web-server test retains HTTP/TLS guidance.

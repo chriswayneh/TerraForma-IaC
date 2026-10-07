@@ -18,6 +18,8 @@ On Windows PowerShell 5.1, ensure the redirected JSON file is UTF-8 rather than 
 
 ## Checks available now
 
+Standalone VM generation accepts a private IPv4 administrator network or one public IPv4 address with `/32`. The plan reviewer uses a stricter rule: administrator access from outside RFC1918/ULA private ranges is blocked, even for a single public address. A valid questionnaire answer therefore does not guarantee a policy pass. Choose a private access design and establish its routed path separately; the generator does not provide a VPN or bastion. The current reviewer has no public-address exception or approval override.
+
 - Deletes, replacements, and removal from state are blocked pending separate destructive review.
 - Incomplete/failed plans and failed or unresolved Terraform checks are blocked.
 - AWS security-group rules, standalone AWS ingress rules, Azure network security rules, and GCP firewall rules are checked for inbound SSH, RDP, and Windows remote-management ports from outside RFC1918/ULA private ranges.
