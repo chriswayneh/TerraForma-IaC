@@ -798,6 +798,23 @@ def test_native_azure_refreshed_windows_offer(native_directories, public, versio
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "public,version",
+    list(itertools.product([False, True], ["latest", "windows-server-2022-dc-core-v20261001"])),
+)
+def test_native_gcp_windows_core(native_directories, public, version):
+    from terraforma.project import compile_project
+    from tests.test_gcp_windows_vm import specification
+
+    spec = specification(
+        public=public,
+        os_image="windows-server-2022-core",
+        image_version=version,
+        admin_access_method="iap_tunnel",
+    )
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

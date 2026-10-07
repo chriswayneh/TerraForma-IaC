@@ -222,7 +222,7 @@ class TerraformGenerator:
                         if self.config.provider == "aws"
                         else "Windows Server 2022 Gen2 from MicrosoftWindowsServer, using x86_64. "
                         if self.config.provider == "azure"
-                        else "Windows Server 2022 from windows-cloud, using x86_64. "
+                        else "Windows Server 2022 desktop or Core from windows-cloud, using x86_64. Core omits the standard desktop; verify application and administration-tool compatibility. Switching installation options replaces the VM. "
                     )
                     if self.config.architecture_type == "windows_virtual_machine"
                     else "Linux image from the supported publisher catalog, using x86_64/AMD64. "
@@ -234,7 +234,7 @@ class TerraformGenerator:
                 else LINUX_IMAGE_CHOICES[self.config.provider][0],
                 choices=("windows-server-2022", "windows-server-2022-core")
                 if self.config.architecture_type == "windows_virtual_machine"
-                and self.config.provider == "aws"
+                and self.config.provider in {"aws", "gcp"}
                 else ("windows-server-2022",)
                 if self.config.architecture_type == "windows_virtual_machine"
                 else LINUX_IMAGE_CHOICES[self.config.provider],

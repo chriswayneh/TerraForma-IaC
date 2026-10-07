@@ -168,17 +168,17 @@ def build_gcp(builder: TerraformGenerator) -> None:
     )
     builder.variable(
         "image_version",
-        "Use latest to resolve windows-cloud/windows-2022 at planning time, or enter an exact published Windows Server 2022 Datacenter image name beginning windows-server-2022-dc-v. The publisher project stays fixed to windows-cloud. Verify image availability, deprecation and compatibility separately. Changing the image can replace the VM and delete boot-disk data; pinning does not install security patches."
+        "Use latest to resolve the selected windows-cloud/windows-2022 or windows-2022-core family, or enter an exact published Windows Server 2022 Datacenter image name matching the selected desktop/Core option. The publisher project stays fixed to windows-cloud. Verify image availability, deprecation and compatibility separately. Changing the image can replace the VM and delete boot-disk data; pinning does not install security patches."
         if windows
         else "Use latest to resolve the selected GCP image family at planning time, or enter an exact published Debian 12 Bookworm / Ubuntu 24.04 Noble AMD64 image name. The publisher project stays fixed. Verify availability, deprecation and compatibility before planning. Changing the image can replace a VM and destroy boot-disk data; pinning does not apply security patches automatically.",
         "latest",
-        pattern="^(latest|windows-server-2022-dc-v[0-9]{8,10})$"
+        pattern="^(latest|windows-server-2022-dc-(core-)?v[0-9]{8,10})$"
         if windows
         else "^(latest|debian-12-bookworm-v[0-9]{8}|ubuntu-2404-noble(-amd64)?-v[0-9]{8})$",
     )
     image_source = (
         ref(
-            'var.image_version == "latest" ? {"windows-server-2022" = "windows-cloud/windows-2022"}[var.os_image] : "windows-cloud/${var.image_version}"'
+            'var.image_version == "latest" ? {"windows-server-2022" = "windows-cloud/windows-2022", "windows-server-2022-core" = "windows-cloud/windows-2022-core"}[var.os_image] : "windows-cloud/${var.image_version}"'
         )
         if windows
         else ref(
@@ -191,7 +191,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
             block(
                 "precondition",
                 condition=ref(
-                    'var.image_version == "latest" || startswith(var.image_version, "windows-server-2022-dc-v")'
+                    'var.image_version == "latest" || (var.os_image == "windows-server-2022-core" ? startswith(var.image_version, "windows-server-2022-dc-core-v") : startswith(var.image_version, "windows-server-2022-dc-v"))'
                     if windows
                     else 'var.image_version == "latest" || (var.os_image == "debian-12" ? startswith(var.image_version, "debian-12-bookworm-v") : startswith(var.image_version, "ubuntu-2404-noble"))'
                 ),

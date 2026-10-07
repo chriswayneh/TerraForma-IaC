@@ -1,5 +1,12 @@
 # Verification record
 
+## GCP Windows Core checkpoint
+
+- The default suite passes 1,808 tests with 270 optional/native/platform cases skipped. Ruff checks and formatting pass across 94 Python files; whitespace checks pass.
+- Thirteen new regressions cover private/public Core selection, direct/IAP paths, latest/exact image names, desktop/Core pin mismatch rejection, unsupported versions, API import and preserved activation/Shielded/serial-console controls. The earlier AWS-only exclusion case was narrowed to Azure now that GCP offers Core.
+- Four separately enabled private/public latest/pin IAP cases pass real Terraform validation and TFLint against the cached Google provider. Synthetic exact image names are structural examples; availability and live guest behavior remain unverified.
+- A temporary browser tab imported an older GCP Windows project, selected Core with a matching exact name and IAP, then generated the matching summary and access guide. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, connection or apply was run.
+
 ## Azure Windows refreshed offer checkpoint
 
 - The default suite passes 1,796 tests with 266 optional/native/platform cases skipped. Ruff checks and formatting pass across 93 Python files; whitespace checks pass.

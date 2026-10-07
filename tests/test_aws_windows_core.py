@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
 from tests.test_azure_windows_vm import specification as azure_specification
-from tests.test_gcp_windows_vm import specification as gcp_specification
 from tests.test_windows_vm import specification
 
 
@@ -52,7 +51,7 @@ def test_other_windows_images_are_rejected(value):
     assert error.value.field == "os_image"
 
 
-@pytest.mark.parametrize("factory", [azure_specification, gcp_specification])
+@pytest.mark.parametrize("factory", [azure_specification])
 def test_other_providers_do_not_offer_aws_core(factory):
     contract = {item["name"]: item for item in input_contract(factory().recipe)}
     assert "windows-server-2022-core" not in contract["os_image"]["choices"]

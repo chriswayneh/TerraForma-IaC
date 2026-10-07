@@ -62,7 +62,7 @@ Private VMs require an existing routed access path such as a VPN or bastion; thi
 
 The image query retains the Amazon owner, selected Windows Server 2022 Full/Core Base name, x86_64 and HVM filters even when an AMI ID is pinned. Image pins do not install security updates and image changes can replace the VM. The selected base image does not add a configurable Secure Boot or TPM guarantee. Verify account policy, image availability, guest compatibility and costs before planning.
 
-Choose **Windows Server 2022 Core Base** for the initial AWS Core recipe. Core omits the standard desktop and needs compatible applications and administration tools. [Microsoft explains the installation differences](https://learn.microsoft.com/en-us/windows-server/get-started/getting-started-with-server-with-desktop-experience), including the lack of in-place conversion between Core and Desktop Experience. Switching the image replaces the VM; review backups, disk retention and encryption-key lifecycle first. The query uses the English Core Base naming pattern documented in [AWS Windows AMI history](https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/ec2-windows-ami-version-history.html). This option does not add TPM/STIG/container images or verify that a matching image is currently available in your region. Other providers retain their existing Windows choices.
+Choose **Windows Server 2022 Core Base** for the initial AWS Core recipe. Core omits the standard desktop and needs compatible applications and administration tools. [Microsoft explains the installation differences](https://learn.microsoft.com/en-us/windows-server/get-started/getting-started-with-server-with-desktop-experience), including the lack of in-place conversion between Core and Desktop Experience. Switching the image replaces the VM; review backups, disk retention and encryption-key lifecycle first. The query uses the English Core Base naming pattern documented in [AWS Windows AMI history](https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/ec2-windows-ami-version-history.html). This option does not add TPM/STIG/container images or verify that a matching image is currently available in your region. Azure retains its existing Windows installation choice.
 
 AWS publishes [Windows AMI version history](https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/ec2-windows-ami-version-history.html), including the 30 GiB root volume used by Core and Full Base images. A larger disk does not replace guest filesystem verification or backups.
 
@@ -72,7 +72,7 @@ The standard Windows VM exposes host maintenance (`MIGRATE` or `TERMINATE`) and 
 
 | Choice | Supported behavior |
 | --- | --- |
-| Image | Latest `windows-cloud/windows-2022` family or a supported exact Windows Server 2022 Datacenter image name from `windows-cloud`; x86_64 |
+| Image | Latest `windows-cloud/windows-2022` or `windows-2022-core` family, or a matching supported exact Datacenter image name from `windows-cloud`; x86_64 |
 | VM size | Configurable, default `e2-standard-2`; availability, licensing and price require review |
 | Boot disk | 64 GiB default/minimum through 2,048 GiB; pd-balanced, pd-standard or pd-ssd |
 | Data disk | One optional new empty persistent disk; no initialization, backup or retention policy |
@@ -83,7 +83,9 @@ The standard Windows VM exposes host maintenance (`MIGRATE` or `TERMINATE`) and 
 | Boot integrity | Secure Boot enabled by default and configurable; vTPM/integrity monitoring remain enabled |
 | Protection | Deletion protection enabled by default; automatic stopping for updates disabled |
 
-Enter `latest` or a published image name beginning `windows-server-2022-dc-v` followed by an 8–10 digit version suffix. Custom publisher projects, Server Core and other Windows versions are outside this initial input. Select the exact name from the official `windows-cloud` image catalog; TerraForma checks its supported shape, not its existence, license or boot compatibility. Google's [Windows VM guide](https://docs.cloud.google.com/compute/docs/instances/windows/creating-managing-windows-instances) explains image selection. Pinning does not install patches, and changing an image can replace the VM and delete boot data. Review backups and the Terraform plan first.
+Enter `latest` or a published image name beginning `windows-server-2022-dc-v` for desktop images or `windows-server-2022-dc-core-v` for Core, followed by an 8–10 digit version suffix. The selected installation option and exact pin must match. Custom publisher projects and other Windows versions are outside this initial input. Select the exact name from the official `windows-cloud` image catalog; TerraForma checks its supported shape, not its existence, license or boot compatibility. Google's [Windows VM guide](https://docs.cloud.google.com/compute/docs/instances/windows/creating-managing-windows-instances) explains image selection. Pinning does not install patches, and changing an image can replace the VM and delete boot data. Review backups and the Terraform plan first.
+
+Choose **Windows Server 2022 Core** for Google's published `windows-2022-core` family, documented in [supported operating systems](https://docs.cloud.google.com/compute/docs/images/os-details). Core omits the standard desktop; verify application and administration-tool compatibility. The existing private/public network choices, IAP option, external guest credential workflow, activation routing and Shielded VM controls are preserved. Live boot, activation and access remain unverified.
 | Workload identity | Optional existing user-managed service account; IAM permissions require separate review |
 | Outputs | VM path/name/zone/address, requested username and optional disk ID |
 

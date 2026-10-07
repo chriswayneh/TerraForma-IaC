@@ -137,10 +137,14 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 **generator.input_constraints[name],
                 "choice_labels": {
                     "os_image": {
-                        "windows-server-2022": "Windows Server 2022 Full Base (desktop)",
-                        "windows-server-2022-core": "Windows Server 2022 Core Base",
+                        "windows-server-2022": "Windows Server 2022 Full Base (desktop)"
+                        if config.provider == "aws"
+                        else "Windows Server 2022 (desktop)",
+                        "windows-server-2022-core": "Windows Server 2022 Core Base"
+                        if config.provider == "aws"
+                        else "Windows Server 2022 Core",
                     }
-                    if config.provider == "aws"
+                    if config.provider in {"aws", "gcp"}
                     and config.architecture_type == "windows_virtual_machine"
                     else {},
                     "admin_access_method": {
@@ -407,7 +411,11 @@ def compile_project(specification: ProjectSpecification) -> dict:
         and effective.get("image_version", "latest") != "latest"
     ):
         prefix = (
-            "windows-server-2022-dc-v"
+            (
+                "windows-server-2022-dc-core-v"
+                if effective["os_image"] == "windows-server-2022-core"
+                else "windows-server-2022-dc-v"
+            )
             if specification.recipe.architecture_type == "windows_virtual_machine"
             else "debian-12-bookworm-v"
             if effective["os_image"] == "debian-12"

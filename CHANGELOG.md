@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- GCP Windows standalone VMs now offer the published Server 2022 Core family or a matching supported exact image name. Desktop remains the default; input and Terraform guards reject mismatched desktop/Core pins. Existing IAP, activation and boot controls are preserved.
+
 - Azure Windows generation now references the refreshed windowsserver2022 offer after Microsoft's legacy-offer deprecation. The form and generated guidance warn that regeneration can replace existing VMs, old pins need revalidation and application dependencies must be reviewed. Existing guests are not migrated.
 
 - Added an AWS Windows Server 2022 Core Base image choice alongside the existing Full Base default. Amazon publisher, selected image-name, x86_64 and HVM filters remain in place for latest or pinned AMIs; Core desktop/compatibility and replacement risks are explained.
