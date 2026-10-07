@@ -13,6 +13,8 @@
 - Review existing plan JSON in the browser with bounded input, one review at a time, sanitized reports, and explicit manual-review status.
 - Require an explicit target AWS account and generate a provider account allowlist; carry unverified account/subscription/project references into previews and project guides.
 - Pin CI/composite setup actions to verified official commit references and require Python formatting checks in CI.
+- Carry an environment label through the shared questionnaire, project target, generated tags/labels, and export guide with explicit coverage and isolation limits.
+- Remove Terraform variable values and the OpenAI key from native validation subprocess environments.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

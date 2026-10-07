@@ -58,6 +58,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "gcp_project_id": "Google Cloud project ID",
                     "subscription_id": "Azure subscription ID",
                     "aws_account_id": "Target AWS account ID",
+                    "environment": "Environment label",
                     "ssh_public_key": "Administrator SSH public key (Ed25519 or RSA)",
                     "database_client_ip": "Database client IPv4 address",
                     "index_html": "Website HTML",
@@ -214,6 +215,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
                 ]
             ),
             "identity_verified": False,
+            "environment": effective["environment"],
         },
         "required_secret_environment_variables": required_secrets,
         "verification": "Generated offline. Account permissions, region/image/SKU availability, quotas, and deployment remain unverified.",

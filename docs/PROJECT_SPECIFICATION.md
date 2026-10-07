@@ -16,6 +16,7 @@ A project specification records a recipe and its non-secret Terraform inputs. Th
     "enable_encryption": true
   },
   "inputs": {
+    "environment": "development",
     "aws_account_id": "123456789012",
     "region": "us-west-2",
     "index_html": "<html><body><h1>Hello</h1></body></html>"
@@ -52,6 +53,12 @@ The contract is derived from the actual variables declared by the existing recip
 Existing compute recipes now expose VM size, boot-disk size, and supported disk classes. Boot sizes are whole numbers in a bounded range: 20–2048 GiB for AWS/GCP and 30–2048 GiB for Azure. These are the current recipe limits, not universal cloud limits. Both the contract and generated Terraform enforce them. The selected image can impose a higher minimum, and live account/SKU/storage compatibility still requires preflight.
 
 Generation is offline. Provider permissions, account identity, live image/SKU availability, quotas, and deployment are not established by the input checks. Schema/template versions are recorded; the current development workflow does not yet promise cross-version migration or reproducible generation across changing development commits.
+
+## Environment labels
+
+Every recipe exposes a defaulted `environment` input, using 3–20 lowercase letters, digits, or hyphens. The contract and Terraform enforce the same format. AWS uses provider default tags for supported resources; Azure tags the resource group only, whose tags do not automatically propagate to its resources; GCP labels the generated VM/template, Cloud SQL settings, or storage bucket. Network/supporting resources without label support are not covered.
+
+The label appears in compiled target metadata and the project guide. It does not isolate credentials or state and does not change resource names. Use distinct project names for distinct environments until the multi-environment/state workflow is implemented.
 
 ## Recipe capabilities
 

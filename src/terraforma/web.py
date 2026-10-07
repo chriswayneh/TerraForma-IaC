@@ -252,7 +252,7 @@ def create_app() -> FastAPI:
                     "",
                     "## Target account",
                     "",
-                    f"{project['target']['provider']}: {project['target']['account_reference']}. Identity remains unverified offline.",
+                    f"{project['target']['provider']}: {project['target']['account_reference']}. Environment label: {project['target']['environment']}. Identity remains unverified offline.",
                 ]
             )
         instructions.extend(["", "## What the configuration creates", ""])

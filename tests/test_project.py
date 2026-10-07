@@ -43,6 +43,7 @@ def test_browser_import_round_trip_preserves_answers_and_export():
             "provider": "aws",
             "account_reference": "123456789012",
             "identity_verified": False,
+            "environment": "development",
         }
 
 
@@ -149,6 +150,7 @@ def test_compilation_answers_required_inputs_and_keeps_secrets_external():
         "provider": "azure",
         "account_reference": specification.inputs["subscription_id"],
         "identity_verified": False,
+        "environment": "development",
     }
 
 
@@ -303,7 +305,7 @@ def test_api_contract_compilation_and_private_errors():
         headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
         contract = client.post("/api/input-contract", json=recipe().model_dump(), headers=headers)
         assert contract.status_code == 200
-        assert len(contract.json()["inputs"]) == 4
+        assert len(contract.json()["inputs"]) == 5
         specification = ProjectSpecification(
             recipe=recipe(), inputs={"aws_account_id": "123456789012", "region": "us-west-2"}
         ).model_dump()

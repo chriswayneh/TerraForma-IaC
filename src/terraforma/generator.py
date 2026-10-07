@@ -157,6 +157,17 @@ class TerraformGenerator:
             )
         )
         self.variable("project_name", "Resource name prefix.", self.config.project_name)
+        self.variable(
+            "environment",
+            {
+                "aws": "Environment tag applied through AWS provider default tags to supported resources.",
+                "azure": "Environment tag on the new resource group; tags are not inherited by its resources.",
+                "gcp": "Environment label on generated compute, database, or storage resources that support labels.",
+            }[self.config.provider]
+            + " Use a distinct project name per environment; this label does not isolate state or change resource names.",
+            "development",
+            pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$",
+        )
         getattr(self, f"_{self.config.provider}")()
         return {
             "main.tf": "\n\n".join(item.render() for item in self.main) + "\n",
@@ -177,6 +188,12 @@ class TerraformGenerator:
                 "aws",
                 region=ref("var.region"),
                 allowed_account_ids=[ref("var.aws_account_id")],
+                children=[
+                    block(
+                        "default_tags",
+                        tags={"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
+                    )
+                ],
             )
         )
         if self.config.architecture_type == "static_site":
@@ -527,7 +544,10 @@ class TerraformGenerator:
             )
         )
         self.resource(
-            "azurerm_resource_group", name=ref("var.project_name"), location=ref("var.location")
+            "azurerm_resource_group",
+            name=ref("var.project_name"),
+            location=ref("var.location"),
+            tags={"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
         )
         common = {
             "resource_group_name": ref("azurerm_resource_group.this.name"),
@@ -994,6 +1014,7 @@ class TerraformGenerator:
             self.resource(
                 "google_compute_instance_template",
                 name_prefix=ref('"${var.project_name}-"'),
+                labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
                 machine_type=ref("var.machine_type"),
                 tags=["terraforma-web"],
                 metadata_startup_script=startup,
@@ -1096,6 +1117,7 @@ class TerraformGenerator:
             self.resource(
                 "google_compute_instance",
                 name=ref("var.project_name"),
+                labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
                 machine_type=ref("var.machine_type"),
                 zone=ref("var.zone"),
                 tags=["terraforma-web"],
@@ -1157,6 +1179,7 @@ class TerraformGenerator:
         settings = block(
             "settings",
             tier="db-custom-2-7680",
+            user_labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
             availability_type="REGIONAL",
             disk_size=20,
             children=[
@@ -1203,6 +1226,7 @@ class TerraformGenerator:
         self.resource(
             "google_storage_bucket",
             name=ref('"${var.gcp_project_id}-${var.project_name}-${random_id.suffix.hex}"'),
+            labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
             location=ref("var.region"),
             uniform_bucket_level_access=True,
             public_access_prevention="inherited" if self.config.is_public else "enforced",

@@ -121,12 +121,14 @@ class ValidationSandbox:
     def _execute(self, arguments: list[str]) -> tuple[int, str]:
         environment = os.environ.copy()
         for name in list(environment):
-            if name.startswith("TF_CLI_ARGS") or name in {
+            normalized = name.upper()
+            if normalized.startswith(("TF_CLI_ARGS", "TF_VAR_")) or normalized in {
                 "TF_DATA_DIR",
                 "TF_WORKSPACE",
                 "TF_LOG",
                 "TF_LOG_PATH",
                 "TFLINT_LOG",
+                "OPENAI_API_KEY",
             }:
                 environment.pop(name)
         environment.update(

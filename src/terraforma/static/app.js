@@ -340,7 +340,7 @@ function renderProject(result) {
   byId("target-description").hidden = !result.target;
   if (result.target) {
     const targetName = {aws: "AWS account", azure: "Azure subscription", gcp: "Google Cloud project"}[result.target.provider];
-    byId("target-description").textContent = `Target ${targetName}: ${result.target.account_reference}. Identity has not been verified offline.`;
+    byId("target-description").textContent = `Target ${targetName}: ${result.target.account_reference}. Environment label: ${result.target.environment}. Identity has not been verified offline.`;
   }
   byId("project-notes").replaceChildren(
     ...result.notes.map((text) => {

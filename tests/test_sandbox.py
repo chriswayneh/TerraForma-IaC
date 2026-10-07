@@ -73,10 +73,14 @@ def test_timeout_is_a_failure(monkeypatch):
 def test_environment_overrides_cannot_change_commands(monkeypatch):
     monkeypatch.setenv("TF_CLI_ARGS_init", "-backend=true")
     monkeypatch.setenv("TF_DATA_DIR", "outside")
+    monkeypatch.setenv("TF_VAR_database_password", "private-database-value")
+    monkeypatch.setenv("OPENAI_API_KEY", "private-ai-value")
     monkeypatch.setattr("terraforma.sandbox.shutil.which", lambda name: f"/tools/{name}")
 
     def run(arguments, **kwargs):
         assert "TF_CLI_ARGS_init" not in kwargs["env"]
+        assert "TF_VAR_database_password" not in kwargs["env"]
+        assert "OPENAI_API_KEY" not in kwargs["env"]
         assert Path(kwargs["env"]["TF_DATA_DIR"]).parent == Path(kwargs["cwd"])
         return subprocess.CompletedProcess(arguments, 0, "", "")
 
