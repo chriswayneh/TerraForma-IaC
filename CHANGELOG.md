@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update pinned GitHub checkout/Python setup actions to official Node 24 releases and disable checkout credential persistence in CI.
+
 - Ask for deletion protection on standalone AWS/GCP VMs, enabled by default, and explain the configuration change required before deliberate deletion or replacement.
 
 - Bound validation command output to 512 KiB per stream, fail on overflow, and disable terminal input while retaining partial timeout diagnostics.

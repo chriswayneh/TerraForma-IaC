@@ -4,12 +4,14 @@ CI and the reusable Action reference setup actions by full commit SHA. The follo
 
 | Action | Selected tag | Pinned commit |
 | --- | --- | --- |
-| actions/checkout | v4 | [11d5960](https://github.com/actions/checkout/commit/11d5960a326750d5838078e36cf38b85af677262) |
-| actions/setup-python | v5 | [a26af69](https://github.com/actions/setup-python/commit/a26af69be951a213d495a4c3e4e4022e16d87065) |
+| actions/checkout | v7.0.1 | [3d3c42e](https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1) |
+| actions/setup-python | v7.0.0 | [5fda3b9](https://github.com/actions/setup-python/commit/5fda3b95a4ea91299a34e894583c3862153e4b97) |
 | hashicorp/setup-terraform | v3 | [b9cd54a](https://github.com/hashicorp/setup-terraform/commit/b9cd54a3c349d3f38e8881555d616ced269862dd) |
 | terraform-linters/setup-tflint | v4 | [90f302c](https://github.com/terraform-linters/setup-tflint/commit/90f302c255ef959cbfb4bd10581afecdb7ece3e6) |
 
 Update the workflow and composite Action together after reviewing the upstream change. Verify the selected commit in the official repository and run all CI jobs, including the installed-wheel and composite-Action smoke checks. A tag name alone does not identify immutable source.
+
+Checkout and Python setup now use Node 24; self-hosted runners need Actions Runner v2.327.1 or later. Authenticated Git commands inside Docker container actions require v2.329.0 or later with the selected checkout version. Project CI uses GitHub-hosted runners and disables checkout credential persistence. See the official [checkout release](https://github.com/actions/checkout/releases/tag/v7.0.1) and [Python setup release](https://github.com/actions/setup-python/releases/tag/v7.0.0).
 
 Terraform 1.14.0 and TFLint 0.61.0 are selected explicitly for native checks. Provider constraints remain in the generated Terraform; initialization downloads provider packages. Preserve and review Terraform's dependency lock file in deployment projects. Setup-action commit pins do not independently certify the binaries, downloaded provider packages, or linter plugins.
 
