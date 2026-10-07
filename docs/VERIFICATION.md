@@ -1,5 +1,11 @@
 # Verification record
 
+## Storage encryption guidance checkpoint
+
+- The existing 11 CLI regressions pass after moving the provider-specific explanation before the encryption question. Ruff checks/formatting and JavaScript syntax pass.
+- A temporary browser tab checked AWS standalone VM, database, web-server and static-site guidance. Local AWS Windows generation with root encryption off and a data disk enabled produced `encrypted = false` for the boot disk and `encrypted = true` for the data disk, matching the explanation. No cloud resources were created.
+- The same tab displayed the new EBS capability consent guidance with cloud reads disabled. Temporary tabs were closed, the user's tab was preserved and original sidebar spacing remains unchanged.
+
 ## AWS EBS encryption capability checkpoint
 
 - The default suite passes 1,569 tests with 240 optional/native/platform cases skipped. Ruff checks and formatting pass across 86 Python files; JavaScript syntax passes.

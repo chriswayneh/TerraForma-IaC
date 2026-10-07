@@ -301,11 +301,6 @@ def wizard(target_dir: Path | None):
         )
     )
     public = ask(questionary.confirm("Allow access from the public internet?", default=False))
-    encryption = ask(
-        questionary.confirm(
-            "Enable storage encryption (provider defaults still apply)?", default=True
-        )
-    )
     if provider == "azure":
         click.echo(
             "Azure encrypts storage by default. For compute, this option also enables encryption at host, which requires subscription support."
@@ -314,6 +309,19 @@ def wizard(target_dir: Path | None):
         click.echo(
             "This cloud service enforces encryption at rest even when this option is disabled."
         )
+    elif architecture == "secure_database":
+        click.echo(
+            "For AWS databases, this enables storage encryption with a customer-managed KMS key. Turning it off requests unencrypted storage; review account policy and replacement risks."
+        )
+    else:
+        click.echo(
+            "For AWS compute, this encrypts VM boot disks with a customer-managed KMS key. Turning it off requests unencrypted boot disks. Optional standalone data disks remain encrypted; review account policy and replacement risks."
+        )
+    encryption = ask(
+        questionary.confirm(
+            "Enable storage encryption (provider defaults still apply)?", default=True
+        )
+    )
     if architecture == "secure_database":
         click.echo(
             "Database passwords are required variables. Databases have backups and deletion protection."

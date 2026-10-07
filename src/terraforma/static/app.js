@@ -345,7 +345,11 @@ function updateGuidance() {
     ? "This service always encrypts data with provider-managed keys."
     : config.provider === "azure"
       ? "Also enable encryption at host. Requires subscription and VM-size support."
-      : "Enable customer-managed KMS encryption for your stored data.";
+      : config.architecture_type === "secure_database"
+        ? "Encrypt database storage with a customer-managed KMS key. Turning this off requests unencrypted storage. Changes can require replacement; review the plan and account policy."
+        : ["virtual_machine", "windows_virtual_machine"].includes(config.architecture_type)
+          ? "Encrypt the boot disk with a customer-managed KMS key. Turning this off requests an unencrypted boot disk; optional data disks remain encrypted. Review account policy and replacement risks."
+          : "Encrypt VM boot disks with a customer-managed KMS key. Turning this off requests unencrypted boot disks. Review account policy and replacement risks.";
   const notes = {
     windows_virtual_machine: config.provider === "gcp" ? "RDP is restricted to your administrator network. Set the requested user password separately through Google Cloud after provisioning; TerraForma does not create the account or collect its password. Private VMs need routed access and Windows activation prerequisites." : config.provider === "azure" ? "RDP is restricted to your administrator network. Supply TF_VAR_admin_password externally. AzureRM stores the password in state and saved plans; protect them before use. TerraForma configures no protected backend." : "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
     virtual_machine: "SSH is restricted to your administrator network. AWS/Azure need your public key; Google uses OS Login IAM access. Private VMs require a routed access path. No application is installed.",

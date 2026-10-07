@@ -76,6 +76,17 @@ Opt-in checks run in a temporary working directory with closed stdin, a default 
 
 Exit `0` means the check was skipped or the CLI reported a matching target; other check outcomes return exit `1`. `target_confirmed` establishes only the documented CLI-reported target check. Terraform can use different credentials or cloud endpoints, and executable/endpoint trust, resource permissions, regions, images, SKUs, quotas and connectivity remain unverified. The report includes the normalized specification digest, never grants approval, and does not alter saved questionnaires, initialize Terraform, or run plan/apply/destroy. Treat it as a separate, limited preflight rather than a provisioning gate.
 
+### Storage encryption choices
+
+The **Storage encryption** choice has provider-specific effects. Review this before changing it; offline generation cannot establish account policy or service defaults, and changes can replace resources.
+
+| Recipe | Effect of the choice |
+| --- | --- |
+| AWS compute | Enables boot-disk encryption with a generated customer-managed KMS key. Off requests unencrypted boot disks; optional standalone data disks remain encrypted. Account defaults or policy can still enforce encryption. |
+| AWS database | Enables database storage encryption with a generated customer-managed KMS key. Off requests unencrypted database storage. |
+| Azure compute | Adds encryption at host to provider-managed disk encryption; requires reported size support and subscription feature registration. |
+| GCP, static sites and Azure databases | Provider-managed encryption remains enforced; this choice does not configure a customer-managed key for those recipes. |
+
 ### Optional VM size metadata
 
 For Azure standalone VMs, the same SKU response also checks reported `HyperVGenerations` and `TrustedLaunchDisabled`. The generated Gen2 image and retained vTPM require Trusted Launch support even when Secure Boot is disabled. A reported unsupported size yields `boot_features_incompatible`; missing generation evidence yields `boot_features_unknown`. This follows [Microsoft's SKU guidance](https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch-faq#how-can-i-find-vm-sizes-that-support-trusted-launch) and adds no extra cloud request. Image support, capacity, quotas and effective cloud settings remain unverified.

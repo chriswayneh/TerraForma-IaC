@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarified the storage encryption choice in the web UI and before the terminal question: disabling it requests unencrypted AWS boot/database storage, while standalone data disks retain encryption. Provider-specific defaults and account policy still apply.
+
 - AWS standalone VM size preflight now checks reported EBS encryption support when the generated root or data disk requires encryption. Missing or unsupported capabilities remain unresolved and prevent a subsequent zone offering read; no extra cloud request is added.
 
 - The optional AWS VM metadata preflight now reads the selected availability zone's instance-type offering after target and CPU checks pass. Incomplete, malformed and failed responses remain unresolved; an offering does not verify capacity, quotas, deployment permissions or grant approval.
