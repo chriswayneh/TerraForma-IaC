@@ -2,7 +2,7 @@
 
 Available on `main` during v0.3 development. The v0.2.0 release does not include this workflow.
 
-A project specification records a recipe and its non-secret Terraform inputs. The browser asks about each declared variable in the Configure step. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers.
+A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.
 
 ```json
 {
@@ -40,7 +40,7 @@ Unknown input names, private keys, secret values in declared sensitive fields, m
 
 ## Current scope
 
-The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still hardcoded in those recipes, such as all image, disk, OS, network, and availability choices. The complete VM adapter work remains on the roadmap.
+The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still hardcoded in those recipes, such as all image, OS, network, and availability choices. The complete VM adapter work remains on the roadmap.
 
 Existing compute recipes now expose VM size, boot-disk size, and supported disk classes. Boot sizes are whole numbers in a bounded range: 20–2048 GiB for AWS/GCP and 30–2048 GiB for Azure. These are the current recipe limits, not universal cloud limits. Both the contract and generated Terraform enforce them. The selected image can impose a higher minimum, and live account/SKU/storage compatibility still requires preflight.
 

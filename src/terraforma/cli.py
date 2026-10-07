@@ -11,9 +11,15 @@ from pydantic import ValidationError
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
-from terraforma.generator import TerraformGenerator, WizardConfig, write_configuration
+from terraforma.generator import WizardConfig, write_configuration
 from terraforma.plan_review import load_and_review
-from terraforma.project import compile_project, input_contract, load_specification
+from terraforma.project import (
+    ProjectSpecification,
+    compile_project,
+    input_contract,
+    load_specification,
+    validate_answer,
+)
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -28,6 +34,51 @@ def ask(prompt):
     if answer is None:
         raise click.Abort()
     return answer
+
+
+def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
+    inputs = {}
+    references = {}
+    for definition in input_contract(config):
+        if not definition["editable"]:
+            continue
+        if definition["sensitive"]:
+            references[definition["name"]] = definition["environment_variable"]
+            click.echo(
+                f"{definition['label']}: supply {definition['environment_variable']} externally before planning."
+            )
+            continue
+
+        def valid(text, definition=definition):
+            try:
+                value = int(text) if definition["kind"] == "integer" else text
+                validate_answer(definition, value)
+                return True
+            except (ValueError, TypeError):
+                return "Enter a valid value for this field; review its description and supported range."
+
+        click.echo(definition["description"])
+        if definition["kind"] == "integer":
+            click.echo(f"Whole number: {definition['minimum']}–{definition['maximum']}.")
+        if definition["choices"]:
+            answer = ask(
+                questionary.select(
+                    definition["label"] + ":",
+                    choices=definition["choices"],
+                    default=definition["default"],
+                )
+            )
+        else:
+            answer = ask(
+                questionary.text(
+                    definition["label"] + ":",
+                    default=str(definition["default"]) if definition["default"] is not None else "",
+                    multiline=definition["kind"] == "multiline",
+                    validate=valid,
+                )
+            )
+        inputs[definition["name"]] = int(answer) if definition["kind"] == "integer" else answer
+    return ProjectSpecification(recipe=config, inputs=inputs, secret_references=references)
 
 
 @main.command()
@@ -101,12 +152,17 @@ def wizard(target_dir: Path | None):
             is_public=public,
             enable_encryption=encryption,
         )
-        directory = write_configuration(
-            TerraformGenerator(config).generate(), target_dir or Path.cwd() / name
-        )
-    except (OSError, ValueError, ValidationError) as error:
+        specification = collect_recipe_inputs(config)
+        project = compile_project(specification)
+        directory = write_configuration(project["files"], target_dir or Path.cwd() / name)
+    except OSError as error:
         raise click.ClickException(str(error)) from error
+    except (ValueError, ValidationError):
+        raise click.ClickException(
+            "Project inputs are invalid or incompatible. Review the recipe's input contract; values are omitted from this error."
+        ) from None
     click.secho(f"Created main.tf, variables.tf, and outputs.tf in {directory}", fg="green")
+    click.echo(project["verification"])
     click.echo(f'Validate with: terraforma run --dir "{directory}"')
 
 

@@ -24,7 +24,18 @@ def test_json_diagnostics_are_readable():
 
 
 def test_wizard_writes_selected_configuration(tmp_path, monkeypatch):
-    answers = iter(["gcp", "example", "static_site", False, True])
+    answers = iter(
+        [
+            "gcp",
+            "example",
+            "static_site",
+            False,
+            True,
+            "example-project",
+            "us-central1",
+            "<h1>Hello</h1>",
+        ]
+    )
     prompt = lambda *args, **kwargs: Mock(ask=lambda: next(answers))
     monkeypatch.setattr("terraforma.cli.questionary.select", prompt)
     monkeypatch.setattr("terraforma.cli.questionary.text", prompt)
@@ -33,6 +44,59 @@ def test_wizard_writes_selected_configuration(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     assert '"google_storage_bucket"' in (tmp_path / "main.tf").read_text()
     assert 'public_access_prevention = "enforced"' in (tmp_path / "main.tf").read_text()
+    assert 'default = "example-project"' in (tmp_path / "variables.tf").read_text()
+
+
+def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
+    answers = iter(
+        [
+            "aws",
+            "example",
+            "single_web_server",
+            False,
+            True,
+            "us-west-2",
+            "10.0.0.0/16",
+            "t3.small",
+            "100",
+            "gp2",
+        ]
+    )
+    prompt = lambda *args, **kwargs: Mock(ask=lambda: next(answers))
+    for name in ("select", "text", "confirm"):
+        monkeypatch.setattr(f"terraforma.cli.questionary.{name}", prompt)
+    result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    variables = (tmp_path / "variables.tf").read_text()
+    assert 'default = "us-west-2"' in variables
+    assert 'default = "t3.small"' in variables
+    assert "default = 100" in variables
+    assert 'default = "gp2"' in variables
+
+
+def test_wizard_never_prompts_for_password(tmp_path, monkeypatch):
+    answers = iter(["aws", "example", "secure_database", False, True, "us-east-1", "10.0.0.0/16"])
+
+    def prompt(label, **kwargs):
+        assert "password" not in label.lower()
+        return Mock(ask=lambda: next(answers))
+
+    for name in ("select", "text", "confirm"):
+        monkeypatch.setattr(f"terraforma.cli.questionary.{name}", prompt)
+    result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    assert "TF_VAR_database_password" in result.output
+    assert 'variable "database_password"' in (tmp_path / "variables.tf").read_text()
+
+
+def test_cancelled_recipe_question_writes_nothing(tmp_path, monkeypatch):
+    answers = iter(["aws", "example", "single_web_server", False, True, None])
+    prompt = lambda *args, **kwargs: Mock(ask=lambda: next(answers))
+    for name in ("select", "text", "confirm"):
+        monkeypatch.setattr(f"terraforma.cli.questionary.{name}", prompt)
+    result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
+    assert result.exit_code == 1
+    assert not list(tmp_path.iterdir())
 
 
 def test_failure_uses_ai_and_preserves_failure_exit(tmp_path, monkeypatch):

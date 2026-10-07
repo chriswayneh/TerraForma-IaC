@@ -107,6 +107,21 @@ def validate_input(name: str, value: str, kind: str):
         )
 
 
+def validate_answer(definition: dict, value: str | int) -> None:
+    if definition["kind"] == "integer":
+        if (
+            type(value) is not int
+            or not definition["minimum"] <= value <= definition["maximum"]
+        ):
+            raise ValueError("Numeric input is outside the supported whole-number range.")
+    else:
+        if not isinstance(value, str):
+            raise TypeError("This input requires a string.")
+        validate_input(definition["name"], value, definition["kind"])
+        if definition["choices"] and value not in definition["choices"]:
+            raise ValueError("Input is not one of the supported choices.")
+
+
 def compile_project(specification: ProjectSpecification) -> dict:
     contract = input_contract(specification.recipe)
     definitions = {item["name"]: item for item in contract}
@@ -114,18 +129,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
         definition = definitions.get(name)
         if definition is None or definition["sensitive"] or not definition["editable"]:
             raise ValueError("Project input is unsupported, secret, or controlled by the recipe.")
-        if definition["kind"] == "integer":
-            if (
-                type(value) is not int
-                or not definition["minimum"] <= value <= definition["maximum"]
-            ):
-                raise ValueError("Numeric input is outside the supported whole-number range.")
-        else:
-            if not isinstance(value, str):
-                raise TypeError("This input requires a string.")
-            validate_input(name, value, definition["kind"])
-            if definition["choices"] and value not in definition["choices"]:
-                raise ValueError("Input is not one of the supported choices.")
+        validate_answer(definition, value)
     for name, reference in specification.secret_references.items():
         definition = definitions.get(name)
         if definition is None or not definition["sensitive"] or reference != f"TF_VAR_{name}":
