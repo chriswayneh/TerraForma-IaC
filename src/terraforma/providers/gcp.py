@@ -204,6 +204,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
     )
     disk = block(
         "boot_disk",
+        **{"auto_delete": ref("var.delete_boot_disk_with_vm")} if standalone else {},
         children=[
             block(
                 "initialize_params",

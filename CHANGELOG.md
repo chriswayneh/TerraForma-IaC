@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added explicit AWS/GCP standalone boot-disk deletion or retention choices, preserving deletion by default. The form and generated guidance explain separate data-disk/key lifecycle, AWS KMS recovery requirements and GCP replacement naming conflicts. No live retention or recovery was run.
+
 - GCP Windows standalone VMs accept latest or a supported exact Windows Server 2022 Datacenter image name from the fixed windows-cloud publisher. Input and Terraform guards reject other image variants; availability and cloud boot remain unverified.
 
 - GCP standalone Linux/Windows questionnaires now offer an IAP tunnel connection path, with one targeted administrator port and the unused direct network question hidden. Direct access remains the default; IAM grants and guest authentication remain outside generation. Added connection guidance without opening live tunnels.

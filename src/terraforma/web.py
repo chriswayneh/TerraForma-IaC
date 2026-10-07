@@ -200,6 +200,19 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         "gcp",
     }:
         protection = payload.inputs.get("protect_vm", True)
+        if payload.inputs.get("delete_boot_disk_with_vm", True) is False:
+            project["notes"].append(
+                "Boot disk retention is requested. Storage charges continue; recovery, "
+                "reattachment and cleanup remain separate. This does not retain data disks, "
+                "keys or other project resources. "
+                + (
+                    "Preserve the AWS KMS key separately before teardown; key deletion can make retained encrypted disks unreadable."
+                    if payload.recipe.provider == "aws" and payload.recipe.enable_encryption
+                    else "A retained GCP boot disk can conflict with replacement disk naming; review recovery and naming before replacement."
+                    if payload.recipe.provider == "gcp"
+                    else "Retention does not create backups or verify recovery."
+                )
+            )
         project["notes"].append(
             "VM deletion protection is "
             + ("enabled" if protection else "disabled")

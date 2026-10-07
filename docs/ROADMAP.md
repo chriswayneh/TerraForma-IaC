@@ -98,6 +98,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - Azure Windows offers automatic platform patch assessment separately from automatic OS installation; guest health, assessment and installation success remain unverified.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.
 - Boot/data disk size, type, encryption, managed-key references, and deletion behavior.
+- AWS/GCP standalone boot disks expose a deletion/retention choice with existing deletion defaults. Data disks and encryption keys remain separate; live retention and restoration are unverified.
 - New or existing networks/subnets, private/public addresses, explicit inbound rules, and egress choices.
 - SSH public keys, identity-based access, or references to external secret mechanisms for Windows administration. The [Azure Windows credential design](AZURE_WINDOWS_DESIGN.md) documents the implemented external password reference, native provider state retention, and protected state controls still needed before managed deployment.
 - Tags/labels, initialization scripts from trusted local files, availability choices, and explanations of cost drivers.

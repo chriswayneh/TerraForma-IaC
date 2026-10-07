@@ -764,6 +764,18 @@ def test_native_gcp_windows_exact_image(native_directories, public):
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "provider,windows,delete",
+    list(itertools.product(["aws", "gcp"], [False, True], [False, True])),
+)
+def test_native_standalone_boot_retention(native_directories, provider, windows, delete):
+    from terraforma.project import compile_project
+    from tests.test_boot_disk_retention import specification
+
+    spec = specification(provider, windows, delete_boot_disk_with_vm=delete)
+    assert_native_files(native_directories[provider], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

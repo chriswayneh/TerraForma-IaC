@@ -264,6 +264,7 @@ def build_aws(builder: TerraformGenerator) -> None:
     }
     if standalone:
         disk.update(
+            delete_on_termination=ref("var.delete_boot_disk_with_vm"),
             iops=ref('var.boot_disk_type == "gp3" ? var.boot_disk_iops : null'),
             throughput=ref('var.boot_disk_type == "gp3" ? var.boot_disk_throughput : null'),
         )

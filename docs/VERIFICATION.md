@@ -1,5 +1,12 @@
 # Verification record
 
+## Standalone boot disk lifecycle checkpoint
+
+- The default suite passes 1,781 tests with 258 optional/native/platform cases skipped. Ruff checks and formatting pass across 92 Python files; JavaScript syntax passes.
+- Twenty-six new regressions cover AWS/GCP Linux/Windows deletion/retention values, unchanged defaults, separate data-disk scope, boolean validation, unrelated recipe exclusion and API import. Generated warnings distinguish AWS encrypted-key preservation from GCP replacement naming.
+- Eight separately enabled AWS/GCP Linux/Windows deletion/retention cases pass real Terraform validation and TFLint against cached providers. No cloud request, apply, deletion or recovery was run.
+- A temporary browser tab imported an older AWS Windows project, confirmed the enabled deletion default, selected retention and generated the matching summary and KMS warning. The tab was closed; original sidebar spacing and the user's tab were preserved. Live disk retention, key preservation and recovery remain unverified.
+
 ## GCP Windows image pin checkpoint
 
 - The default suite passes 1,755 tests with 250 optional/native/platform cases skipped. Ruff checks and formatting pass across 91 Python files; whitespace checks pass.

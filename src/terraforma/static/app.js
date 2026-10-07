@@ -21,7 +21,7 @@ const inputSections = [
   ["Cloud target", ["environment", "aws_account_id", "subscription_id", "gcp_project_id", "region", "location", "zone", "availability_zone"]],
   ["Image and capacity", ["os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_count", "computer_name", "license_type"]],
   ["Network and access", ["network_cidr", "private_ip_address", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
-  ["Storage", ["enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching"]],
+  ["Storage", ["enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
   ["Operations and identity", ["enable_workload_identity", "workload_identity", "detailed_monitoring", "cpu_credit_mode", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
   ["Workload inputs", []],
 ];

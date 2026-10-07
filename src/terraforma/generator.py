@@ -251,6 +251,19 @@ class TerraformGenerator:
                 prefix_maximum=28 if self.config.provider == "gcp" else 20,
             )
             self._data_disk_inputs()
+            if self.config.provider in {"aws", "gcp"}:
+                self.variable(
+                    "delete_boot_disk_with_vm",
+                    "Delete the boot disk when this VM is deleted. Enabled preserves the existing provider default and can permanently remove boot data during deletion or replacement. Disabled requests retention of the old disk, with ongoing storage charges and separate recovery/cleanup. Retention is not a backup, does not reattach the disk to a replacement VM and does not retain separately managed data disks, keys or network resources. "
+                    + (
+                        "AWS encrypted boot disks use a project-managed KMS key; destroying that key can make a retained disk unreadable. Arrange key preservation separately before teardown. "
+                        if self.config.provider == "aws"
+                        else "A retained GCP boot disk can conflict with a replacement disk of the same name. Resolve recovery and naming separately before replacement. "
+                    )
+                    + "Review the Terraform plan and recovery requirements before changing this setting; actual lifecycle behavior remains unverified.",
+                    True,
+                    type_name="bool",
+                )
             octet = r"(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])"
             self.variable(
                 "private_ip_address",

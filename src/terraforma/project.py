@@ -103,6 +103,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "aws"
                     else "Existing service account email",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
+                    "delete_boot_disk_with_vm": "Delete boot disk when VM is deleted",
                     "boot_disk_type": "Boot disk type",
                     "boot_disk_caching": "Boot disk host caching",
                     "boot_disk_iops": "Boot disk IOPS (gp3)",
