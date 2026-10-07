@@ -53,3 +53,14 @@ jobs:
       - run: python -m pytest tests/test_generator.py -q
         env:
           TERRAFORMA_NATIVE_TESTS: '1'
+      - name: Prepare a cloud-free Action smoke configuration
+        run: >-
+          python -c
+          "from pathlib import Path;
+          root = Path('.verification/action-smoke');
+          root.mkdir(parents=True, exist_ok=True);
+          (root / 'main.tf').write_text('terraform {\n  required_version = \"' + '>= 1.6' + '\"\n}\n', encoding='utf-8')"
+      - name: Verify the composite Action
+        uses: ./
+        with:
+          target_dir: .verification/action-smoke

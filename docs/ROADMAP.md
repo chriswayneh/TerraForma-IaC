@@ -6,19 +6,20 @@ TerraForma-IaC is becoming a local infrastructure workspace for configuring, pro
 
 The platform will support a growing, explicitly documented resource catalog. It will not claim to provision every resource or accept arbitrary AI-generated commands as trusted automation. Unsupported requests should be identified clearly and become catalog work, rather than silently producing an incomplete configuration.
 
-## Current checkpoint · v0.2.0.dev0
+## First release · v0.2.0
 
-Implemented: local sky-blue web UI, terminal wizard, twelve provider/workload templates, file previews and downloads, resource explanations, optional saved non-secret choices, Terraform/TFLint validation, optional AI diagnostics, and Windows/Linux CI.
+Implemented: local sky-blue web UI, terminal wizard, twelve provider/workload templates, file previews and downloads, resource explanations, optional saved non-secret choices, Terraform/TFLint validation, optional AI diagnostics, initial local plan review, bounded API requests, and Windows/Linux CI.
 
-Limits: this is a generator and structural validator. It does not collect all VM settings, execute plans, apply infrastructure, manage state, or orchestrate Terragrunt. Templates have structural validation evidence; live cloud deployment and live OpenAI requests remain unverified. No release is tagged.
+Limits: this is a generator and structural validator. It does not collect all VM settings, execute plans, apply infrastructure, manage state, or orchestrate Terragrunt. Templates have structural validation evidence; live cloud deployment and live OpenAI requests remain unverified. The first release covers the existing guided workflow, not the planned full provisioning platform.
 
 ## Phase 1 · Security and project foundation · v0.3
 
-Status: next implementation phase.
+Status: started. Initial local plan review, bounded API requests, and CLI AI opt-in are implemented; the project specification and execution foundation remain planned.
 
 - Define a versioned project specification shared by the CLI, UI, generator, and automation API.
 - Record provider, account identity, environment, resource selections, dependencies, and template versions without persisting credentials.
 - Add explicit capability metadata so supported, unsupported, and unverified configurations are distinguishable.
+- Maintain one input contract per catalog entry: each configurable field has a plain-language question, type, validation, conditional dependencies, an explained default or required answer, and a sensitive-value handling rule. The UI and generated variables use this same contract so questions cannot drift from output.
 - Add local policy review for Terraform plan JSON: destructive changes, broad network access, missing protections, and unresolved policy coverage.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
@@ -41,6 +42,8 @@ Status: planned after the foundation.
 - Existing web-server recipes become compositions of the same VM/network primitives.
 
 Exit criteria: users can supply every required input for each documented VM pattern through the guided workflow. Structural/lint tests cover supported combinations. Dedicated test-account deployments verify Linux/Windows creation, access, and teardown; unsupported combinations are rejected explicitly.
+
+Input-completeness gate: a user who understands provisioning can finish a supported VM configuration without editing HCL. Every supported operational choice is collected or explicitly defaulted, every generated variable has a supplied value/default/external-secret reference, and no hidden hardcoded image, size, network, or administrator choice is presented as configurable. Region/size/image availability is checked against the selected account before planning when credentials are available; offline generation labels those checks as outstanding.
 
 ## Phase 3 · Networks, storage, and identity · v0.5
 
@@ -105,6 +108,7 @@ Status: planned; add individually verified capabilities rather than one universa
 - Add supported serverless and scheduled-job patterns.
 - Publish a compatibility matrix covering providers, resource families, OS/image support, execution modes, and verification status.
 - Allow reviewed module extensions with pinned sources and explicit trust boundaries; arbitrary imports remain a trusted-user operation.
+- Reuse free Terraform templates/modules where suitable, preserving license notices and source provenance. Review maintenance, provider compatibility, required inputs, access/encryption defaults, and execution hooks before adoption. Pin reviewed sources; free availability is not evidence of safety or compatibility.
 
 Exit criteria: each catalog entry declares required inputs, policy coverage, cost drivers, tests, deployment evidence, and teardown/recovery instructions. Experimental entries are labeled visibly.
 

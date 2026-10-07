@@ -19,6 +19,7 @@ from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_s
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
+from terraforma.request_limits import RequestSizeLimitMiddleware
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -79,6 +80,7 @@ def create_app() -> FastAPI:
         openapi_url=None,
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
+    app.add_middleware(RequestSizeLimitMiddleware)
     token = secrets.token_urlsafe(32)
     validation_lock = asyncio.Lock()
     static = Path(__file__).parent / "static"

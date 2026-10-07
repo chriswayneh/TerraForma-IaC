@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.generator import TerraformGenerator, WizardConfig, write_configuration
+from terraforma.plan_review import load_and_review
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -150,7 +151,7 @@ def readable_error(raw_output: str) -> str:
 )
 @click.option(
     "--ai/--no-ai",
-    default=True,
+    default=False,
     help="Explain failures through OpenAI when OPENAI_API_KEY is set; logs are redacted before transmission.",
 )
 @click.option(
@@ -182,6 +183,43 @@ def run(target_dir: Path, ai: bool, timeout: float):
         except DiagnosticsError as error:
             warning_card("AI explanation unavailable", str(error))
     raise click.exceptions.Exit(1)
+
+
+@main.command("review-plan")
+@click.option(
+    "--file",
+    "plan_file",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--json-output", is_flag=True, help="Print the report as JSON without raw plan values."
+)
+def review_plan_command(plan_file: Path, json_output: bool):
+    """Review a Terraform show -json export locally without executing infrastructure."""
+    try:
+        report = load_and_review(plan_file)
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "Unable to review the file: use a readable, valid Terraform plan JSON export within the documented limits."
+        ) from None
+    if json_output:
+        click.echo(json.dumps(report, indent=2))
+    else:
+        click.secho(f"Plan review: {report['status']}", fg="yellow", bold=True)
+        click.echo(f"Policy {report['policy_version']} | JSON SHA256 {report['artifact_sha256']}")
+        click.echo("Actions: " + json.dumps(report["actions"], sort_keys=True))
+        for finding in report["findings"][:100]:
+            click.echo(
+                f"[{finding['severity']}] {finding['resource_id']} · {finding['code']}: {finding['message']}"
+            )
+        if len(report["findings"]) > 100:
+            click.echo(
+                "Further findings omitted from console output; use --json-output for the complete report."
+            )
+        click.echo(report["limitations"])
+    if report["status"] == "blocked":
+        raise click.exceptions.Exit(1)
 
 
 @main.command()

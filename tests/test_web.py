@@ -56,6 +56,20 @@ def test_mutation_requires_session_token(client):
     )
 
 
+def test_api_bounds_actual_request_body(client):
+    request_headers = {**headers(client), "Content-Type": "application/json"}
+    response = client.post("/api/generate", content=b"x" * (64 * 1024 + 1), headers=request_headers)
+    assert response.status_code == 413
+    assert "Request exceeds" in response.json()["detail"]
+
+
+def test_api_bounds_streamed_body_without_content_length(client):
+    request_headers = {**headers(client), "Content-Type": "application/json"}
+    chunks = (b"x" * 1024 for _ in range(65))
+    response = client.post("/api/generate", content=chunks, headers=request_headers)
+    assert response.status_code == 413
+
+
 def test_cross_origin_and_untrusted_host_are_rejected(client):
     request_headers = {**headers(client), "Origin": "https://external.example"}
     assert client.post("/api/generate", json=CONFIG, headers=request_headers).status_code == 403

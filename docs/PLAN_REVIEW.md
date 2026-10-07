@@ -1,0 +1,39 @@
+# Local plan review
+
+The first security-foundation component reviews an existing Terraform plan JSON export locally. It does not create a plan, use cloud credentials, call AI, or run apply.
+
+For a trusted project that you have configured and authenticated separately:
+
+```text
+terraform plan -out=review.tfplan
+terraform show -json review.tfplan > review.tfplan.json
+terraforma review-plan --file review.tfplan.json
+```
+
+On Windows PowerShell 5.1, ensure the redirected JSON file is UTF-8 rather than UTF-16; PowerShell 7 uses UTF-8 for native output redirection. Use a terminal/version that preserves the Terraform JSON bytes. Keep both the binary plan and JSON export private: they can contain passwords, variables, and state values. The repository ignores `*.tfplan` and `*.tfplan.json`; choose these names or add an equivalent ignore rule for your own naming convention.
+
+## Checks available now
+
+- Deletes, replacements, and removal from state are blocked pending separate destructive review.
+- Incomplete/failed plans and failed or unresolved Terraform checks are blocked.
+- AWS security-group rules, standalone AWS ingress rules, Azure network security rules, and GCP firewall rules are checked for inbound SSH, RDP, and Windows remote-management ports from outside RFC1918/ULA private ranges.
+- AWS EC2/EBS disks explicitly disabling encryption are blocked.
+- AWS RDS storage explicitly disabling encryption, publicly accessible databases, and missing deletion protection are blocked.
+- Unknown planned values and resources without specific rules are reported as review gaps.
+- Malformed policy inputs fail closed when a supported rule cannot be evaluated.
+
+These initial checks are intentionally limited. They do not account for the complete routing graph, every IAM condition, provider defaults, organization policy, TLS, or every resource attribute. Even recognized resource types have partial policy coverage. The report always states `approval_granted: false`; no report authorizes provisioning.
+
+## Results and automation
+
+```text
+terraforma review-plan --file review.tfplan.json --json-output
+```
+
+Exit `1` means blocking findings exist. Exit `0` means there are no findings classified as blocking by these initial checks; the status remains `manual_review_required`. A parse/read failure is a nonzero command error. Do not use exit `0` as an apply gate.
+
+The report contains a policy version, SHA256 digest of the JSON bytes, action counts, and findings. It does not include raw before/after values or resource instance keys. Resources are identified using their type and a hash of the address, so keys containing private text do not appear in the report. The digest identifies this JSON export; it does not bind approval to a binary plan or verify account identity.
+
+The reviewer accepts Terraform JSON format `1.x`, up to 8 MiB and 2,000 resource changes. Unknown major versions, duplicate JSON keys, non-finite numbers, state exports, and event-stream JSON are rejected. It reads files locally and makes no network request. Protect the original artifacts even though the report omits their values.
+
+See the [roadmap](ROADMAP.md) for the future state, plan-integrity, and approval controls required before product-managed apply is supported.

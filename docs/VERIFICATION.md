@@ -1,13 +1,14 @@
 # Verification record
 
-Development checkpoint: `0.2.0.dev0`, October 6, 2026. This is not a release certification.
+First release: `0.2.0`, October 6, 2026. This record distinguishes structural/local checks from unverified cloud behavior.
 
 ## Local checks
 
-- 106 unit/API/generator/guidance tests pass on Windows with Python 3.14.
+- 133 unit/API/generator/guidance/plan-review tests pass on Windows with Python 3.14.
 - The 48 optional native template cases are skipped in the normal unit command. They were separately verified against Terraform 1.14.0 and TFLint 0.61.0 with installed AWS/Azure/Google provider schemas.
 - Python lint and formatting checks pass. Browser JavaScript passes `node --check`.
 - A built wheel contains the HTML, JavaScript, and both CSS files.
+- A real Terraform 1.14.0 plan using the built-in `terraform_data` resource was exported and reviewed locally; no apply or cloud API call was made.
 - The CLI returns exit 0 for a valid configuration and exit 1 for an invalid configuration.
 - The browser completed guided generation, native validation, and ZIP download. The later onboarding flow displays required inputs and a resource guide.
 - Desktop, 390-pixel, and 320-pixel layouts were inspected. Dark/light theme switching was exercised; the narrow layout had no horizontal document overflow.

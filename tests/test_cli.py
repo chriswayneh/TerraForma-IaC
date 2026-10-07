@@ -51,7 +51,7 @@ def test_failure_uses_ai_and_preserves_failure_exit(tmp_path, monkeypatch):
             return {"friendly_explanation": "Clear reason", "recommended_fix": "Exact fix"}
 
     monkeypatch.setattr("terraforma.cli.AIDiagnosticsEngine", Engine)
-    result = CliRunner().invoke(main, ["run", "--dir", str(tmp_path)])
+    result = CliRunner().invoke(main, ["run", "--dir", str(tmp_path), "--ai"])
     assert result.exit_code == 1
     assert "Clear reason" in result.output and "Exact fix" in result.output
 

@@ -9,6 +9,10 @@ inputs:
     description: 'The target directory containing the HCL scripts to validate'
     required: false
     default: '.'
+  explain_with_ai:
+    description: 'Explicitly send redacted failed validation logs to OpenAI (true or false)'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -40,5 +44,10 @@ runs:
       env:
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         TERRAFORMA_TARGET_DIR: ${{ inputs.target_dir }}
+        TERRAFORMA_EXPLAIN_WITH_AI: ${{ inputs.explain_with_ai }}
       run: |
-        terraforma run --dir "$TERRAFORMA_TARGET_DIR"
+        case "$TERRAFORMA_EXPLAIN_WITH_AI" in
+          true) terraforma run --dir "$TERRAFORMA_TARGET_DIR" --ai ;;
+          false) terraforma run --dir "$TERRAFORMA_TARGET_DIR" --no-ai ;;
+          *) echo 'explain_with_ai must be true or false'; exit 1 ;;
+        esac

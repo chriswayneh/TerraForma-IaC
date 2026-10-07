@@ -9,9 +9,9 @@ A lightweight local workspace for creating Terraform through a guided questionna
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE)
-[![Status](https://img.shields.io/badge/status-development-7ce2fe)](docs/ROADMAP.md)
+[![Status](https://img.shields.io/badge/release-v0.2.0-7ce2fe)](docs/ROADMAP.md)
 
-**Development version:** `0.2.0.dev0`. The local visual workspace is being verified before the first release.
+**First release:** [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0). A guided generator and local reviewer; full VM provisioning and automation are planned on the roadmap.
 
 [Quick Start](#install-and-use) · [Getting Started](docs/GETTING_STARTED.md) · [Workloads](#generated-infrastructure) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
@@ -35,7 +35,7 @@ Generation works without cloud credentials, an OpenAI key, Terraform, or TFLint.
 
 ## Install and use
 
-Requires Python 3.11+, Terraform 1.6+ and TFLint on PATH. Install Terraform and TFLint separately using their official installers.
+Requires Python 3.11+. Terraform 1.6+ and TFLint on PATH are optional for generation and required for local validation. Install the native tools separately using their official installers.
 
 ```powershell
 git clone https://github.com/chriswayneh/TerraForma-IaC.git
@@ -54,11 +54,13 @@ terraforma wizard
 terraforma run --dir ./my-project --no-ai
 ```
 
+The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md). The current build still generates and validates files; it does not provision resources. An initial [local plan-review command](docs/PLAN_REVIEW.md) is available with `terraforma review-plan --file review.tfplan.json`. AI diagnostics require explicit opt-in.
+
 Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
 
 The wizard creates `main.tf`, `variables.tf`, and `outputs.tf` in a new project directory. Use `--dir` to choose the destination. It refuses to add generated files to an existing Terraform configuration. Cancellation writes nothing.
 
-To enable optional AI explanations, set `OPENAI_API_KEY` in your environment before launching. The UI requires an explicit opt-in to send redacted failed command logs to OpenAI. The CLI uses AI on failures when a key is available; use `--no-ai` for entirely local diagnosis. The default model is `gpt-4o` through OpenAI Chat Completions. Validation works without a key. Known-secret redaction cannot identify every possible secret. Neither interface separately uploads source files, but tool diagnostics may include snippets.
+To enable optional AI explanations, set `OPENAI_API_KEY` in your environment before launching. The UI requires an explicit opt-in to send redacted failed command logs to OpenAI. The CLI defaults to local-only diagnosis; pass `--ai` explicitly to send redacted failure logs. The default model is `gpt-4o` through OpenAI Chat Completions. Validation works without a key. Known-secret redaction cannot identify every possible secret. Neither interface separately uploads source files, but tool diagnostics may include snippets.
 
 ## Generated infrastructure
 
@@ -90,10 +92,11 @@ This is filesystem isolation, not a security boundary. Terraform/providers, modu
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - uses: chriswayneh/TerraForma-IaC@main
+  - uses: chriswayneh/TerraForma-IaC@v0.2.0
     with:
       target_dir: infrastructure
       openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+      explain_with_ai: 'true'
 ```
 
 The `main` reference is for development; pin a reviewed commit for reproducibility. Tagged Action releases will follow the release roadmap. The action installs Python, Terraform, TFLint, and this package from its own action directory. The API key is optional. Avoid running validation with credentials on untrusted pull requests.

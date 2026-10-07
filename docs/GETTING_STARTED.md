@@ -53,7 +53,11 @@ Review a Terraform plan before applying anything. Cloud resources can incur cost
 
 Set `OPENAI_API_KEY` in the server's environment before launching. The browser never collects the key. Enable **Explain failures with AI** to send redacted failed command logs to OpenAI. Known-secret redaction is best effort, and logs may contain source snippets. Leave the option off for local-only checks.
 
-Suggestions are shown for review and are not applied automatically. A suggested fix does not turn a failed validation into a passing result.
+Suggestions are shown for review and are not applied automatically. A suggested fix does not turn a failed validation into a passing result. CLI validation also defaults to local-only diagnostics; pass `--ai` explicitly to request an explanation.
+
+## Local plan review
+
+The CLI can inspect a Terraform plan JSON export using `terraforma review-plan --file review.tfplan.json`. It flags selected destructive, network, storage, and database concerns without applying resources or transmitting the plan. See [plan review](PLAN_REVIEW.md) for export instructions, limits, and why a successful command still requires manual review.
 
 ## Troubleshooting
 

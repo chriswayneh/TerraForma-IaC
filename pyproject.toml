@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "terraforma-iac"
-version = "0.2.0.dev0"
+version = "0.2.0"
 description = "A lightweight local workspace for guided Terraform generation and validation."
 readme = "README.md"
 requires-python = ">=3.11"
