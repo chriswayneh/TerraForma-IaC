@@ -275,7 +275,7 @@ class TerraformGenerator:
             if self.config.provider == "gcp":
                 self.variable(
                     "admin_access_method",
-                    "Administrator connection path. administrator_network uses the entered IPv4 network; iap_tunnel restricts the administrator firewall to Google's IAP proxy range. IAP can reach a VM without a public IP. Configure tunnel IAM, Linux OS Login or Windows guest credentials separately; TerraForma does not grant access or open a connection. Changing this choice can interrupt existing access. Review the generated rule and plan.",
+                    "Direct administrator network uses your IPv4 network; Google IAP tunnel restricts the administrator firewall to Google's IAP proxy range. IAP can reach a VM without a public IP. Configure tunnel IAM, Linux OS Login or Windows guest credentials separately; TerraForma does not grant access or open a connection. Changing this choice can interrupt existing access. Review the generated rule and plan.",
                     "administrator_network",
                     choices=("administrator_network", "iap_tunnel"),
                 )

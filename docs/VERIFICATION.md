@@ -1,5 +1,10 @@
 # Verification record
 
+## Readable questionnaire choices checkpoint
+
+- Eighty-three existing CLI, GCP access/scheduling and AWS credit regressions pass. Ruff checks/formatting and JavaScript syntax pass. These labels change presentation while preserving input values and defaults.
+- A temporary browser tab selected the displayed Google IAP tunnel label, hid the unused network input and generated the existing `iap_tunnel` value in its choice summary. The tab was closed; original sidebar spacing and the user's tab were preserved.
+
 ## Standalone boot disk lifecycle checkpoint
 
 - The default suite passes 1,781 tests with 258 optional/native/platform cases skipped. Ruff checks and formatting pass across 92 Python files; JavaScript syntax passes.

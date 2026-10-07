@@ -213,7 +213,13 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             answer = ask(
                 questionary.select(
                     definition["label"] + ":",
-                    choices=definition["choices"],
+                    choices=[
+                        questionary.Choice(
+                            title=definition.get("choice_labels", {}).get(value, value),
+                            value=value,
+                        )
+                        for value in definition["choices"]
+                    ],
                     default=definition["default"],
                 )
             )

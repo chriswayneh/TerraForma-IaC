@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added readable connection-path, CPU-credit and GCP maintenance option labels to the browser and terminal questionnaire. Terraform/specification values and defaults remain unchanged.
+
 - Added explicit AWS/GCP standalone boot-disk deletion or retention choices, preserving deletion by default. The form and generated guidance explain separate data-disk/key lifecycle, AWS KMS recovery requirements and GCP replacement naming conflicts. No live retention or recovery was run.
 
 - GCP Windows standalone VMs accept latest or a supported exact Windows Server 2022 Datacenter image name from the fixed windows-cloud publisher. Input and Terraform guards reject other image variants; availability and cloud boot remain unverified.

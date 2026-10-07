@@ -135,6 +135,21 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "editable": name != "project_name",
                 "environment_variable": f"TF_VAR_{name}" if sensitive else None,
                 **generator.input_constraints[name],
+                "choice_labels": {
+                    "admin_access_method": {
+                        "administrator_network": "Direct administrator network",
+                        "iap_tunnel": "Google IAP tunnel",
+                    },
+                    "cpu_credit_mode": {
+                        "provider_default": "Provider default (unmanaged)",
+                        "standard": "Standard (earned credits)",
+                        "unlimited": "Unlimited (surplus charges may apply)",
+                    },
+                    "host_maintenance_policy": {
+                        "MIGRATE": "Migrate during maintenance when supported",
+                        "TERMINATE": "Stop during host maintenance",
+                    },
+                }.get(name, {}),
             }
         )
     return contract

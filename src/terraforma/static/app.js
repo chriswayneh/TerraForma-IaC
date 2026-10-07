@@ -113,7 +113,7 @@ async function loadRecipeInputs() {
         definition.choices.forEach((choice) => {
           const option = document.createElement("option");
           option.value = choice;
-          option.textContent = choice;
+          option.textContent = definition.choice_labels?.[choice] || choice;
           input.append(option);
         });
       } else if (definition.kind === "multiline") input.rows = 4;
