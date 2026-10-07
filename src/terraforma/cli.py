@@ -467,6 +467,7 @@ def verify_project_command(directory: Path, json_output: bool):
     else:
         for item in report["files"]:
             click.echo(f"{item['file']}: {item['status']}")
+        click.echo(f"Questionnaire metadata: {report['specification_status']}")
         click.echo(report["limitations"])
     if report["status"] != "matches_receipt":
         raise click.exceptions.Exit(1)

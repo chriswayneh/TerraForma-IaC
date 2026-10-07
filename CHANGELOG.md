@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Compare canonical questionnaire digests and template versions during receipt verification; report invalid or inconsistent metadata without revealing values.
+
 - Create terminal-generated artifacts with Unix owner-only file permissions and private new destination directories; preserve existing directory permissions and document Windows/download boundaries.
 
 - Add `terraforma doctor` for local package/PATH availability checks, capability-specific exit status and JSON output without tool execution or credential access.

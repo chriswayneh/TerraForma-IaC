@@ -37,13 +37,17 @@ def digest_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def specification_digest(specification: dict) -> str:
+    canonical = json.dumps(specification, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return digest_text(canonical)
+
+
 def create_receipt(specification: dict, files: dict[str, str]) -> dict:
     artifacts = {**files, "terraforma.project.json": json_document(specification)}
-    canonical = json.dumps(specification, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return GenerationReceipt(
         generator_version=__version__,
         template_version=specification["template_version"],
-        specification_sha256=digest_text(canonical),
+        specification_sha256=specification_digest(specification),
         file_sha256={name: digest_text(content) for name, content in artifacts.items()},
     ).model_dump()
 
@@ -74,6 +78,8 @@ def verify_project(directory: Path) -> dict:
         )
     )
     results = []
+    specification_bytes = bytearray()
+    specification_status = "unavailable"
     for name, expected in sorted(receipt.file_sha256.items()):
         path = directory / name
         status = "unreadable"
@@ -89,6 +95,8 @@ def verify_project(directory: Path) -> dict:
                         if total > MAX_ARTIFACT_BYTES:
                             break
                         digest.update(chunk)
+                        if name == "terraforma.project.json":
+                            specification_bytes.extend(chunk)
                 status = (
                     "too_large"
                     if total > MAX_ARTIFACT_BYTES
@@ -99,11 +107,32 @@ def verify_project(directory: Path) -> dict:
         except OSError:
             pass
         results.append({"file": name, "status": status})
+        if name == "terraforma.project.json" and status in {"match", "modified"}:
+            try:
+                specification = json.loads(
+                    specification_bytes.decode("utf-8-sig"),
+                    object_pairs_hook=unique_object,
+                    parse_constant=reject_constant,
+                )
+                if not isinstance(specification, dict) or not isinstance(
+                    specification.get("template_version"), str
+                ):
+                    raise TypeError("Invalid specification metadata.")
+                specification_status = (
+                    "template_mismatch"
+                    if specification["template_version"] != receipt.template_version
+                    else "digest_mismatch"
+                    if specification_digest(specification) != receipt.specification_sha256
+                    else "match"
+                )
+            except (ValueError, TypeError, RecursionError):
+                specification_status = "invalid"
     return {
         "status": "matches_receipt"
-        if all(item["status"] == "match" for item in results)
+        if all(item["status"] == "match" for item in results) and specification_status == "match"
         else "mismatch",
         "files": results,
+        "specification_status": specification_status,
         "receipt_authenticated": False,
         "approval_granted": False,
         "limitations": "Unsigned local receipt. Matching hashes identify bytes against this receipt; they do not authenticate the receipt, verify a binary plan or cloud identity, certify security, or authorize deployment.",

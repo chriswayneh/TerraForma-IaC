@@ -31,7 +31,7 @@ terraforma verify-project --dir ./example-web
 terraforma verify-project --dir ./example-web --json-output
 ```
 
-Exit `0` means the three Terraform files and saved questionnaire match this receipt. A modified, missing, unreadable, linked, nonregular, or oversized file returns a mismatch and exit `1`. An invalid/missing receipt returns a nonzero command error. The receipt is limited to 64 KiB, each compared file to 8 MiB, and filenames to the four declared artifacts. Reports omit file contents.
+Exit `0` means the three Terraform files and saved questionnaire match this receipt, its canonical questionnaire digest matches, and its template version agrees with the questionnaire. A modified, missing, unreadable, linked, nonregular, or oversized file returns a mismatch and exit `1`. An invalid/missing receipt returns a nonzero command error. The receipt is limited to 64 KiB, each compared file to 8 MiB, and filenames to the four declared artifacts. Reports omit file contents. `specification_status` reports `match`, `digest_mismatch`, `template_mismatch`, `invalid`, or `unavailable`. Metadata parsing rejects duplicate JSON keys, non-finite numbers and unsupported JSON shapes. This checks receipt consistency rather than schema compatibility, template authenticity or live configuration behavior.
 
 The command does not compare the ZIP guide or authenticate the checksum list. It does not execute Terraform, use cloud credentials, call AI, or upload files.
 

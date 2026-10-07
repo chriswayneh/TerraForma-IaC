@@ -57,6 +57,67 @@ def test_receipt_comparison_detects_changes_without_echoing_file_values(tmp_path
     assert "private-value-marker" not in json.dumps(changed)
 
 
+@pytest.mark.parametrize(
+    "field,value,expected",
+    [
+        ("specification_sha256", "0" * 64, "digest_mismatch"),
+        ("template_version", "private-version-marker", "template_mismatch"),
+    ],
+)
+def test_receipt_metadata_must_agree_with_hashed_questionnaire(tmp_path, field, value, expected):
+    files = project_artifacts(project())
+    receipt = json.loads(files["terraforma.receipt.json"])
+    receipt[field] = value
+    files["terraforma.receipt.json"] = json.dumps(receipt)
+    write_configuration(files, tmp_path)
+    report = verify_project(tmp_path)
+    assert all(item["status"] == "match" for item in report["files"])
+    assert report["status"] == "mismatch"
+    assert report["specification_status"] == expected
+    assert "private-version-marker" not in json.dumps(report)
+    result = CliRunner().invoke(main, ["verify-project", "--dir", str(tmp_path)])
+    assert result.exit_code == 1
+    assert expected in result.output
+    assert "private-version-marker" not in result.output
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        '{"template_version":"first","template_version":"second"}',
+        '{"template_version":"0.3.0.dev0","private-marker":NaN}',
+        '{"template_version":true}',
+        '"private-value-marker"',
+        "private-invalid-json",
+    ],
+)
+def test_even_matching_file_hashes_cannot_validate_invalid_metadata(tmp_path, content):
+    files = project_artifacts(project())
+    receipt = json.loads(files["terraforma.receipt.json"])
+    receipt["file_sha256"]["terraforma.project.json"] = hashlib.sha256(content.encode()).hexdigest()
+    files["terraforma.project.json"] = content
+    files["terraforma.receipt.json"] = json.dumps(receipt)
+    write_configuration(files, tmp_path)
+    report = verify_project(tmp_path)
+    assert report["specification_status"] == "invalid"
+    assert report["status"] == "mismatch"
+    assert "private-" not in json.dumps(report)
+
+
+def test_canonical_comparison_ignores_json_key_order_and_whitespace(tmp_path):
+    files = project_artifacts(project())
+    receipt = json.loads(files["terraforma.receipt.json"])
+    specification = json.loads(files["terraforma.project.json"])
+    content = json.dumps(dict(reversed(list(specification.items()))), indent=4)
+    files["terraforma.project.json"] = content
+    receipt["file_sha256"]["terraforma.project.json"] = hashlib.sha256(content.encode()).hexdigest()
+    files["terraforma.receipt.json"] = json.dumps(receipt)
+    write_configuration(files, tmp_path)
+    report = verify_project(tmp_path)
+    assert report["specification_status"] == "match"
+    assert report["status"] == "matches_receipt"
+
+
 def test_receipt_rejects_arbitrary_paths_and_duplicate_keys(tmp_path):
     receipt = project()["receipt"]
     receipt["file_sha256"]["../outside.tf"] = receipt["file_sha256"].pop("main.tf")
