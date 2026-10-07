@@ -78,6 +78,8 @@ Exit `0` means the check was skipped or the CLI reported a matching target; othe
 
 ### Optional VM size metadata
 
+For Azure standalone VMs, the same SKU response also checks reported `HyperVGenerations` and `TrustedLaunchDisabled`. The generated Gen2 image and retained vTPM require Trusted Launch support even when Secure Boot is disabled. A reported unsupported size yields `boot_features_incompatible`; missing generation evidence yields `boot_features_unknown`. This follows [Microsoft's SKU guidance](https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch-faq#how-can-i-find-vm-sizes-that-support-trusted-launch) and adds no extra cloud request. Image support, capacity, quotas and effective cloud settings remain unverified.
+
 For compute recipes, select **Also read the selected VM size metadata** in the target-check card. Both checkboxes start unchecked and reset after an attempt. This requests one additional cloud read only after the target matches. Editing a questionnaire answer clears the earlier results. No VM metadata read runs for database or static-site recipes.
 
 ```text

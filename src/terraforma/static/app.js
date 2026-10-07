@@ -702,9 +702,11 @@ byId("target-preflight-button").addEventListener("click", async () => {
     );
     if (report.machine_check?.status && !["not_checked", "not_applicable"].includes(report.machine_check.status)) {
       const machineMessages = {
-        metadata_confirmed: "The selected size reports x86 CPU compatibility. Capacity, quotas, image and disk compatibility still need review.",
+        metadata_confirmed: "The selected size passes this recipe's requested CPU and boot metadata checks. Capacity, quotas, image and disk compatibility still need review.",
         architecture_incompatible: "This size reports a CPU architecture that does not support the current x86 image templates. Choose a compatible size before planning.",
         architecture_unknown: "The metadata does not establish CPU architecture. Verify it against the selected x86 image before planning.",
+        boot_features_incompatible: "This Azure size reports missing Gen2 or Trusted Launch support needed by the generated VM. Choose a supported size before planning.",
+        boot_features_unknown: "The Azure metadata does not establish Gen2 support needed for this VM. Verify Gen2 and Trusted Launch support before planning; CPU compatibility alone is insufficient.",
         restricted: "The selected size reports restrictions or deprecation. Review those in your cloud tools before planning.",
         not_found: "The selected size was not found in the returned metadata for this region or zone.",
         failed: "The VM-size read failed or exceeded its limits. Check CLI authentication, permissions and the selected size separately.",

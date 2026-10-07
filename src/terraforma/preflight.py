@@ -11,9 +11,36 @@ from terraforma.process import run_bounded
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 
 
-def machine_report(provider: str, data, size: str, location: str) -> dict:
+def azure_boot_compatibility(capabilities: list) -> bool | None:
+    selected = {}
+    for item in capabilities:
+        name = str(item.get("name", "")).lower()
+        if name not in {"hypervgenerations", "trustedlaunchdisabled"}:
+            continue
+        if name in selected or not isinstance(item.get("value"), str):
+            raise ValueError("Ambiguous or malformed boot capability.")
+        selected[name] = item["value"]
+    disabled = selected.get("trustedlaunchdisabled")
+    if disabled is not None and disabled.lower() not in {"true", "false"}:
+        raise ValueError("Unsupported boot capability.")
+    generations = selected.get("hypervgenerations")
+    if generations is not None:
+        generations = [value.strip() for value in generations.split(",")]
+        if not generations or any(value not in {"V1", "V2"} for value in generations):
+            raise ValueError("Unsupported generation capability.")
+    if disabled is not None and disabled.lower() == "true":
+        return False
+    if generations is None:
+        return None
+    return "V2" in generations
+
+
+def machine_report(
+    provider: str, data, size: str, location: str, *, require_trusted_launch: bool = False
+) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
     restricted = False
+    boot_compatible = None
     if provider == "aws":
         entries = data.get("InstanceTypes") if isinstance(data, dict) else None
         if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
@@ -87,6 +114,9 @@ def machine_report(provider: str, data, size: str, location: str) -> dict:
             raise ValueError("Unsupported architecture metadata.")
         compatible = value == "x64" if value is not None else None
         restricted = bool(restrictions)
+        if require_trusted_launch:
+            boot_compatible = azure_boot_compatibility(capabilities)
+            report["boot_features_compatible"] = boot_compatible
     else:
         architecture = machine.get("architecture")
         if architecture not in {None, "X86_64", "ARM64", "x86_64", "arm64"}:
@@ -110,6 +140,10 @@ def machine_report(provider: str, data, size: str, location: str) -> dict:
         if restricted
         else "architecture_unknown"
         if compatible is None
+        else "boot_features_incompatible"
+        if require_trusted_launch and boot_compatible is False
+        else "boot_features_unknown"
+        if require_trusted_launch and boot_compatible is None
         else "metadata_confirmed"
     )
     return report
@@ -178,7 +212,15 @@ def inspect_machine(specification, executable, environment, timeout):
     if result.failure or result.returncode != 0:
         return {"status": "failed", "architecture_compatible": None}
     try:
-        return machine_report(provider, strict_json(result.stdout), size, location)
+        return machine_report(
+            provider,
+            strict_json(result.stdout),
+            size,
+            location,
+            require_trusted_launch=(
+                provider == "azure" and specification.recipe.architecture_type == "virtual_machine"
+            ),
+        )
     except (ValueError, TypeError, RecursionError):
         return {"status": "invalid_response", "architecture_compatible": None}
 
