@@ -787,6 +787,17 @@ def test_native_aws_windows_core(native_directories, public, version):
     assert_native_files(native_directories["aws"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "public,version", list(itertools.product([False, True], ["latest", "20348.1.1"]))
+)
+def test_native_azure_refreshed_windows_offer(native_directories, public, version):
+    from terraforma.project import compile_project
+    from tests.test_azure_windows_vm import specification
+
+    spec = specification(public=public, image_version=version)
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

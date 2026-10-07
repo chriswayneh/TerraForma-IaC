@@ -266,7 +266,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         )
     builder.variable(
         "image_version",
-        "Azure Windows marketplace version for MicrosoftWindowsServer/WindowsServer/2022-datacenter-g2: latest or exact Major.Minor.Build. Regional availability and compatibility require review; changing images can replace the VM and delete boot data."
+        "Azure Windows marketplace version for MicrosoftWindowsServer/windowsserver2022/2022-datacenter-g2: latest or exact Major.Minor.Build. The refreshed offer excludes deprecated .NET 6 packages. Regenerating older WindowsServer-offer projects changes the image reference and can replace the VM and delete boot data. Verify the exact version in the new offer, region and application dependencies; old-offer pins are not automatically translated. Review backups and the Terraform plan before migration."
         if windows
         else "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
         "latest",
@@ -275,7 +275,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     image = block(
         "source_image_reference",
         publisher="MicrosoftWindowsServer" if windows else "Canonical",
-        offer="WindowsServer"
+        offer="windowsserver2022"
         if windows
         else ref(
             'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'

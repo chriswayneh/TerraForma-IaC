@@ -1,5 +1,12 @@
 # Verification record
 
+## Azure Windows refreshed offer checkpoint
+
+- The default suite passes 1,796 tests with 266 optional/native/platform cases skipped. Ruff checks and formatting pass across 93 Python files; whitespace checks pass.
+- Existing Windows generation regressions assert the refreshed windowsserver2022 offer with the same publisher/SKU and latest/exact version support. API guidance warns about image replacement, application dependencies and old pins requiring review.
+- Four separately enabled private/public latest/pin cases pass real Terraform validation and TFLint against the cached AzureRM provider. Synthetic exact versions are structural examples; new-offer regional availability and guest boot remain unverified.
+- Microsoft's Azure Compute announcement was read directly in a temporary browser tab to verify the refreshed offer and legacy-offer deprecation. A second tab imported an Azure Windows project, generated the new reference and displayed its migration warning. Both tabs were closed; original sidebar spacing and the user's tab were preserved. No live cloud request, guest migration or apply was run.
+
 ## AWS Windows Core checkpoint
 
 - The default suite passes 1,796 tests with 262 optional/native/platform cases skipped. Ruff checks and formatting pass across 93 Python files; whitespace checks pass.

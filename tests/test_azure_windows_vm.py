@@ -58,7 +58,7 @@ def test_windows_resource_uses_external_password_and_restricted_rdp(public, encr
     assert '"egress"' in resources['"azurerm_public_ip"']
     image = vm["source_image_reference"][0]
     assert image["publisher"] == '"MicrosoftWindowsServer"'
-    assert image["offer"] == '"WindowsServer"'
+    assert image["offer"] == '"windowsserver2022"'
     assert "2022-datacenter-g2" in image["sku"]
     assert image["version"] == "${var.image_version}"
     rule = resources['"azurerm_network_security_group"']['"this"']["security_rule"][0]
@@ -174,6 +174,8 @@ def test_windows_api_and_zip_keep_only_external_reference(monkeypatch):
         generated = client.post("/api/generate", headers=headers, json=spec.model_dump())
         assert generated.status_code == 200, generated.text
         assert "Terraform state" in str(generated.json()["notes"])
+        assert "refreshed windowsserver2022 offer" in str(generated.json()["notes"])
+        assert "old pins are not translated" in str(generated.json()["notes"])
         assert "private-marker-never-read" not in generated.text
         exported = client.post("/api/download", headers=headers, json=spec.model_dump())
         assert exported.status_code == 200, exported.text

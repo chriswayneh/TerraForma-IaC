@@ -219,6 +219,16 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             + ". To intentionally delete or replace a protected VM, first disable protection and apply that configuration change in your Terraform workflow. Protection is not a backup or protection for every connected resource."
         )
     if (
+        payload.recipe.provider == "azure"
+        and payload.recipe.architecture_type == "windows_virtual_machine"
+    ):
+        project["notes"].append(
+            "Azure Windows uses the refreshed windowsserver2022 offer, excluding deprecated "
+            ".NET 6 packages. Regenerating an older WindowsServer-offer project can replace "
+            "the VM and delete boot data. Verify the new offer's image version, application "
+            "dependencies and backups before planning; old pins are not translated."
+        )
+    if (
         payload.recipe.provider == "aws"
         and payload.recipe.architecture_type == "windows_virtual_machine"
         and payload.inputs.get("os_image") == "windows-server-2022-core"

@@ -8,11 +8,13 @@ Development on `main` includes initial **AWS, Azure and Google Cloud Windows Ser
 
 ## Azure
 
+Development generation now uses the refreshed `windowsserver2022` offer. [Microsoft's migration announcement](https://techcommunity.microsoft.com/blog/azurecompute/incoming-changes-for-window-server-2022-marketplace-image-users/4262423) identifies the legacy `windowsserver` offer's Windows Server 2022 SKUs as deprecated from June 2026; the refreshed offer excludes .NET 6. Regenerating an older project changes its image reference and can replace the VM and delete boot data. Confirm the selected version exists under the new offer, review application dependencies and backups, then review the Terraform plan. Existing exact pins are not automatically translated. Generation does not migrate an existing guest or prove regional image availability.
+
 ![Azure Windows external password reference and state guidance](images/azure-windows-credentials.png)
 
 | Choice | Supported behavior |
 | --- | --- |
-| Image | MicrosoftWindowsServer / WindowsServer / 2022-datacenter-g2, with latest or an exact marketplace version |
+| Image | MicrosoftWindowsServer / windowsserver2022 / 2022-datacenter-g2, with latest or an exact marketplace version |
 | Capacity | Standard_D2s_v5 default; configurable size, 128 GiB boot disk default/minimum, optional empty data disk |
 | Disk caching | None, ReadOnly or ReadWrite; boot defaults to ReadWrite and data defaults to None. Review durability and VM/disk support before changing cache modes |
 | Guest naming | Separate 3–15 character computer name and 3–20 character administrator username; reserved usernames rejected |

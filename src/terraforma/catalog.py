@@ -46,6 +46,8 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 + (
                     "Image version is configurable: latest windows-2022 family or an exact supported Windows Server 2022 Datacenter image name from windows-cloud. Availability and deprecation remain unverified."
                     if windows and config.provider == "gcp"
+                    else "Uses the refreshed windowsserver2022/2022-datacenter-g2 offer with latest or an exact version. Regenerating older WindowsServer-offer projects can replace the VM; confirm version availability and application dependencies before migration."
+                    if windows and config.provider == "azure"
                     else "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
                     if config.provider == "azure"
                     else "Image version is configurable: latest (default) or an exact supported published image name. Availability and deprecation remain unverified."
