@@ -92,7 +92,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - AWS standalone VMs expose optional standard/unlimited CPU credit choices for x86 T2/T3/T3a families. The default leaves credit configuration unmanaged; performance, pricing and effective cloud settings remain unverified.
 - Azure standalone Linux/Windows VMs expose regional or single-zone placement with aligned disk, Standard NAT and public-IP settings; live zone support/capacity and replacement recovery require separate verification.
 - GCP standalone Linux/Windows VMs expose host-maintenance and automatic-restart choices for standard instances; live event behavior and machine compatibility require separate verification.
-- Google IAP access groundwork: plan policy recognizes narrowly targeted IPv4 proxy rules as mandatory manual review. Guided tunnel generation and access instructions remain planned; IAM and guest access have not been verified.
+- GCP standalone Linux/Windows VMs expose an optional [Google IAP administrator tunnel](GCP_IAP_ACCESS.md), preserving direct-network access by default. Narrowly targeted IPv4 proxy rules require manual plan review. Tunnel IAM and guest authentication remain separate; live access has not been verified.
 - Azure standalone Linux/Windows boot and optional data disks expose supported host cache modes with durability guidance. Actual workload behavior and safe cache changes require live verification.
 - Azure Windows offers automatic platform patch assessment separately from automatic OS installation; guest health, assessment and installation success remain unverified.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.

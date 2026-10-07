@@ -53,7 +53,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     else "Image version is configurable: latest (default) or an exact AMI ID matching the trusted owner and selected x86 OS filters. Regional availability remains unverified."
                 ),
                 (
-                    "No application initialization is configured; RDP is restricted to the supplied administrator CIDR."
+                    "No application initialization is configured; GCP administrator access uses a selected direct network or IAP tunnel, with separate IAM and guest authentication."
+                    if config.provider == "gcp"
+                    else "No application initialization is configured; RDP is restricted to the supplied administrator CIDR."
                     if windows
                     else "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
                 )

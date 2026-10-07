@@ -80,7 +80,11 @@ def build_gcp(builder: TerraformGenerator) -> None:
             else '"${var.project_name}-http"'
         ),
         network=ref("google_compute_network.this.name"),
-        source_ranges=[ref("var.allowed_cidr")]
+        direction="INGRESS",
+        disabled=False,
+        source_ranges=ref(
+            'var.admin_access_method == "iap_tunnel" ? ["35.235.240.0/20"] : [var.allowed_cidr]'
+        )
         if standalone
         else [ref("var.allowed_cidr"), "35.191.0.0/16", "130.211.0.0/22"],
         target_tags=["terraforma-web"],

@@ -78,6 +78,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "aws"
                     else "GCP image version (latest or exact image name)",
                     "admin_username": "Administrator username",
+                    "admin_access_method": "Administrator connection path",
                     "computer_name": "Windows computer name",
                     "license_type": "Windows licensing",
                     "admin_password": "Administrator password (external reference)",
@@ -313,10 +314,18 @@ def compile_project(specification: ProjectSpecification) -> dict:
             raise ValueError(
                 "Secret references must identify the declared Terraform environment variable."
             )
+    iap_access = (
+        specification.recipe.provider == "gcp"
+        and specification.recipe.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+        and specification.inputs.get("admin_access_method") == "iap_tunnel"
+    )
     missing = [
         item["name"]
         for item in contract
-        if item["required"] and not item["sensitive"] and item["name"] not in specification.inputs
+        if item["required"]
+        and not item["sensitive"]
+        and item["name"] not in specification.inputs
+        and not (iap_access and item["name"] == "allowed_cidr")
     ]
     if missing:
         raise ProjectInputError(missing[0], "This required project input is missing.")
@@ -417,6 +426,8 @@ def compile_project(specification: ProjectSpecification) -> dict:
     for variable in generator.variables:
         if variable.labels[0] in specification.inputs:
             variable.attributes["default"] = specification.inputs[variable.labels[0]]
+        elif iap_access and variable.labels[0] == "allowed_cidr":
+            variable.attributes["default"] = "10.0.0.0/16"
     files["variables.tf"] = (
         "\n\n".join(variable.render() for variable in generator.variables) + "\n"
     )

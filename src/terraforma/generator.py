@@ -264,6 +264,13 @@ class TerraformGenerator:
                 pattern=rf"^($|{octet}\.{octet}\.{octet}\.{octet})$",
             )
             self._workload_identity_inputs()
+            if self.config.provider == "gcp":
+                self.variable(
+                    "admin_access_method",
+                    "Administrator connection path. administrator_network uses the entered IPv4 network; iap_tunnel restricts the administrator firewall to Google's IAP proxy range. IAP can reach a VM without a public IP. Configure tunnel IAM, Linux OS Login or Windows guest credentials separately; TerraForma does not grant access or open a connection. Changing this choice can interrupt existing access. Review the generated rule and plan.",
+                    "administrator_network",
+                    choices=("administrator_network", "iap_tunnel"),
+                )
             self.variable(
                 "allowed_cidr",
                 (
@@ -275,6 +282,9 @@ class TerraformGenerator:
                 + "Public /32 input is supported for generation, but local plan review blocks administrator access from outside private ranges, including a single public address. "
                 + "Valid input does not approve deployment. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
                 None if self.config.is_public else "10.0.0.0/16",
+                visible_when={"admin_access_method": "administrator_network"}
+                if self.config.provider == "gcp"
+                else None,
                 network_policy="administrator_cidr",
             )
             if self.config.provider == "aws":

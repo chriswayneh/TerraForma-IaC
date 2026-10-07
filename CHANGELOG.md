@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- GCP standalone Linux/Windows questionnaires now offer an IAP tunnel connection path, with one targeted administrator port and the unused direct network question hidden. Direct access remains the default; IAM grants and guest authentication remain outside generation. Added connection guidance without opening live tunnels.
+
 - Local plan policy 0.9.0 recognizes narrowly targeted Google IAP IPv4 administrator firewall rules as mandatory manual review. Broader or unresolved rules retain the block; tunnel IAM, guest authentication and effective access remain unverified. Guided IAP generation remains planned.
 
 - Added AWS standalone VM CPU credit choices: provider default, standard or unlimited for x86 T2/T3/T3a families. The shared questionnaire/specification and Terraform guards enforce the supported scope; defaults leave the setting unmanaged, and removing an explicit mode does not reset an existing VM.

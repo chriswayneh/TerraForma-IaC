@@ -65,7 +65,7 @@ def generate_project(config: WizardConfig) -> dict:
     if config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
         notes.extend(
             [
-                "RDP requires the selected administrator network and separate Windows account/password setup through Google Cloud after provisioning. Terraform does not create that account. Verify guest-agent readiness, IAM permissions and Windows activation; private access needs a routed path."
+                "RDP uses the selected administrator network or IAP tunnel with separate Windows account/password setup through Google Cloud after provisioning. Terraform does not create that account. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. Review Windows activation prerequisites."
                 if config.architecture_type == "windows_virtual_machine"
                 and config.provider == "gcp"
                 else "RDP requires the selected administrator network and externally supplied TF_VAR_admin_password. AzureRM retains the password in Terraform state and saved plans; protect their storage/access before use. This generator does not configure a protected backend. Private access needs a routed path."
@@ -129,9 +129,28 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
     project["target"] = compiled["target"]
     project["receipt"] = compiled["receipt"]
     project["choice_summary"] = compiled["choice_summary"]
+    iap_access = (
+        payload.recipe.provider == "gcp"
+        and payload.recipe.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+        and payload.inputs.get("admin_access_method") == "iap_tunnel"
+    )
     project["required_inputs"] = [
-        item for item in project["required_inputs"] if item["name"] not in payload.inputs
+        item
+        for item in project["required_inputs"]
+        if item["name"] not in payload.inputs
+        and not (iap_access and item["name"] == "allowed_cidr")
     ]
+    if iap_access:
+        project["guide"]["route"][0] = "Authorized Google IAP tunnel"
+        project["guide"]["components"][-1]["explanation"] = (
+            "The administrator firewall accepts one TCP port from Google's IAP IPv4 proxy range. "
+            "Review tunnel IAM, guest authentication and other firewall rules separately. "
+            "TerraForma grants no access and opens no connection."
+        )
+        project["notes"].append(
+            "IAP tunnel access requires separate IAM and guest authentication. "
+            "The targeted proxy firewall rule requires manual plan review; no access is approved."
+        )
     project["notes"].append(compiled["verification"])
     if payload.recipe.architecture_type in {
         "virtual_machine",

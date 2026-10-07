@@ -745,6 +745,16 @@ def test_native_gcp_standard_scheduling(native_directories, windows, policy):
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize("windows,public", list(itertools.product([False, True], [False, True])))
+def test_native_gcp_iap_access(native_directories, windows, public):
+    from terraforma.project import compile_project
+    from tests.test_gcp_scheduling import specification
+
+    spec = specification(windows, admin_access_method="iap_tunnel")
+    spec.recipe.is_public = public
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

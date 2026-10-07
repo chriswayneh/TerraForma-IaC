@@ -1,5 +1,7 @@
 # Linux virtual machines
 
+GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](GCP_IAP_ACCESS.md). IAP generation targets SSH port 22; tunnel IAM and OS Login authentication are configured separately. Live connectivity remains unverified.
+
 Azure standalone VMs expose `boot_disk_caching` and conditional `data_disk_caching`: None, ReadOnly or ReadWrite. Defaults remain ReadWrite for the OS and None for data. [Azure documents cache and I/O behavior](https://learn.microsoft.com/en-us/azure/virtual-machines/disks-performance). Review guest/application durability and safe cache changes; generation does not flush writes, verify performance or protect data through backups.
 
 Available on `main` during development. The v0.2.0 release does not include the standalone VM recipe. Cloud creation, login, and teardown remain unverified.

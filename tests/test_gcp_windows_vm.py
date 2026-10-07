@@ -43,7 +43,9 @@ def test_gcp_windows_restricts_access_and_preserves_boot_and_activation(
         for kind, values in entry.items():
             resources.setdefault(kind, {}).update(values)
     ingress = resources['"google_compute_firewall"']['"this"']
-    assert ingress["source_ranges"] == ["${var.allowed_cidr}"]
+    assert ingress["source_ranges"] == (
+        '${var.admin_access_method == "iap_tunnel" ? ["35.235.240.0/20"] : [var.allowed_cidr]}'
+    )
     assert ingress["allow"][0]["ports"] == ['"3389"']
     activation = resources['"google_compute_firewall"']['"windows_activation"']
     assert activation["direction"] == '"EGRESS"'

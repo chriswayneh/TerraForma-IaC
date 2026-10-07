@@ -1,5 +1,7 @@
 # Windows virtual machines
 
+GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](GCP_IAP_ACCESS.md). IAP generation targets RDP port 3389; tunnel IAM and Windows guest credentials are configured separately. Live connectivity remains unverified.
+
 Development on `main` includes initial **AWS, Azure and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
 
 ## Azure

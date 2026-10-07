@@ -328,7 +328,9 @@ def wizard(target_dir: Path | None):
         )
     elif architecture in {"virtual_machine", "windows_virtual_machine"}:
         click.echo(
-            "VM administrator access is restricted to the selected network. Private access requires a routed path; no VPN or bastion is created."
+            "GCP administrator access uses the selected direct network or IAP tunnel. Configure routing or tunnel IAM and guest authentication separately."
+            if provider == "gcp"
+            else "VM administrator access is restricted to the selected network. Private access requires a routed path; no VPN or bastion is created."
         )
         click.echo(
             "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur ongoing charges."

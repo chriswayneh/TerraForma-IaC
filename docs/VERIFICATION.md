@@ -1,5 +1,12 @@
 # Verification record
 
+## Google IAP generation checkpoint
+
+- The default suite passes 1,735 tests with 248 optional/native/platform cases skipped. Ruff checks and formatting pass across 90 Python files; JavaScript syntax passes.
+- Twenty-three new regressions cover Linux/Windows private/public access choices, unchanged direct-access defaults, conditional CIDR visibility, invalid choices, unrelated recipe exclusion and API import/generation. Existing public direct-access requirements remain enforced.
+- Four separately enabled Linux/Windows private/public IAP cases pass real Terraform validation and TFLint against the cached Google provider. No cloud read, IAM grant, tunnel connection or apply was run.
+- A temporary browser tab imported an older GCP Windows project, selected IAP, hid the unused CIDR field and generated matching configuration, summary and access-path guidance. Original sidebar spacing and the user's tab were preserved. Live IAM, guest access and SSH/RDP connectivity remain unverified.
+
 ## Google IAP plan policy checkpoint
 
 - The default suite passes 1,712 tests with 244 optional/native/platform cases skipped. Ruff checks and formatting pass across 89 Python files; whitespace checks pass.
