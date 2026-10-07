@@ -53,3 +53,9 @@ The command does not compare the ZIP guide or authenticate the checksum list. It
 Receipts are unsigned local records. Anyone able to replace both files and receipt can produce a matching set. Keep a trusted original receipt or independently trusted artifact hashes when comparing copies. A match does not authenticate the generator, prove account identity, bind a binary Terraform plan, certify security, or approve deployment. The report always sets `receipt_authenticated` and `approval_granted` to `false`.
 
 Receipts supplement source review and [local plan review](PLAN_REVIEW.md). The protected state, plan-integrity, signing/provenance, and approval workflows remain future roadmap work.
+
+## Local validation copies
+
+Validation works in a temporary copy of a trusted configuration. Common state, variable-value, saved plan (`.tfplan`/`.plan`) and plan JSON filenames are omitted, along with `.tfbackend`, `.terraformrc`/`terraform.rc`, crash logs and `.env` files. Filename matching is case-insensitive, including the existing excluded cache and credential directories. Provider locks, linter configuration, local modules and other assets remain available. These exclusions are naming rules, not a secret scanner; inspect other assets before validation.
+
+Each included file is checked for a regular file before opening and on the opened descriptor, then read with an 8 MiB limit plus one overflow byte. The actual copied bytes count toward the 32 MiB workspace limit, so growth after the first size check cannot silently bypass the byte budget. POSIX nonblocking open avoids waiting on a named pipe substituted at open. Ordinary filesystem races and untrusted execution are not fully contained. Raw/generated HCL also has an 8 MiB per-file limit. No source files, state or cloud resources are modified by these copy checks.

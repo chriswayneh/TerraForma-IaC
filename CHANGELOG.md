@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Validation copies now omit saved plans/plan JSON, backend configuration, local Terraform CLI configuration and crash logs using case-insensitive filename rules. Bounded regular-file reads enforce limits against actual copied bytes; raw HCL receives the same per-file limit. Other assets still require review.
+
 - Local plan policy 0.8.0 now reviews Azure managed disk remote import/export and public network controls. Unrestricted exports/public access and reopening a deny-all boundary are blocked; private export and unknown settings require review. No provisioning approval is granted.
 
 - Newly generated optional Azure managed data disks deny remote import/export and disable public network access. The recipe retains empty-disk attachment; exports, private endpoints and backup/recovery workflows remain unsupported.

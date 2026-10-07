@@ -6,10 +6,13 @@ import tempfile
 from pathlib import Path
 from typing import Any, ClassVar
 
+from terraforma.file_input import read_regular_bytes
 from terraforma.process import run_bounded
 
 
 class ValidationSandbox:
+    file_limit: ClassVar[int] = 8 * 1024 * 1024
+    workspace_limit: ClassVar[int] = 32 * 1024 * 1024
     excluded_names: ClassVar[set[str]] = {
         ".terraform",
         ".git",
@@ -24,6 +27,8 @@ class ValidationSandbox:
         "terraform.tfstate",
         "terraform.tfstate.backup",
         "crash.log",
+        ".terraformrc",
+        "terraform.rc",
     }
 
     def __init__(
@@ -65,10 +70,12 @@ class ValidationSandbox:
                 }:
                     raise ValueError("Supply main.tf and only supported Terraform filenames.")
                 for name, content in self.generated_files.items():
-                    if len(content.encode("utf-8")) > 8 * 1024 * 1024:
+                    if len(content.encode("utf-8")) > self.file_limit:
                         raise ValueError("Generated file exceeds the 8 MiB limit.")
                     (destination / name).write_text(content, encoding="utf-8")
             elif self.target_dir is None:
+                if len(self.raw_main_hcl.encode("utf-8")) > self.file_limit:
+                    raise ValueError("Generated file exceeds the 8 MiB limit.")
                 (destination / "main.tf").write_text(self.raw_main_hcl, encoding="utf-8")
             else:
                 if not self.target_dir.is_dir():
@@ -80,7 +87,7 @@ class ValidationSandbox:
                 total = 0
                 for current, directories, files in os.walk(self.target_dir, followlinks=False):
                     directories[:] = [
-                        name for name in directories if name not in self.excluded_names
+                        name for name in directories if name.lower() not in self.excluded_names
                     ]
                     for name in directories:
                         folder = Path(current) / name
@@ -91,24 +98,41 @@ class ValidationSandbox:
                     output = destination / Path(current).relative_to(self.target_dir)
                     output.mkdir(parents=True, exist_ok=True)
                     for name in files:
+                        normalized = name.lower()
                         if (
-                            name in self.excluded_names
-                            or name.endswith(
-                                (".tfstate", ".tfstate.backup", ".tfvars", ".tfvars.json")
+                            normalized in self.excluded_names
+                            or normalized.endswith(
+                                (
+                                    ".tfstate",
+                                    ".tfstate.backup",
+                                    ".tfvars",
+                                    ".tfvars.json",
+                                    ".tfplan",
+                                    ".tfplan.json",
+                                    ".plan",
+                                    ".plan.json",
+                                    ".tfbackend",
+                                )
                             )
-                            or name.startswith(".env")
+                            or normalized.startswith(".env")
+                            or (normalized.startswith("crash.") and normalized.endswith(".log"))
                         ):
                             continue
                         source = Path(current) / name
                         if source.is_symlink() or not source.is_file():
                             raise ValueError(f"Only regular files can be copied: {source.name}")
                         size = source.stat().st_size
-                        total += size
-                        if size > 8 * 1024 * 1024 or total > 32 * 1024 * 1024:
+                        if size > self.file_limit or total + size > self.workspace_limit:
                             raise ValueError(
                                 "Sandbox input exceeds the 8 MiB file or 32 MiB workspace limit."
                             )
-                        shutil.copyfile(source, output / name)
+                        content = read_regular_bytes(source, self.file_limit)
+                        total += len(content)
+                        if len(content) > self.file_limit or total > self.workspace_limit:
+                            raise ValueError(
+                                "Sandbox input exceeds the 8 MiB file or 32 MiB workspace limit."
+                            )
+                        (output / name).write_bytes(content)
             return self.temp_dir
         except BaseException:
             self.destroy_environment()

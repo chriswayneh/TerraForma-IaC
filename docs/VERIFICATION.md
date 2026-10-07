@@ -1,5 +1,12 @@
 # Verification record
 
+## Validation copy input checkpoint
+
+- The default suite passes 1,459 tests with 228 optional/native/platform cases skipped. Ruff checks and formatting pass across 83 Python files; JavaScript syntax passes.
+- New copy tests cover root/nested private filename exclusions, case-insensitive matching, exact binary asset/lock preservation, UTF-8 HCL byte limits, growth after the initial size check, exact limits and temporary cleanup. A POSIX pipe-substitution case is skipped on this Windows host and included in platform CI.
+- A copied cloud-free `terraform_data` configuration with a referenced asset passes real Terraform init/validate and TFLint init/lint. Saved plan, backend configuration and local CLI configuration markers are absent from the copy; no apply was run.
+- Filename rules do not discover arbitrary secrets. Included assets, native tools, provider/linter plugins and inherited cloud credential chains remain trusted inputs; the copy is not an untrusted-code execution boundary.
+
 ## Azure managed disk policy checkpoint
 
 - The default suite passes 1,428 tests with 227 optional/native/platform cases skipped. Ruff checks and formatting pass across 82 Python files; JavaScript syntax passes.
