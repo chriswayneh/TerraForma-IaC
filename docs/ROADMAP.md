@@ -82,7 +82,7 @@ Exit criteria: invalid specifications fail closed; review reports expose no raw 
 
 Target: **v0.4.0**.
 
-Status: planned after the foundation; existing compute recipes already expose region, VM size, boot-disk size/type, and their current required inputs. Full Linux/Windows, image, network, identity, and lifecycle adapters remain planned.
+Status: planned after the foundation; existing compute recipes already expose region, VM size, boot-disk size/type, load-balanced tier count, and their current required inputs. Full Linux/Windows, image, network, identity, and lifecycle adapters remain planned.
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.

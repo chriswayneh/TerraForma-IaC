@@ -31,7 +31,7 @@ def infrastructure_guide(config: WizardConfig) -> dict:
         components.append(
             {
                 "name": compute,
-                "explanation": f"{'Two virtual machines share' if balanced else 'One virtual machine handles'} your web workload. Each runs nginx, which serves web traffic over HTTP.",
+                "explanation": f"{'The configured virtual machines share' if balanced else 'One virtual machine handles'} your web workload. Each runs nginx, which serves web traffic over HTTP.",
             }
         )
         components.append(
@@ -44,13 +44,13 @@ def infrastructure_guide(config: WizardConfig) -> dict:
             components.append(
                 {
                     "name": "Load balancer",
-                    "explanation": "A front door distributes traffic across the two web servers and checks whether they are responding.",
+                    "explanation": "A front door distributes traffic across the configured web servers and checks whether they are responding.",
                 }
             )
         route = [
             entry,
             "Load balancer" if balanced else "HTTP access rules",
-            "Two web servers" if balanced else "Web server",
+            "Configured web server tier" if balanced else "Web server",
         ]
     elif config.architecture_type == "secure_database":
         components.append(

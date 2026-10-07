@@ -277,7 +277,7 @@ function updateGuidance() {
       ? "Public mode opens HTTP access. SSH stays closed by default. Add TLS before sensitive use."
       : "Your web server is reached through its cloud network. Outbound NAT may incur charges.",
     load_balanced_tier:
-      "Two servers share traffic through a load balancer. This costs more than a single-server setup.",
+      "Your selected number of servers shares traffic through a load balancer. Each server adds compute and disk cost.",
     secure_database: config.is_public
       ? "You must supply a restricted client IP or network before deployment. Database passwords are kept in Terraform variables."
       : "Your database stays on a private cloud network. A standby, backups, and deletion protection are included.",

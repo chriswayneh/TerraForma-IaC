@@ -194,6 +194,15 @@ class TerraformGenerator:
             "development",
             pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$",
         )
+        if self.config.architecture_type == "load_balanced_tier":
+            self.variable(
+                "instance_count",
+                "Number of web VMs in the tier. Each VM adds compute and disk cost; this does not configure automatic scaling or multi-zone placement.",
+                2,
+                type_name="number",
+                minimum=2,
+                maximum=20,
+            )
         getattr(self, f"_{self.config.provider}")()
         return {
             "main.tf": "\n\n".join(item.render() for item in self.main) + "\n",
@@ -364,7 +373,7 @@ class TerraformGenerator:
         self.resource(
             "aws_instance",
             "web",
-            count=2 if balanced else 1,
+            count=ref("var.instance_count") if balanced else 1,
             ami=ref("data.aws_ami.linux.id"),
             instance_type=ref("var.instance_type"),
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
@@ -412,7 +421,7 @@ class TerraformGenerator:
             )
             self.resource(
                 "aws_lb_target_group_attachment",
-                count=2,
+                count=ref("var.instance_count"),
                 target_group_arn=ref("aws_lb_target_group.this.arn"),
                 target_id=ref("aws_instance.web[count.index].id"),
                 port=80,
@@ -768,7 +777,7 @@ class TerraformGenerator:
             self.resource(
                 "azurerm_linux_virtual_machine_scale_set",
                 sku=ref("var.vm_size"),
-                instances=2,
+                instances=ref("var.instance_count"),
                 children=[
                     disk,
                     image,
@@ -1067,7 +1076,7 @@ class TerraformGenerator:
                 name=ref("var.project_name"),
                 base_instance_name=ref("var.project_name"),
                 zone=ref("var.zone"),
-                target_size=2,
+                target_size=ref("var.instance_count"),
                 children=[
                     block(
                         "version", instance_template=ref("google_compute_instance_template.this.id")

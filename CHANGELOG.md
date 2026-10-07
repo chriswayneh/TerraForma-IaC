@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ask for load-balanced VM capacity across AWS, Azure, and GCP, with matching whole-number bounds and generated counts.
+
 - Restrict database client networks through shared questionnaire and Terraform checks; exclude broad Azure-service firewall access.
 
 - Add a versioned project specification and a contract derived from every declared recipe variable.

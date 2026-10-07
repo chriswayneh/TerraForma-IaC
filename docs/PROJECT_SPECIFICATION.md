@@ -64,6 +64,12 @@ The label appears in compiled target metadata and the project guide. It does not
 
 ## Recipe capabilities
 
+### Tier capacity
+
+Load-balanced compute recipes ask for `instance_count`, a whole number from 2 to 20 with a default of 2. The answer controls EC2 instances and target attachments, Azure scale-set instances, or the GCP managed instance-group target size. Single-server recipes keep exactly one VM and reject this extra input. This is initial capacity; autoscaling and custom placement are not configured. AWS distributes instances across its two generated subnets; Azure and GCP retain their existing recipe placement. Check quotas, availability, and per-instance compute/disk costs before deploying.
+
+![Configuring tier capacity](images/tier-capacity.png)
+
 ### Database client access
 
 Database recipes constrain client networks in both questionnaires and generated Terraform. AWS database client CIDRs and public GCP database client CIDRs accept an RFC1918 private subnet (`10/8`, `172.16/12`, or `192.168/16`) or an IPv4 `/24`–`/32` network. Prefer `/32` for a single public client. Larger public ranges require a separately reviewed configuration; this is a TerraForma recipe policy, not a cloud provider limit. Public HTTP web-server ranges use their own policy and can still accept `0.0.0.0/0`.

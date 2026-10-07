@@ -30,7 +30,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
                 if config.architecture_type == "single_web_server"
-                else "Creates a two-instance tier; count and placement are fixed.",
+                else "Creates a tier with 2–20 instances (default 2); placement is fixed and automatic scaling is not configured.",
             ]
         )
         if config.provider == "azure":
