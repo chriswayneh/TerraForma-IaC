@@ -742,3 +742,14 @@ def test_native_gcp_standard_scheduling(native_directories, windows, policy):
         windows, host_maintenance_policy=policy, automatic_restart=policy == "MIGRATE"
     )
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
+def test_native_azure_standalone_placement(native_directories, windows, zone):
+    from terraforma.project import compile_project
+    from tests.test_azure_disk_caching import specification
+
+    spec = specification(windows, availability_zone=zone, enable_data_disk=True)
+    spec.recipe.is_public = True
+    spec.inputs["allowed_cidr"] = "10.20.0.0/24"
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])

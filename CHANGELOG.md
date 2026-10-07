@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Azure standalone Linux/Windows placement choices: regional or availability zone 1–3. The VM, optional data disk, Standard NAT gateway and generated public IPs share the selected placement. Changes can replace resources and lose data; zone support/capacity remain unverified.
+
 - Removed repeated non-secret field descriptions from the terminal questionnaire. Input guidance appears once per applicable question; external-secret guidance remains visible.
 
 - Local project-specification and plan-JSON readers now check for regular files before opening and recheck the opened descriptor. Pipes, devices and directories are rejected; existing byte limits and generic CLI error handling remain in place.

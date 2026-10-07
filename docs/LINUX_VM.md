@@ -56,6 +56,12 @@ The generated output has no application startup script or HTTP endpoint. Review 
 
 Reference behavior: [EC2 key pairs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html), [Google SSH connections](https://docs.cloud.google.com/compute/docs/instances/ssh), and [project SSH-key restrictions](https://docs.cloud.google.com/compute/docs/connect/restrict-ssh-keys?hl=en).
 
+## Azure placement
+
+Standalone Azure Linux and Windows VMs expose **Azure availability zone** in Cloud target. `regional` (default) requests no specific zone. Selecting `1`, `2` or `3` places the VM, optional managed data disk, Standard NAT gateway and generated public IPs in that zone. The network/subnet remains regional. This is one VM in one zone, not a redundant deployment or failover configuration.
+
+Confirm zone support for the region, VM size, disks and network services separately. The current opt-in size metadata check does not establish zone availability or capacity. Changing placement replaces resources and can delete OS/data disks or change public addresses; review backups and the Terraform plan before changing it. See the provider's [VM placement](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine), [managed disk](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk) and [Standard NAT gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) references.
+
 ## GCP host maintenance and restart
 
 Standalone GCP Linux and Windows VMs expose **GCP host maintenance behavior** and **Restart the VM after host failures or maintenance** in Operations and identity. Defaults are `MIGRATE` and enabled automatic restart for a standard VM. `TERMINATE` stops the VM during host maintenance; automatic restart governs subsequent Compute Engine recovery, not deliberate user stops or application health.

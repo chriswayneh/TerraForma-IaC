@@ -57,6 +57,15 @@ def build_azure(builder: TerraformGenerator) -> None:
     windows = builder.config.architecture_type == "windows_virtual_machine"
     vm_resource = "azurerm_windows_virtual_machine" if windows else "azurerm_linux_virtual_machine"
     standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+    zone = ref('var.availability_zone == "regional" ? null : var.availability_zone')
+    zones = ref('var.availability_zone == "regional" ? null : [var.availability_zone]')
+    if standalone:
+        builder.variable(
+            "availability_zone",
+            "Azure placement: regional (default) requests no specific availability zone; 1, 2 or 3 places the VM, optional data disk, Standard NAT gateway and generated public IPs in that zone. Verify region, VM-size, disk and network support separately; the current size check does not establish zone availability or capacity. One zone is not a highly available deployment. Changing placement replaces resources and can delete OS/data disks or change public addresses; review backups and the Terraform plan first.",
+            "regional",
+            choices=("regional", "1", "2", "3"),
+        )
     builder.variable(
         "admin_username",
         "Windows administrator username: 3–20 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Reserved names are rejected. Supply the password externally and protect Terraform state and plans."
@@ -168,10 +177,15 @@ def build_azure(builder: TerraformGenerator) -> None:
         name=ref('"${var.project_name}-egress"'),
         allocation_method="Static",
         sku="Standard",
+        **{"zones": zones} if standalone else {},
         **common,
     )
     builder.resource(
-        "azurerm_nat_gateway", name=ref('"${var.project_name}-nat"'), sku_name="Standard", **common
+        "azurerm_nat_gateway",
+        name=ref('"${var.project_name}-nat"'),
+        sku_name="Standard",
+        **{"zones": zones} if standalone else {},
+        **common,
     )
     builder.resource(
         "azurerm_nat_gateway_public_ip_association",
@@ -191,6 +205,7 @@ def build_azure(builder: TerraformGenerator) -> None:
             name=ref('"${var.project_name}-web"'),
             allocation_method="Static",
             sku="Standard",
+            **{"zones": zones} if standalone else {},
             **common,
         )
     builder.variable(
@@ -295,6 +310,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     }
     if standalone:
         compute.pop("custom_data")
+        compute["zone"] = zone
     if windows:
         compute.pop("disable_password_authentication")
         compute.update(
@@ -452,6 +468,7 @@ def build_azure(builder: TerraformGenerator) -> None:
             create_option="Empty",
             disk_size_gb=ref("var.data_disk_size_gb"),
             storage_account_type=ref("var.data_disk_type"),
+            zone=zone,
             **common,
         )
         builder.resource(

@@ -1,5 +1,13 @@
 # Verification record
 
+## Azure standalone placement checkpoint
+
+- The default suite passes 1,349 tests with 227 optional/native/platform cases skipped. Ruff checks/formatting and JavaScript syntax checks pass.
+- Eighteen new regression cases cover Linux/Windows regional and zone 1–3 answers, matching VM/data-disk/NAT/public-IP placement, API generation/import preservation, invalid choices, defaults and exclusion from other Azure recipes.
+- Four separately enabled Linux/Windows regional/zone-2 cases pass Terraform validation and TFLint against AzureRM 4.81, including data disks and inbound public IPs. Versioned AzureRM 4.0 documentation confirms the existing Linux provider floor supports these zone arguments.
+- A temporary browser tab imported an Azure Windows project, displayed the regional default in Cloud target, selected zone 2 and generated files successfully. The resulting summary retained zone 2; the user's tab was preserved.
+- These checks do not establish regional/SKU/network zone support, account capacity, successful deployment, failover or replacement/data recovery. The current size preflight does not confirm zone availability.
+
 ## Terminal question guidance checkpoint
 
 - The CLI/project/Azure Windows regression run passes 89 cases. Removing a duplicate description print preserves the existing per-question guidance and external-secret handling. Ruff checks and formatting pass across 79 Python files after normalizing edited source files.
