@@ -304,15 +304,19 @@ async function api(path, body, raw = false) {
   if (!response.ok) {
     const text = await response.text();
     let detail = text;
+    let field = null;
     try {
       const parsed = JSON.parse(text);
+      if (typeof parsed.field === "string") field = parsed.field;
       detail = Array.isArray(parsed.detail)
         ? parsed.detail.map((item) => item.msg).join("; ")
         : parsed.detail || text;
     } catch {
       detail = text || "The local request failed.";
     }
-    throw new Error(detail);
+    const error = new Error(detail);
+    error.field = field;
+    throw error;
   }
   return response;
 }
@@ -516,6 +520,13 @@ form.addEventListener("submit", async (event) => {
     );
   } catch (error) {
     notify(error.message, true);
+    setBusy(false);
+    const field = error.field ? byId(`recipe-${error.field}`) : null;
+    if (field) {
+      field.setCustomValidity(error.message);
+      field.setAttribute("aria-invalid", "true");
+      field.reportValidity();
+    }
   } finally {
     setBusy(false);
   }
@@ -526,6 +537,10 @@ byId("back-button").addEventListener("click", () => {
   if (!busy && step > 0) showStep(step - 1);
 });
 form.addEventListener("input", (event) => {
+  if (typeof event.target.setCustomValidity === "function") {
+    event.target.setCustomValidity("");
+    event.target.removeAttribute("aria-invalid");
+  }
   saveChoices();
   if (event.target.id === "remember-choice") return;
   updateGuidance();

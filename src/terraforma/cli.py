@@ -16,6 +16,7 @@ from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import WizardConfig, project_destination, write_configuration
 from terraforma.plan_review import load_and_review
 from terraforma.project import (
+    ProjectInputError,
     ProjectSpecification,
     compile_project,
     input_contract,
@@ -59,6 +60,8 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
                 value = int(text) if definition["kind"] == "integer" else text
                 validate_answer(definition, value)
                 return True
+            except ProjectInputError as error:
+                return str(error)
             except (ValueError, TypeError):
                 return "Enter a valid value for this field; review its description and supported range."
 
@@ -182,6 +185,8 @@ def wizard(target_dir: Path | None):
         )
         specification = collect_recipe_inputs(config)
         project = compile_project(specification)
+    except ProjectInputError as error:
+        raise click.ClickException(str(error)) from None
     except (ValueError, TypeError, ValidationError):
         raise click.ClickException(
             "Project inputs are invalid or incompatible. Review the recipe's input contract; values are omitted from this error."
@@ -337,6 +342,8 @@ def generate_specification(spec: Path, target_dir: Path):
     try:
         specification = load_specification(spec)
         result = compile_project(specification)
+    except ProjectInputError as error:
+        raise click.ClickException(str(error)) from None
     except ValidationError:
         raise click.ClickException(
             "Project specification does not match the supported schema; input values are omitted from this error."

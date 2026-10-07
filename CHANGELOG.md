@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show field-specific input correction hints without reflecting submitted values; focus the invalid browser field and clear errors on edits.
+
 - Offer supported Linux image choices from official publishers across AWS, Azure, and GCP, with image-specific AWS startup scripts and visible compatibility limits.
 
 - Ask for load-balanced VM capacity across AWS, Azure, and GCP, with matching whole-number bounds and generated counts.

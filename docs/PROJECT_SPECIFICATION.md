@@ -4,6 +4,8 @@ Available on `main` during v0.3 development. The v0.2.0 release does not include
 
 A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.
 
+If an answer fails a field check, the interfaces identify the declared field and a safe correction hint without repeating its submitted value. The browser focuses that field and clears its validation error when you edit it. Unknown or secret input names and malformed project files receive a generic error. No native validation starts for invalid project inputs.
+
 ```json
 {
   "schema_version": 1,

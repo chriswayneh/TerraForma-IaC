@@ -24,6 +24,7 @@ from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
 from terraforma.plan_review import MAX_PLAN_BYTES, review_bytes
 from terraforma.project import (
+    ProjectInputError,
     ProjectSpecification,
     compile_project,
     input_contract,
@@ -87,6 +88,8 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         return generate_project(payload)
     try:
         compiled = compile_project(payload)
+    except ProjectInputError:
+        raise
     except (ValueError, TypeError):
         raise HTTPException(
             status_code=422,
@@ -130,6 +133,10 @@ def create_app() -> FastAPI:
             },
         )
 
+    @app.exception_handler(ProjectInputError)
+    async def invalid_project_input(request: Request, error: ProjectInputError):
+        return JSONResponse(status_code=422, content={"detail": str(error), "field": error.field})
+
     @app.post("/api/input-contract")
     async def recipe_inputs(config: WizardConfig):
         return {
@@ -148,6 +155,8 @@ def create_app() -> FastAPI:
         try:
             specification = parse_specification(await request.body())
             return configured_project(specification)
+        except ProjectInputError:
+            raise
         except (ValueError, TypeError, RecursionError):
             raise HTTPException(
                 status_code=422,
@@ -175,6 +184,8 @@ def create_app() -> FastAPI:
     async def project_compile(specification: ProjectSpecification):
         try:
             return compile_project(specification)
+        except ProjectInputError:
+            raise
         except (ValueError, TypeError):
             raise HTTPException(
                 status_code=422,

@@ -31,6 +31,12 @@ class ProjectSpecification(BaseModel):
         return value
 
 
+class ProjectInputError(ValueError):
+    def __init__(self, field: str, message: str):
+        self.field = field
+        super().__init__(f"{field}: {message}")
+
+
 def input_contract(config: WizardConfig) -> list[dict]:
     generator = TerraformGenerator(config)
     generator.generate()
@@ -154,6 +160,35 @@ def validate_input(name: str, value: str, kind: str):
 
 
 def validate_answer(definition: dict, value: str | int) -> None:
+    try:
+        _validate_answer(definition, value)
+    except (ValueError, TypeError):
+        if definition["kind"] == "integer":
+            message = (
+                f"Enter a whole number from {definition['minimum']} to {definition['maximum']}."
+            )
+        elif definition.get("network_policy") == "database_cidr":
+            message = "Enter an RFC1918 private subnet or an IPv4 /24 through /32 client network; prefer /32 for one client."
+        elif definition.get("network_policy") == "database_address":
+            message = "Enter one client IPv4 address outside 0/8, loopback, and 224/3; Azure-wide service access is unsupported."
+        elif definition["choices"]:
+            message = "Choose one of: " + ", ".join(definition["choices"]) + "."
+        elif definition["name"] == "aws_account_id":
+            message = "Enter the 12-digit target AWS account ID."
+        else:
+            message = {
+                "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
+                "ipv4_address": "Enter a valid IPv4 client address.",
+                "uuid": "Enter a valid subscription UUID.",
+                "ssh_public_key": "Enter a structurally valid OpenSSH Ed25519 or RSA public key; private keys are unsupported.",
+            }.get(
+                definition["kind"],
+                "Enter a nonempty value in the field's documented format; private keys and control characters are unsupported.",
+            )
+        raise ProjectInputError(definition["name"], message) from None
+
+
+def _validate_answer(definition: dict, value: str | int) -> None:
     if definition["kind"] == "integer":
         if type(value) is not int or not definition["minimum"] <= value <= definition["maximum"]:
             raise ValueError("Numeric input is outside the supported whole-number range.")
@@ -201,7 +236,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
         if item["required"] and not item["sensitive"] and item["name"] not in specification.inputs
     ]
     if missing:
-        raise ValueError("Required project inputs are missing: " + ", ".join(missing))
+        raise ProjectInputError(missing[0], "This required project input is missing.")
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
@@ -210,7 +245,9 @@ def compile_project(specification: ProjectSpecification) -> dict:
         and "zone" in effective
         and not effective["zone"].startswith(effective["region"] + "-")
     ):
-        raise ValueError("The selected Google Cloud zone must belong to the selected region.")
+        raise ProjectInputError(
+            "zone", "Choose a zone that belongs to the selected Google Cloud region."
+        )
     generator = TerraformGenerator(specification.recipe)
     files = generator.generate()
     for variable in generator.variables:
