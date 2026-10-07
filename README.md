@@ -23,7 +23,7 @@ TerraForma creates Terraform configuration files from scratch based on answers t
 
 **Terraform** uses text files to describe the servers, networks, storage, and access rules a cloud system needs. It can use those files to build and update that system, making the setup repeatable instead of a series of manual steps.
 
-**TerraForma creates those Terraform configuration files from scratch** through a guided questionnaire using supported, built-in templates. You answer questions about the setup you want; TerraForma generates new files, explains what they describe, and helps check them. The goal is to make a complicated, manual process easier and more repeatable.
+**TerraForma creates those Terraform configuration files from scratch** through a guided questionnaire using supported, built-in templates. Enter your infrastructure requirements, select your cloud provider and workload, and configure the supported inputs. TerraForma generates the files, explains the resources, and helps check the configuration.
 
 **For example:** you need a small server to host a website. Choose a supported cloud service, name the project, and decide whether people should be able to reach it from the internet. TerraForma produces Terraform files describing the server and its supporting network, shows an explanation, and lets you download the result for review.
 

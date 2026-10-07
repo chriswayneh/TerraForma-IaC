@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Updated the workspace introduction and questionnaire labels to direct input wording, and refreshed GitHub screenshots that still showed older copy.
+
 - Added a GCP Windows Server 2022 recipe with restricted RDP, external user/password setup, activation routing, configurable Shielded VM settings and no password or private-key collection. Exact Windows image pins and Azure Windows remain planned.
 
 - Added an initial AWS Windows Server 2022 VM recipe with restricted RDP, RSA public-key validation, configurable machine/disks/network and external EC2 password recovery. No password or private key is collected or retrieved. Azure/GCP Windows generation and live deployment/access checks remain planned.
