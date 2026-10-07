@@ -1,6 +1,8 @@
 import hashlib
 import io
 import json
+import os
+import stat
 import zipfile
 from pathlib import Path
 
@@ -90,18 +92,41 @@ def test_existing_manifest_is_preserved_and_no_outputs_written(tmp_path):
 def test_failed_write_rolls_back_only_new_files(tmp_path, monkeypatch):
     note = tmp_path / "note.txt"
     note.write_text("existing note")
-    original_open = Path.open
+    original_open = open
 
     def fail_second_write(path, mode="r", *args, **kwargs):
-        if path.name == "variables.tf" and mode == "x":
+        if Path(path).name == "variables.tf" and mode == "x":
             raise OSError("simulated write failure")
         return original_open(path, mode, *args, **kwargs)
 
-    monkeypatch.setattr(Path, "open", fail_second_write)
+    monkeypatch.setattr("builtins.open", fail_second_write)
     with pytest.raises(OSError):
         write_configuration(project_artifacts(project()), tmp_path)
     assert note.read_text() == "existing note"
     assert list(tmp_path.iterdir()) == [note]
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Unix permission semantics")
+def test_new_project_is_private_even_with_permissive_umask(tmp_path):
+    destination = tmp_path / "private-output"
+    previous = os.umask(0)
+    try:
+        write_configuration(project_artifacts(project()), destination)
+    finally:
+        os.umask(previous)
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o700
+    assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in destination.iterdir())
+    assert verify_project(destination)["status"] == "matches_receipt"
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Unix permission semantics")
+def test_existing_directory_permissions_are_preserved(tmp_path):
+    destination = tmp_path / "existing-output"
+    destination.mkdir(mode=0o750)
+    original_mode = stat.S_IMODE(destination.stat().st_mode)
+    write_configuration(project_artifacts(project()), destination)
+    assert stat.S_IMODE(destination.stat().st_mode) == original_mode
+    assert all(stat.S_IMODE(path.stat().st_mode) & 0o077 == 0 for path in destination.iterdir())
 
 
 def test_zip_checksums_and_receipt_cover_exact_exported_bytes(tmp_path):

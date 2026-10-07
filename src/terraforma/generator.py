@@ -1,4 +1,5 @@
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -1823,12 +1824,18 @@ def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
     if not files or not set(files) <= GENERATED_FILENAMES:
         raise ValueError("Unexpected or empty generated filename set.")
     destination = project_destination(directory)
-    destination.mkdir(parents=True, exist_ok=True)
+    destination.mkdir(mode=0o700, parents=True, exist_ok=True)
     created: list[Path] = []
     try:
         for name, content in files.items():
             path = destination / name
-            with path.open("x", encoding="utf-8", newline="\n") as stream:
+            with open(
+                path,
+                "x",
+                encoding="utf-8",
+                newline="\n",
+                opener=lambda name, flags: os.open(name, flags, 0o600),
+            ) as stream:
                 created.append(path)
                 stream.write(content)
     except BaseException:

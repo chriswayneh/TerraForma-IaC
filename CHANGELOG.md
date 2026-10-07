@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Create terminal-generated artifacts with Unix owner-only file permissions and private new destination directories; preserve existing directory permissions and document Windows/download boundaries.
+
 - Add `terraforma doctor` for local package/PATH availability checks, capability-specific exit status and JSON output without tool execution or credential access.
 
 - Extend local plan review to block tokenless AWS metadata access and flag unverified attached AWS/GCP identity permissions, using policy version `0.3.0`.

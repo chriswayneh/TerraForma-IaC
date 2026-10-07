@@ -16,6 +16,8 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
+- Terminal output uses exclusive file creation with mode `0600` and new leaf directories with mode `0700`. Existing overwrite and rollback tests pass on Windows. The rebuilt isolated installed wheel generates an intact receipt and refuses overwrites. Two added Unix CI tests verify private modes under a permissive umask and preservation of existing directory permissions; they are skipped on Windows. Download/extraction permissions and cross-version Windows ACL privacy are not established by these checks.
+
 - Ten local readiness tests cover missing native/web/base dependencies, unsupported Python, selected-capability exit status, JSON/text reports and omission of private environment values and discovered paths. The rebuilt isolated installed wheel confirms web availability, validation exit `1` with missing tools, and generation remaining available. The command discovers package metadata and PATH only; it does not run tools or establish executable trust, cloud identity or provider readiness.
 
 - Optional workload identity checks cover enabled/disabled AWS profiles, Azure managed identities and GCP user-managed service accounts, conditional required references, malformed/credential-shaped values, terminal collection, resource guides and ZIP import/export. Six added provider cases pass native validation/TFLint; two native console cases enforce the required-reference condition. The full generator run passes 166 tests, and a focused identity/username rerun passes after correcting literal-hyphen patterns.
