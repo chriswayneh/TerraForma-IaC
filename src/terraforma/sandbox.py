@@ -116,7 +116,19 @@ class ValidationSandbox:
     def _clean(value: str | bytes | None) -> str:
         if isinstance(value, bytes):
             value = value.decode("utf-8", errors="replace")
-        return re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", value or "").strip()
+        clean = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", value or "")
+        clean = re.sub(r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)", "", clean)
+        clean = clean.replace("\r\n", "\n").replace("\r", "\n")
+        return "".join(
+            char
+            for char in clean
+            if char in "\n\t"
+            or (
+                ord(char) >= 32
+                and not 127 <= ord(char) <= 159
+                and char not in "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069"
+            )
+        ).strip()
 
     def _execute(self, arguments: list[str]) -> tuple[int, str]:
         environment = os.environ.copy()

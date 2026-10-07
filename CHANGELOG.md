@@ -17,6 +17,7 @@
 - Remove Terraform variable values and the OpenAI key from native validation subprocess environments.
 - Save project manifests, deterministic generation receipts, and export checksums from both interfaces; add bounded `verify-project` comparisons that detect changed files without disclosing contents or granting deployment approval.
 - Reject destinations containing existing Terraform state, variable files, initialization data, or generated artifacts before writing; check explicit wizard destinations before prompts and roll back new files after write failures.
+- Strip incoming terminal controls and bidirectional formatting controls from displayed validation diagnostics and AI warning cards.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

@@ -101,3 +101,10 @@ def test_empty_target_is_rejected_and_cleaned(tmp_path):
     with pytest.raises(ValueError, match="no root"):
         sandbox.create_environment()
     assert sandbox.temp_dir is None
+
+
+def test_diagnostics_remove_terminal_controls_and_preserve_plain_text():
+    raw = "\x1b[31mFailure\x1b[0m\rHidden\x1b]52;c;clipboard-payload\x07\nDetails\tremain\x08\x00\x9b\u202e"
+    assert ValidationSandbox._clean(raw) == "Failure\nHidden\nDetails\tremain"
+    assert ValidationSandbox._clean(b"invalid-utf8\xff") == "invalid-utf8\ufffd"
+    assert ValidationSandbox._clean("\x1b]0;title\x1b\\message") == "message"

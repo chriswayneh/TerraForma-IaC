@@ -317,7 +317,9 @@ def create_app() -> FastAPI:
             errors = [
                 {
                     "tool": item["tool"],
-                    "message": redact_sensitive_text(readable_error(item["raw_output"])),
+                    "message": redact_sensitive_text(
+                        ValidationSandbox._clean(readable_error(item["raw_output"]))
+                    ),
                 }
                 for item in result["errors"]
             ]
