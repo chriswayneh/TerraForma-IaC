@@ -32,13 +32,15 @@ def infrastructure_guide(config: WizardConfig) -> dict:
             [
                 {
                     "name": compute,
-                    "explanation": "One Windows VM uses the selected machine size and boot disk, with the Amazon Windows Server 2022 image. Application initialization is left for your workload setup."
+                    "explanation": "One Windows VM uses the selected machine size and boot disk, with the supported Windows Server 2022 image. Application initialization is left for your workload setup."
                     if windows
                     else "One Linux VM uses the selected operating system, machine size, and boot disk. Application initialization is left for your workload setup.",
                 },
                 {
                     "name": "Administrator access",
-                    "explanation": "Only RDP from the supplied administrator CIDR is added. Recover the Administrator password separately through EC2 with the private key matching the supplied RSA public key. Private VMs need an existing routed access path. TerraForma does not collect either credential."
+                    "explanation": "Only RDP from the supplied administrator CIDR is added. Set the requested local user password separately with the Google Cloud console or gcloud reset-windows-password. Terraform does not create the account or collect its password; guest-agent readiness and IAM permissions need review. Private VMs require a routed access path."
+                    if windows and provider == "gcp"
+                    else "Only RDP from the supplied administrator CIDR is added. Recover the Administrator password separately through EC2 with the private key matching the supplied RSA public key. Private VMs need an existing routed access path. TerraForma does not collect either credential."
                     if windows
                     else "Only SSH from the supplied administrator CIDR is added. AWS and Azure use your public key; Google uses OS Login and requires appropriate IAM roles. Private VMs also require an existing routed access path such as a VPN or bastion.",
                 },

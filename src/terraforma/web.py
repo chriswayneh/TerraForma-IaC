@@ -65,13 +65,16 @@ def generate_project(config: WizardConfig) -> dict:
     if config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
         notes.extend(
             [
-                "RDP requires the selected administrator network and an Administrator password recovered separately with your RSA private key through EC2. TerraForma does not collect or decrypt it. Private access needs a routed path."
+                "RDP requires the selected administrator network and separate Windows account/password setup through Google Cloud after provisioning. Terraform does not create that account. Verify guest-agent readiness, IAM permissions and Windows activation; private access needs a routed path."
+                if config.architecture_type == "windows_virtual_machine"
+                and config.provider == "gcp"
+                else "RDP requires the selected administrator network and an Administrator password recovered separately with your RSA private key through EC2. TerraForma does not collect or decrypt it. Private access needs a routed path."
                 if config.architecture_type == "windows_virtual_machine"
                 else "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",
                 "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur charges.",
             ]
         )
-        if config.provider == "gcp":
+        if config.provider == "gcp" and config.architecture_type == "virtual_machine":
             notes.append(
                 "Google OS Login needs an appropriate IAM role. Organization policy and login prerequisites remain unverified offline."
             )

@@ -74,6 +74,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "aws"
                     else "GCP image version (latest or exact image name)",
                     "admin_username": "Administrator username",
+                    "windows_username": "Windows username for separate credential setup",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
                     "enable_secure_boot": "Verify signed boot components (Secure Boot)",

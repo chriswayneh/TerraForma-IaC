@@ -68,9 +68,9 @@ def test_windows_access_image_and_no_secret_collection(public, encryption, data_
     assert not any("ec2-user" in item for item in result["capabilities"]["fixed_choices"])
 
 
-@pytest.mark.parametrize("provider", ["azure", "gcp"])
+@pytest.mark.parametrize("provider", ["azure"])
 def test_other_windows_providers_fail_closed(provider):
-    with pytest.raises(ValidationError, match="AWS only"):
+    with pytest.raises(ValidationError, match="AWS and GCP only"):
         WizardConfig(
             provider=provider,
             project_name="windows-demo",

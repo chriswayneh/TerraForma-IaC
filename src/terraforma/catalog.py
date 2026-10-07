@@ -3,7 +3,7 @@ from terraforma.generator import LINUX_IMAGE_CHOICES, WizardConfig
 PROVIDERS = ("aws", "azure", "gcp")
 WORKLOADS = {
     "virtual_machine": "Linux virtual machine",
-    "windows_virtual_machine": "Windows virtual machine (AWS)",
+    "windows_virtual_machine": "Windows virtual machine",
     "single_web_server": "Single web server",
     "load_balanced_tier": "Load-balanced application",
     "secure_database": "Managed PostgreSQL",
@@ -33,12 +33,18 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             "gcp": "Debian 12 or Ubuntu 24.04 LTS from debian-cloud/ubuntu-os-cloud",
         }[config.provider]
         if windows:
-            image = "Windows Server 2022 English Full Base from Amazon"
+            image = (
+                "Windows Server 2022 English Full Base from Amazon"
+                if config.provider == "aws"
+                else "Windows Server 2022 from windows-cloud"
+            )
         fixed.extend(
             [
                 f"Operating system choices: {image}; x86_64/AMD64 only. "
                 + (
-                    "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
+                    "Latest Windows image family only; exact image pins are unsupported and resolved image availability remains unverified."
+                    if windows and config.provider == "gcp"
+                    else "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
                     if config.provider == "azure"
                     else "Image version is configurable: latest (default) or an exact supported published image name. Availability and deprecation remain unverified."
                     if config.provider == "gcp"
@@ -70,6 +76,14 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 if windows
                 else "Imports the supplied public key into EC2; image username is ec2-user for Amazon Linux or ubuntu for Ubuntu. No private key is generated or stored."
             )
+        elif windows:
+            fixed.append(
+                "Uses the Google Windows guest-agent credential workflow after provisioning. The requested username is an output reference, not a Terraform-created account. Passwords, reset operations and private keys stay outside TerraForma; IAM permissions and guest readiness need verification."
+            )
+            fixed.append(
+                "Private Google Access and a default-internet-gateway route to 35.190.247.13/32 support Windows activation; an egress rule permits TCP 1688 for the VM tag. Cloud NAT is not the activation path. Organization policy and actual activation remain unverified."
+            )
+            unsupported.append("Exact Windows image pins")
         elif standalone:
             fixed.append(
                 "Uses Google OS Login with project SSH keys blocked. OS Login IAM roles and organization policy must be checked before access; no metadata SSH key is collected."
@@ -179,5 +193,5 @@ def recipe_catalog() -> list[dict]:
         )
         for provider in PROVIDERS
         for workload in WORKLOADS
-        if workload != "windows_virtual_machine" or provider == "aws"
+        if workload != "windows_virtual_machine" or provider != "azure"
     ]

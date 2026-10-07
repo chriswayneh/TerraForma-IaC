@@ -283,7 +283,7 @@ def wizard(target_dir: Path | None):
                             value="windows_virtual_machine",
                         )
                     ]
-                    if provider == "aws"
+                    if provider in {"aws", "gcp"}
                     else []
                 ),
                 questionary.Choice("A single web server", value="single_web_server"),

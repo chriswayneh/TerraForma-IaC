@@ -305,10 +305,10 @@ function showStep(index) {
 
 function updateGuidance() {
   const windowsChoice = byId("windows-vm-choice");
-  const aws = form.elements.provider.value === "aws";
-  windowsChoice.hidden = !aws;
-  windowsChoice.querySelector("input").disabled = !aws;
-  if (!aws && form.elements.architecture_type.value === "windows_virtual_machine") {
+  const windowsSupported = ["aws", "gcp"].includes(form.elements.provider.value);
+  windowsChoice.hidden = !windowsSupported;
+  windowsChoice.querySelector("input").disabled = !windowsSupported;
+  if (!windowsSupported && form.elements.architecture_type.value === "windows_virtual_machine") {
     form.querySelector('[name="architecture_type"][value="virtual_machine"]').checked = true;
   }
   const config = configuration();
@@ -323,7 +323,7 @@ function updateGuidance() {
       ? "Also enable encryption at host. Requires subscription and VM-size support."
       : "Enable customer-managed KMS encryption for your stored data.";
   const notes = {
-    windows_virtual_machine: "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
+    windows_virtual_machine: config.provider === "gcp" ? "RDP is restricted to your administrator network. Set the requested user password separately through Google Cloud after provisioning; TerraForma does not create the account or collect its password. Private VMs need routed access and Windows activation prerequisites." : "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
     virtual_machine: "SSH is restricted to your administrator network. AWS/Azure need your public key; Google uses OS Login IAM access. Private VMs require a routed access path. No application is installed.",
     single_web_server: config.is_public
       ? "Public mode opens HTTP access. SSH stays closed by default. Add TLS before sensitive use."

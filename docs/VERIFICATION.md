@@ -126,3 +126,11 @@ The test environment currently emits a third-party Starlette warning about futur
 - These checks do not establish cloud availability, creation, password recovery, RDP access or teardown. Azure/GCP Windows recipes remain planned.
 
 The AWS Windows checkpoint passes 1,198 local tests (205 optional native cases skipped in the default run), Ruff checks across 73 Python files, JavaScript syntax checks and four separately enabled native provider/lint cases. An installed-wheel smoke verifies Windows generation, bundled UI assets and the 16-entry catalog. Target metadata tests use mocked responses, and the terminal questionnaire resolves required public-key/account inputs without collecting a password.
+
+## Google Cloud Windows VM development checkpoint
+
+- The default suite passes 1,231 tests (209 optional native cases skipped). Two additional terminal and ZIP export/import tests pass separately, preserving the requested non-secret username and required project inputs. Ruff covers 74 Python files; JavaScript syntax checks pass.
+- Four enabled native provider/lint cases cover public/private networking and both Secure Boot settings with an optional data disk. Trusted windows-cloud family selection, restricted RDP, Private Google Access, activation routing/TCP 1688, vTPM/integrity monitoring and serial-console disablement are generated explicitly.
+- An installed wheel verifies GCP Windows generation, bundled assets and the 17-entry catalog. A temporary browser tab completed GCP Windows generation, showed 64 GiB and e2-standard-2 defaults, and explained external account/password setup without collecting credentials.
+- Cloud creation, licensing activation, guest readiness, password setup, RDP access, BitLocker recovery and teardown remain unverified. Exact GCP Windows image pins and Azure Windows generation remain planned. The username output does not create a guest account.
+- The preceding AWS Windows checkpoint passed all GitHub Actions jobs: [workflow run](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37585313510).

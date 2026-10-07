@@ -33,7 +33,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
         "google_compute_subnetwork",
         name=ref("var.project_name"),
         ip_cidr_range=ref("var.network_cidr")
-        if builder.config.architecture_type == "virtual_machine"
+        if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else "10.0.1.0/24",
         region=ref("var.region"),
         network=ref("google_compute_network.this.id"),
@@ -43,7 +43,8 @@ def build_gcp(builder: TerraformGenerator) -> None:
         build_database(builder)
         return
     builder.variable("zone", "Compute zone in the chosen region.", "us-central1-a")
-    standalone = builder.config.architecture_type == "virtual_machine"
+    windows = builder.config.architecture_type == "windows_virtual_machine"
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     if standalone:
         builder.variable(
             "protect_vm",
@@ -59,14 +60,53 @@ def build_gcp(builder: TerraformGenerator) -> None:
         )
     builder.resource(
         "google_compute_firewall",
-        name=ref('"${var.project_name}-ssh"' if standalone else '"${var.project_name}-http"'),
+        name=ref(
+            '"${var.project_name}-rdp"'
+            if windows
+            else '"${var.project_name}-ssh"'
+            if standalone
+            else '"${var.project_name}-http"'
+        ),
         network=ref("google_compute_network.this.name"),
         source_ranges=[ref("var.allowed_cidr")]
         if standalone
         else [ref("var.allowed_cidr"), "35.191.0.0/16", "130.211.0.0/22"],
         target_tags=["terraforma-web"],
-        children=[block("allow", protocol="tcp", ports=["22" if standalone else "80"])],
+        children=[
+            block(
+                "allow", protocol="tcp", ports=["3389" if windows else "22" if standalone else "80"]
+            )
+        ],
     )
+    if windows:
+        builder.resource(
+            "google_compute_route",
+            "windows_activation",
+            name=ref('"${var.project_name}-windows-activation"'),
+            network=ref("google_compute_network.this.id"),
+            dest_range="35.190.247.13/32",
+            next_hop_gateway="default-internet-gateway",
+            priority=1000,
+            tags=["terraforma-web"],
+        )
+        builder.resource(
+            "google_compute_firewall",
+            "windows_activation",
+            name=ref('"${var.project_name}-windows-activation"'),
+            network=ref("google_compute_network.this.name"),
+            direction="EGRESS",
+            destination_ranges=["35.190.247.13/32"],
+            target_tags=["terraforma-web"],
+            priority=1000,
+            children=[block("allow", protocol="tcp", ports=["1688"])],
+        )
+        builder.variable(
+            "windows_username",
+            "Local Windows account to create or reset separately through the Google Cloud console or gcloud reset-windows-password after provisioning. Terraform records this non-secret reference as an output; it does not create the account. Resetting an existing user can lose data encrypted with the old password. Passwords stay outside TerraForma.",
+            "terraforma",
+            pattern=r"^[a-z][a-z0-9_-]{2,19}$",
+            forbidden_values=("administrator", "admin", "guest", "root", "system"),
+        )
     builder.resource(
         "google_compute_router",
         name=ref("var.project_name"),
@@ -94,14 +134,14 @@ def build_gcp(builder: TerraformGenerator) -> None:
     builder.variable(
         "machine_type",
         "Google Compute Engine machine type; zone availability requires account preflight.",
-        "e2-micro",
+        "e2-standard-2" if windows else "e2-micro",
     )
     builder.variable(
         "boot_disk_size_gb",
         "Boot disk size in GiB; review image requirements and storage cost.",
-        20,
+        64 if windows else 20,
         type_name="number",
-        minimum=20,
+        minimum=64 if windows else 20,
         maximum=2048,
     )
     builder.variable(
@@ -112,12 +152,23 @@ def build_gcp(builder: TerraformGenerator) -> None:
     )
     builder.variable(
         "image_version",
-        "Use latest to resolve the selected GCP image family at planning time, or enter an exact published Debian 12 Bookworm / Ubuntu 24.04 Noble AMD64 image name. The publisher project stays fixed. Verify availability, deprecation and compatibility before planning. Changing the image can replace a VM and destroy boot-disk data; pinning does not apply security patches automatically.",
+        "This initial Windows recipe resolves the windows-cloud/windows-2022 family at planning time. Exact image pins are not yet supported; record and review the resolved image in the plan. Image changes can replace the VM and delete boot data."
+        if windows
+        else "Use latest to resolve the selected GCP image family at planning time, or enter an exact published Debian 12 Bookworm / Ubuntu 24.04 Noble AMD64 image name. The publisher project stays fixed. Verify availability, deprecation and compatibility before planning. Changing the image can replace a VM and destroy boot-disk data; pinning does not apply security patches automatically.",
         "latest",
-        pattern="^(latest|debian-12-bookworm-v[0-9]{8}|ubuntu-2404-noble(-amd64)?-v[0-9]{8})$",
+        choices=("latest",) if windows else None,
+        pattern=None
+        if windows
+        else "^(latest|debian-12-bookworm-v[0-9]{8}|ubuntu-2404-noble(-amd64)?-v[0-9]{8})$",
     )
-    image_source = ref(
-        'var.image_version == "latest" ? (var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64") : (var.os_image == "debian-12" ? "debian-cloud/${var.image_version}" : "ubuntu-os-cloud/${var.image_version}")'
+    image_source = (
+        ref(
+            'var.image_version == "latest" ? {"windows-server-2022" = "windows-cloud/windows-2022"}[var.os_image] : null'
+        )
+        if windows
+        else ref(
+            'var.image_version == "latest" ? (var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64") : (var.os_image == "debian-12" ? "debian-cloud/${var.image_version}" : "ubuntu-os-cloud/${var.image_version}")'
+        )
     )
     image_lifecycle = block(
         "lifecycle",
@@ -125,9 +176,13 @@ def build_gcp(builder: TerraformGenerator) -> None:
             block(
                 "precondition",
                 condition=ref(
-                    'var.image_version == "latest" || (var.os_image == "debian-12" ? startswith(var.image_version, "debian-12-bookworm-v") : startswith(var.image_version, "ubuntu-2404-noble"))'
+                    'var.image_version == "latest"'
+                    if windows
+                    else 'var.image_version == "latest" || (var.os_image == "debian-12" ? startswith(var.image_version, "debian-12-bookworm-v") : startswith(var.image_version, "ubuntu-2404-noble"))'
                 ),
-                error_message="Choose an exact image name matching the selected Linux operating system.",
+                error_message="This Windows recipe supports the latest windows-cloud/windows-2022 image family only."
+                if windows
+                else "Choose an exact image name matching the selected Linux operating system.",
             )
         ]
         + (builder._identity_precondition().children if standalone else []),
@@ -146,7 +201,12 @@ def build_gcp(builder: TerraformGenerator) -> None:
     if standalone:
         builder.variable(
             "enable_secure_boot",
-            "Verify signed boot components with Google Shielded VM Secure Boot. Unsigned kernel modules or drivers can prevent booting; review workload compatibility before changing this setting. Changing Shielded VM options requires a stopped VM; automatic stopping is disabled. vTPM and integrity monitoring remain enabled.",
+            (
+                "On Windows, changing Shielded VM options can require BitLocker recovery. Verify access to recovery keys or suspend BitLocker before changing settings. "
+                if windows
+                else ""
+            )
+            + "Verify signed boot components with Google Shielded VM Secure Boot. Unsigned kernel modules or drivers can prevent booting; review workload compatibility before changing this setting. Changing Shielded VM options requires a stopped VM; automatic stopping is disabled. vTPM and integrity monitoring remain enabled.",
             True,
             type_name="bool",
         )
@@ -280,7 +340,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
             **{"allow_stopping_for_update": False} if standalone else {},
             tags=["terraforma-web"],
             **{
-                "metadata": {
+                "metadata": {"serial-port-enable": "FALSE"}
+                if windows
+                else {
                     "enable-oslogin": "TRUE",
                     "block-project-ssh-keys": "TRUE",
                     "serial-port-enable": "FALSE",
@@ -360,8 +422,16 @@ def build_gcp(builder: TerraformGenerator) -> None:
         builder.output(
             "vm_address",
             endpoint,
-            "VM IPv4 address; use OS Login with the required IAM role and allowed client network. Private VMs require routed access.",
+            "VM IPv4 address for restricted RDP. Create/reset the Windows user password separately through Google Cloud; private VMs require a routed access path."
+            if windows
+            else "VM IPv4 address; use OS Login with the required IAM role and allowed client network. Private VMs require routed access.",
         )
+        if windows:
+            builder.output(
+                "administrator_username",
+                "var.windows_username",
+                "Requested Windows username for separate Google Cloud credential setup; Terraform does not create this account.",
+            )
     else:
         builder.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
 

@@ -62,6 +62,6 @@ class WizardConfig(BaseModel):
 
     @model_validator(mode="after")
     def supported_windows_provider(self):
-        if self.architecture_type == "windows_virtual_machine" and self.provider != "aws":
-            raise ValueError("Windows VM generation currently supports AWS only.")
+        if self.architecture_type == "windows_virtual_machine" and self.provider == "azure":
+            raise ValueError("Windows VM generation currently supports AWS and GCP only.")
         return self

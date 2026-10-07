@@ -212,11 +212,20 @@ class TerraformGenerator:
             self.variable(
                 "os_image",
                 (
-                    "Windows Server 2022 English Full Base from Amazon, using x86_64. "
+                    (
+                        "Windows Server 2022 English Full Base from Amazon, using x86_64. "
+                        if self.config.provider == "aws"
+                        else "Windows Server 2022 from windows-cloud, using x86_64. "
+                    )
                     if self.config.architecture_type == "windows_virtual_machine"
                     else "Linux image from the supported publisher catalog, using x86_64/AMD64. "
                 )
-                + "The image version can be pinned separately; latest resolves at planning time. "
+                + (
+                    "This Windows recipe uses the latest family; exact image pins are not supported. "
+                    if self.config.architecture_type == "windows_virtual_machine"
+                    and self.config.provider == "gcp"
+                    else "The image version can be pinned separately; latest resolves at planning time. "
+                )
                 + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
                 "windows-server-2022"
                 if self.config.architecture_type == "windows_virtual_machine"
