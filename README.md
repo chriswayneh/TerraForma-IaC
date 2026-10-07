@@ -8,8 +8,8 @@ A lightweight local workspace for creating Terraform through a guided questionna
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-MIT-70e0a5)](LICENSE)
-[![Status](https://img.shields.io/badge/status-development-70e0a5)](docs/ROADMAP.md)
+[![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE)
+[![Status](https://img.shields.io/badge/status-development-7ce2fe)](docs/ROADMAP.md)
 
 **Development version:** `0.2.0.dev0`. The local visual workspace is being verified before the first release.
 
@@ -23,7 +23,7 @@ A lightweight local workspace for creating Terraform through a guided questionna
 
 ## What you get
 
-- A three-step browser wizard with a dark theme and an optional light theme.
+- A three-step browser wizard with sky-blue dark and light themes, using locally bundled [Radix Colors](https://www.radix-ui.com/colors).
 - AWS, Azure, and Google Cloud configurations with public/private access choices.
 - Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.
 - A simplified access diagram and plain-language resource explanations.
