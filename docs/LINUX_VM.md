@@ -92,3 +92,13 @@ AWS/GCP reference questions appear only when enabled. Missing references fail be
 Identity references are identifiers, not credentials. TerraForma validates their structure but cannot establish whether the referenced identity exists, belongs to the intended account, can be attached, or has appropriate permissions. Review least privilege, organization policy, metadata access and the Terraform plan before provisioning. Enabling an identity does not grant its workload access to any particular service. User-assigned Azure identities, Compute default service accounts, custom OAuth scopes, web-tier identities and IAM/RBAC policy creation remain outside this recipe.
 
 Provider references: [EC2 roles and instance profiles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html), [Azure managed identity lifecycle](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview), and [GCP service accounts and access scopes](https://docs.cloud.google.com/compute/docs/access/service-accounts).
+
+## Google Shielded VM boot protection
+
+![Configuring Google Shielded VM boot protection](images/shielded-vm.png)
+
+For standalone GCP VMs, **Verify signed boot components (Secure Boot)** is enabled by default. The generated VM also explicitly enables vTPM and integrity monitoring. Turning Secure Boot off leaves those two protections enabled and appears in the exported choices summary.
+
+Secure Boot can prevent unsigned kernel modules or drivers from loading. Review your workload before changing the setting. Shielded configuration changes require a stopped VM; the recipe keeps automatic stopping disabled, so arrange a maintenance window in your Terraform workflow. Integrity monitoring does not configure an alert destination or a recovery procedure.
+
+The supported Debian 12 and Ubuntu 24.04 image families support Shielded VM according to Google's [operating system matrix](https://docs.cloud.google.com/compute/docs/images/os-details). Image versions resolve at planning time; account policy and workload compatibility remain unverified. See [Shielded VM behavior](https://docs.cloud.google.com/compute/shielded-vm/docs/shielded-vm) and the [Terraform resource settings](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance).

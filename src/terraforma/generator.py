@@ -1451,6 +1451,12 @@ class TerraformGenerator:
             ],
         )
         if standalone:
+            self.variable(
+                "enable_secure_boot",
+                "Verify signed boot components with Google Shielded VM Secure Boot. Unsigned kernel modules or drivers can prevent booting; review workload compatibility before changing this setting. Changing Shielded VM options requires a stopped VM; automatic stopping is disabled. vTPM and integrity monitoring remain enabled.",
+                True,
+                type_name="bool",
+            )
             self.resource(
                 "google_compute_disk",
                 "data",
@@ -1591,6 +1597,12 @@ class TerraformGenerator:
                 + (
                     [
                         self._identity_precondition(),
+                        block(
+                            "shielded_instance_config",
+                            enable_secure_boot=ref("var.enable_secure_boot"),
+                            enable_vtpm=True,
+                            enable_integrity_monitoring=True,
+                        ),
                         block(
                             "dynamic",
                             "service_account",

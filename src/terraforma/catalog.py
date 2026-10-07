@@ -92,6 +92,10 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         elif standalone:
             unsupported.append("Azure VM deletion locks")
+        if standalone and config.provider == "gcp":
+            fixed.append(
+                "Shielded VM Secure Boot is configurable (default enabled); vTPM and integrity monitoring stay enabled. Unsigned drivers/modules can prevent booting. Shielded setting changes require a stopped VM; automatic stopping is disabled."
+            )
     elif config.architecture_type == "secure_database":
         fixed.extend(
             [

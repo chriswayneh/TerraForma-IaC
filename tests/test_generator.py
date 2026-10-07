@@ -163,6 +163,7 @@ def assert_native_files(directory, files):
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
     assert json.loads(result.stdout)["valid"]
     config = directory / ".tflint.hcl"
     config.write_text('plugin "terraform" {\n  enabled = true\n  preset = "recommended"\n}\n')
@@ -175,6 +176,29 @@ def assert_native_files(directory, files):
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("image", ["debian-12", "ubuntu-24.04"])
+@pytest.mark.parametrize("enabled", [False, True])
+@pytest.mark.parametrize("public", [False, True])
+def test_native_shielded_vm_choices(native_directories, image, enabled, public):
+    from terraforma.project import ProjectSpecification, compile_project
+
+    specification = ProjectSpecification(
+        recipe=WizardConfig(
+            provider="gcp",
+            project_name="shielded-test",
+            architecture_type="virtual_machine",
+            is_public=public,
+        ),
+        inputs={
+            "gcp_project_id": "example-project",
+            "allowed_cidr": "10.1.0.0/24",
+            "os_image": image,
+            "enable_secure_boot": enabled,
+        },
+    )
+    assert_native_files(native_directories["gcp"], compile_project(specification)["files"])
 
 
 @pytest.mark.parametrize(
