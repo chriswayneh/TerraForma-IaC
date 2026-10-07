@@ -1,5 +1,11 @@
 # Verification record
 
+## Google IAP plan policy checkpoint
+
+- The default suite passes 1,712 tests with 244 optional/native/platform cases skipped. Ruff checks and formatting pass across 89 Python files; whitespace checks pass.
+- Seventy new regressions cover exact SSH/RDP proxy rules, broader or missing selectors, unknown/malformed markers, destructive changes and identical redacted CLI/API reports. Approval remains false, and other policy gaps remain visible.
+- This is local plan classification only. Guided IAP generation, tunnel IAM, guest authentication and live connectivity have not been verified. No cloud request or apply was run.
+
 ## AWS CPU credit choices checkpoint
 
 - The default suite passes 1,642 tests with 244 optional/native/platform cases skipped. Ruff checks and formatting pass across 88 Python files; JavaScript syntax passes.

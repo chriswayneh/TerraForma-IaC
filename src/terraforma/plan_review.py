@@ -11,7 +11,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.8.0"
+POLICY_VERSION = "0.9.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -65,6 +65,54 @@ def unknown_values(value: Any) -> bool:
     if isinstance(value, list):
         return any(unknown_values(item) for item in value)
     return value is True
+
+
+def known_marker(value: Any) -> bool:
+    if value is False:
+        return True
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and known_marker(item) for key, item in value.items())
+    if isinstance(value, list):
+        return all(known_marker(item) for item in value)
+    return False
+
+
+def iap_admin_rule(change: dict, sources: list, ports: list, protocol: str) -> bool:
+    after = change["after"]
+    unknown = change.get("after_unknown", {})
+    fields = (
+        "source_ranges",
+        "source_tags",
+        "source_service_accounts",
+        "target_tags",
+        "target_service_accounts",
+        "allow",
+        "direction",
+        "disabled",
+    )
+    if not isinstance(unknown, dict) or any(
+        not known_marker(unknown.get(field, False)) for field in fields
+    ):
+        return False
+    targets = after.get("target_tags")
+    rules = after.get("allow")
+    return (
+        after.get("direction") == "INGRESS"
+        and after.get("disabled") is False
+        and sources == ["35.235.240.0/20"]
+        and ports in (["22"], ["3389"])
+        and protocol == "tcp"
+        and isinstance(rules, list)
+        and len(rules) == 1
+        and rules[0].get("protocol") == "tcp"
+        and isinstance(targets, list)
+        and len(targets) == 1
+        and isinstance(targets[0], str)
+        and re.fullmatch(r"[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?", targets[0]) is not None
+        and after.get("source_tags", []) == []
+        and after.get("source_service_accounts", []) == []
+        and after.get("target_service_accounts", []) == []
+    )
 
 
 def network_rules(resource_type: str, after: dict) -> list[tuple[list, list, str]]:
@@ -581,12 +629,22 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                     and administrative_ports(ports)
                     and any(public_source(source) for source in sources)
                 ):
-                    add(
-                        "public_admin_access",
-                        "block",
-                        resource_id,
-                        "An inbound rule permits administrative ports from outside private network ranges.",
-                    )
+                    if resource_type == "google_compute_firewall" and iap_admin_rule(
+                        change, sources, ports, protocol
+                    ):
+                        add(
+                            "iap_admin_ingress",
+                            "review",
+                            resource_id,
+                            "A narrowly targeted rule uses Google's IAP proxy source for one administrator port. Review tunnel IAM, guest authentication and target scope; access is not approved.",
+                        )
+                    else:
+                        add(
+                            "public_admin_access",
+                            "block",
+                            resource_id,
+                            "An inbound rule permits administrative ports from outside private network ranges.",
+                        )
             if resource_type == "aws_instance":
                 disks = after.get("root_block_device", []) + after.get("ebs_block_device", [])
                 if not disks:
