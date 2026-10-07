@@ -9,6 +9,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Understand what the release includes | [v0.2.0 release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
 | See current progress and planned versions | [Roadmap](ROADMAP.md) |
 | Understand how the components work together | [Architecture](ARCHITECTURE.md) |
+| Review build dependencies and update rules | [Dependency trust](DEPENDENCIES.md) |
 | Check validation and platform evidence | [Verification record](VERIFICATION.md) |
 | Review a Terraform plan locally | [Plan review](PLAN_REVIEW.md) |
 | Reuse a recipe's input answers on main | [Project specifications](PROJECT_SPECIFICATION.md) |
