@@ -1,4 +1,16 @@
+import json
+import math
+
 from starlette.responses import JSONResponse
+
+from terraforma.plan_review import reject_constant, unique_object
+
+
+def finite_float(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("Non-finite JSON numbers are unsupported.")
+    return number
 
 
 class RequestSizeLimitMiddleware:
@@ -29,6 +41,40 @@ class RequestSizeLimitMiddleware:
             messages.append(message)
             if not message.get("more_body", False):
                 break
+        content_type = (
+            next(
+                (
+                    value.decode("latin-1")
+                    for name, value in scope["headers"]
+                    if name == b"content-type"
+                ),
+                "",
+            )
+            .split(";", 1)[0]
+            .strip()
+            .lower()
+        )
+        if (
+            not content_type
+            or content_type == "application/json"
+            or (content_type.startswith("application/") and content_type.endswith("+json"))
+        ):
+            try:
+                json.loads(
+                    b"".join(message.get("body", b"") for message in messages).decode("utf-8"),
+                    object_pairs_hook=unique_object,
+                    parse_constant=reject_constant,
+                    parse_float=finite_float,
+                )
+            except (ValueError, TypeError, RecursionError):
+                response = JSONResponse(
+                    {
+                        "detail": "Request must contain unambiguous UTF-8 JSON with finite numbers and unique object keys. Input values are omitted."
+                    },
+                    status_code=422,
+                )
+                await response(scope, receive, send)
+                return
         iterator = iter(messages)
 
         async def bounded_receive():

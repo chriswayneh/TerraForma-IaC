@@ -35,7 +35,7 @@ flowchart LR
 - `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
 - `cli.py` exposes generation, validation, local plan review, and local serving commands.
 - `plan_review.py` inspects bounded plan JSON exports and produces reports without raw resource values. Its initial rules have limited coverage and never grant apply approval.
-- `request_limits.py` bounds mutation bodies to 64 KiB before route parsing, with an explicit 8 MiB exception for the plan-review route.
+- `request_limits.py` bounds mutation bodies to 64 KiB before route parsing, with an explicit 8 MiB exception for the plan-review route. JSON requests require UTF-8, unique object keys and finite numbers; rejected input values are omitted from errors. Non-JSON content remains subject to route-specific parsing.
 - `web.py` exposes generation, validation, ZIP download, project import, and local plan-review routes. It accepts validated specifications or plan JSON, not arbitrary HCL or arbitrary host paths. Native checks and plan review run off the event loop, with one validation and one review at a time.
 - `static/` contains the buildless browser application. It keeps the current questionnaire in browser memory, optionally saves non-secret choices locally, and displays server-returned text using text nodes.
 
