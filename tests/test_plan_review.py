@@ -183,6 +183,100 @@ def test_malformed_previous_vm_protection_fails_closed():
     assert "unresolved_policy_input" in codes(data)
 
 
+@pytest.mark.parametrize(
+    "endpoint,tokens,expected",
+    [
+        ("enabled", "optional", "legacy_instance_metadata"),
+        (None, "optional", "legacy_instance_metadata"),
+        ("enabled", None, "instance_metadata_unknown"),
+        (None, "required", "instance_metadata_unknown"),
+        ("enabled", "required", None),
+        ("disabled", "optional", None),
+        ("disabled", None, None),
+    ],
+)
+def test_instance_metadata_token_policy(endpoint, tokens, expected):
+    report = review_plan(
+        plan(
+            "aws_instance",
+            {"metadata_options": [{"http_endpoint": endpoint, "http_tokens": tokens}]},
+        ),
+        artifact_sha256="test",
+    )
+    findings = {finding["code"] for finding in report["findings"]}
+    if expected:
+        assert expected in findings
+    else:
+        assert not {"legacy_instance_metadata", "instance_metadata_unknown"} & findings
+    assert report["status"] == (
+        "blocked" if expected == "legacy_instance_metadata" else "manual_review_required"
+    )
+    assert report["approval_granted"] is False
+
+
+@pytest.mark.parametrize("options", [None, []])
+def test_missing_metadata_options_remain_unknown(options):
+    assert "instance_metadata_unknown" in codes(plan("aws_instance", {"metadata_options": options}))
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        "enabled",
+        {},
+        [True],
+        [{}, {}],
+        [{"http_tokens": True}],
+        [{"http_endpoint": "private-invalid-value"}],
+        [{"http_tokens": []}],
+    ],
+)
+def test_malformed_metadata_controls_fail_closed(options):
+    data = plan("aws_instance", {"metadata_options": options})
+    assert "unresolved_policy_input" in codes(data)
+    assert "private-invalid-value" not in json.dumps(review_plan(data, artifact_sha256="test"))
+
+
+@pytest.mark.parametrize(
+    "resource_type,after",
+    [
+        ("aws_instance", {"iam_instance_profile": "private-profile-reference"}),
+        (
+            "google_compute_instance",
+            {
+                "service_account": [
+                    {
+                        "email": "private-account@example-project.iam.gserviceaccount.com",
+                        "scopes": ["cloud-platform"],
+                    }
+                ]
+            },
+        ),
+        ("google_compute_instance", {"service_account": [{"email": None}]}),
+    ],
+)
+def test_attached_identity_permissions_are_not_certified_or_disclosed(resource_type, after):
+    data = plan(resource_type, after)
+    report = review_plan(data, artifact_sha256="test")
+    assert "identity_permissions_unknown" in codes(data)
+    assert "private-profile-reference" not in json.dumps(report)
+    assert "private-account@" not in json.dumps(report)
+    assert report["approval_granted"] is False
+
+
+@pytest.mark.parametrize(
+    "resource_type,after",
+    [
+        ("aws_instance", {"iam_instance_profile": []}),
+        ("google_compute_instance", {"service_account": "private-value"}),
+        ("google_compute_instance", {"service_account": [{"email": False}]}),
+        ("google_compute_instance", {"service_account": [{}, {}]}),
+    ],
+)
+def test_malformed_identity_attachment_fields_fail_closed(resource_type, after):
+    assert "unresolved_policy_input" in codes(plan(resource_type, after))
+
+
 def test_unknown_configuration_and_coverage_remain_visible():
     data = plan("azurerm_linux_virtual_machine", {"password": "private-secret-value"})
     data["resource_changes"][0]["change"]["after_unknown"] = {"disk": [True]}

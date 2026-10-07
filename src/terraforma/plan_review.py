@@ -9,7 +9,7 @@ from typing import Any
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.2.0"
+POLICY_VERSION = "0.3.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -261,6 +261,73 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
             "Only the documented initial checks are implemented; manual review remains required.",
         )
         try:
+            if resource_type == "aws_instance":
+                options = after.get("metadata_options")
+                if options is None or options == []:
+                    add(
+                        "instance_metadata_unknown",
+                        "review",
+                        resource_id,
+                        "The plan does not establish instance metadata endpoint and token settings.",
+                    )
+                else:
+                    if (
+                        not isinstance(options, list)
+                        or len(options) != 1
+                        or not isinstance(options[0], dict)
+                    ):
+                        raise TypeError("Metadata options must contain one object.")
+                    endpoint = options[0].get("http_endpoint")
+                    tokens = options[0].get("http_tokens")
+                    if endpoint not in {None, "enabled", "disabled"} or tokens not in {
+                        None,
+                        "required",
+                        "optional",
+                    }:
+                        raise ValueError("Metadata controls have unsupported values.")
+                    if endpoint != "disabled":
+                        if tokens == "optional":
+                            add(
+                                "legacy_instance_metadata",
+                                "block",
+                                resource_id,
+                                "Instance metadata permits tokenless IMDSv1 requests. Require IMDSv2 or disable the metadata endpoint before provisioning.",
+                            )
+                        elif endpoint is None or tokens is None:
+                            add(
+                                "instance_metadata_unknown",
+                                "review",
+                                resource_id,
+                                "The plan does not establish whether IMDSv2 tokens are required for the metadata endpoint.",
+                            )
+                profile = after.get("iam_instance_profile")
+                if profile is not None and not isinstance(profile, str):
+                    raise TypeError("Instance profile must be a string.")
+                if profile:
+                    add(
+                        "identity_permissions_unknown",
+                        "review",
+                        resource_id,
+                        "An IAM instance profile is attached, but this plan review does not establish its role policies, trust or attachment authorization. Review least privilege separately.",
+                    )
+            elif resource_type == "google_compute_instance":
+                accounts = after.get("service_account")
+                if accounts is not None and accounts != []:
+                    if (
+                        not isinstance(accounts, list)
+                        or len(accounts) != 1
+                        or not isinstance(accounts[0], dict)
+                    ):
+                        raise TypeError("Service account must contain one object.")
+                    email = accounts[0].get("email")
+                    if email is not None and not isinstance(email, str):
+                        raise TypeError("Service account email must be a string.")
+                    add(
+                        "identity_permissions_unknown",
+                        "review",
+                        resource_id,
+                        "A service account is attached, but this plan review does not establish its IAM roles or attachment authorization. OAuth scopes do not prove least privilege.",
+                    )
             if resource_type in {"aws_instance", "google_compute_instance"}:
                 field = (
                     "disable_api_termination"

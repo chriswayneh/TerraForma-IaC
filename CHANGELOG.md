@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Extend local plan review to block tokenless AWS metadata access and flag unverified attached AWS/GCP identity permissions, using policy version `0.3.0`.
+
+- Clarify the generator introduction: enter infrastructure requirements and review the generated Terraform.
+
 - Add optional workload identity to standalone Linux VMs: existing AWS instance profiles, Azure system-assigned identities, and existing GCP user-managed service accounts, with conditional required references and no role grants or credential keys.
 
 - Restore browser format checks for supported identifiers by escaping literal hyphens in shared input patterns.
