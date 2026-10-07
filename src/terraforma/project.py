@@ -169,7 +169,7 @@ def validate_input(name: str, value: str, kind: str):
             raise ValueError("Region, zone, or machine-size identifier has an invalid format.")
     elif name == "gcp_project_id" and not re.fullmatch(r"[a-z][a-z0-9-]{4,28}[a-z0-9]", value):
         raise ValueError(
-            "Google Cloud project ID must use 6â€“30 lowercase letters, digits, or hyphens."
+            "Google Cloud project ID must use 6–30 lowercase letters, digits, or hyphens."
         )
 
 
@@ -198,7 +198,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
         elif definition["name"] == "aws_account_id":
             message = "Enter the 12-digit target AWS account ID."
         elif definition["name"] == "admin_username":
-            message = "Enter a non-reserved username using 3â€“32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
+            message = "Enter a non-reserved username using 3–32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
         else:
             message = {
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",

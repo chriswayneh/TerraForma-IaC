@@ -57,7 +57,7 @@ def test_ambiguous_json_is_rejected_before_tool_or_generation_calls(body, route,
     [None, "application/json", "Application/JSON; charset=utf-8", "application/project+json"],
 )
 def test_strict_json_replays_original_chunked_utf8_bytes(content_type):
-    original = json.dumps({"label": "cafÃƒÂ©", "nested": [{"value": 1.25}]}).encode("utf-8")
+    original = json.dumps({"label": "café", "nested": [{"value": 1.25}]}).encode("utf-8")
     chunks = [original[:18], original[18:23], original[23:]]
     messages = iter(
         {"type": "http.request", "body": chunk, "more_body": index < len(chunks) - 1}
