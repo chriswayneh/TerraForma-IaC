@@ -100,6 +100,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             fixed.append(
                 "Trusted Launch Secure Boot is configurable (default enabled); vTPM stays enabled. Check selected VM-size support and unsigned driver compatibility. Guest attestation and Defender monitoring are not configured."
             )
+            fixed.append(
+                "Optional boot diagnostics use Azure-managed storage (default off). Console output/screenshots can contain sensitive data; retention is not configurable and managed diagnostic blobs are currently not billed; application logging, alerts and custom diagnostic storage are not configured."
+            )
     elif config.architecture_type == "secure_database":
         fixed.extend(
             [

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added optional Azure-managed VM boot diagnostics, off by default, with shared input/export/import handling and console-data/retention guidance. No custom storage account or diagnostic URL output is generated.
+
 - Extended local plan policy to version `0.5.0` with Azure Linux VM Secure Boot/vTPM checks. Disabled controls require review, removal of existing controls is blocked, and malformed values fail closed without exposing raw values.
 
 - Added guided Azure standalone VM Secure Boot, enabled by default with vTPM retained. The questionnaire explains unsigned driver and VM-size compatibility limits; guest attestation and Defender monitoring remain outside this recipe.

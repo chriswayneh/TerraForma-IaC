@@ -1033,6 +1033,12 @@ class TerraformGenerator:
                 True,
                 type_name="bool",
             )
+            self.variable(
+                "enable_boot_diagnostics",
+                "Capture boot console output and screenshots in Azure-managed diagnostic storage for startup troubleshooting. Managed diagnostic blobs are currently not billed by Azure; verify current pricing. Retention is not configurable and logs are overwritten above 1 GB. Console output can contain sensitive data; restrict cloud access and avoid writing secrets to the console. This does not configure application logs, alerts or guest attestation, and no custom storage account or public log URL is created by this recipe.",
+                False,
+                type_name="bool",
+            )
         image = block(
             "source_image_reference",
             publisher="Canonical",
@@ -1152,6 +1158,18 @@ class TerraformGenerator:
                     else {}
                 ),
                 children=[disk, image, key]
+                + (
+                    [
+                        block(
+                            "dynamic",
+                            "boot_diagnostics",
+                            for_each=ref("var.enable_boot_diagnostics ? [1] : []"),
+                            children=[block("content", storage_account_uri=None)],
+                        )
+                    ]
+                    if standalone
+                    else []
+                )
                 + (
                     [
                         block(

@@ -181,13 +181,14 @@ def assert_native_files(directory, files):
 @pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])
-def test_native_trusted_launch_choices(native_directories, image, enabled, public):
+@pytest.mark.parametrize("diagnostics", [False, True])
+def test_native_trusted_launch_choices(native_directories, image, enabled, public, diagnostics):
     from terraforma.project import compile_project
     from tests.test_trusted_launch import specification
 
-    assert_native_files(
-        native_directories["azure"], compile_project(specification(enabled, image, public))["files"]
-    )
+    spec = specification(enabled, image, public)
+    spec.inputs["enable_boot_diagnostics"] = diagnostics
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
 @pytest.mark.parametrize("image", ["debian-12", "ubuntu-24.04"])

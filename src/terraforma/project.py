@@ -67,6 +67,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
                     "enable_secure_boot": "Verify signed boot components (Secure Boot)",
+                    "enable_boot_diagnostics": "Capture Azure boot diagnostics",
                     "enable_data_disk": "Attach a data disk",
                     "data_disk_size_gb": "Data disk size (GiB)",
                     "data_disk_type": "Data disk type",

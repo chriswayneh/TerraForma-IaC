@@ -138,6 +138,8 @@ Azure compute recipes ask for `admin_username`, defaulting to `terraforma`. This
 
 ### Linux image selection
 
+Azure standalone VMs also expose `enable_boot_diagnostics`, defaulting to `false`. Enabling it adds boot console output/screenshots using Azure-managed diagnostic storage, without a custom storage account or exported diagnostic URL. Console output can contain sensitive data: review cloud read access and avoid printing secrets. [Microsoft documents](https://learn.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics) that managed diagnostic blobs are currently not billed, retention cannot be configured, and logs are overwritten above 1 GB. Verify current terms before deployment. Application logging, alerts, guest attestation and a durable audit archive remain outside this feature.
+
 Azure standalone VMs expose `enable_secure_boot`, defaulting to `true`, and retain `vtpm_enabled = true`. Both supported Ubuntu images use Gen2 marketplace offers. Review [Trusted Launch support](https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch) for the selected size and image; unsigned kernel drivers can prevent booting. Guest attestation and Defender monitoring are not configured. Disabling Secure Boot retains vTPM and requires a separate workload/security decision. The [AzureRM Linux VM schema](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine) defines these controls; structural validation does not prove successful deployment.
 
 Compute recipes expose `os_image` as a supported choice, shared by terminal and browser forms. The selected image also determines the AWS package-manager startup script.
