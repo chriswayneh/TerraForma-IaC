@@ -265,7 +265,9 @@ def wizard(target_dir: Path | None):
             raise click.ClickException(
                 "Choose a fresh, writable project directory without existing Terraform or generated artifacts."
             ) from None
-    provider = ask(questionary.select("Which cloud provider?", choices=["aws", "azure", "gcp"]))
+    provider = ask(
+        questionary.select("Select your cloud provider:", choices=["aws", "azure", "gcp"])
+    )
     name = ask(
         questionary.text(
             "Project name (3–20 lowercase letters, digits, or hyphens):",
@@ -277,7 +279,7 @@ def wizard(target_dir: Path | None):
     )
     architecture = ask(
         questionary.select(
-            "What would you like to create?",
+            "Select your infrastructure type:",
             choices=[
                 questionary.Choice(
                     "A Linux virtual machine with restricted SSH", value="virtual_machine"
@@ -317,7 +319,14 @@ def wizard(target_dir: Path | None):
         click.echo(
             "Database passwords are required variables. Databases have backups and deletion protection."
         )
-    elif architecture != "static_site":
+    elif architecture in {"virtual_machine", "windows_virtual_machine"}:
+        click.echo(
+            "VM administrator access is restricted to the selected network. Private access requires a routed path; no VPN or bastion is created."
+        )
+        click.echo(
+            "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur ongoing charges."
+        )
+    elif architecture in {"single_web_server", "load_balanced_tier"}:
         click.echo(
             "The template serves HTTP. Add TLS before using it for sensitive traffic. NAT gateways and load balancers can incur ongoing charges."
         )

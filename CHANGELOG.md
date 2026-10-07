@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Updated terminal provider/workload prompts to direct selection wording. Standalone VM guidance now explains administrator access and routing; HTTP/TLS guidance appears only for web-server recipes.
+
 - Improved recovery from failed or interrupted terminal generation. Cleanup attempts all newly created artifacts even when one removal fails, and the CLI identifies leftovers requiring review without exposing underlying error details.
 
 - Added an Azure Windows automatic patch-assessment question. It preserves automatic OS installation and the enabled VM Agent; platform assessment, agent health and patch completion remain unverified.

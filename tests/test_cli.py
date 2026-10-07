@@ -1,8 +1,12 @@
 from unittest.mock import Mock
 
+import pytest
 from click.testing import CliRunner
 
 from terraforma.cli import main, readable_error
+from terraforma.project import ProjectSpecification
+from tests.test_virtual_machine import KEY
+from tests.test_windows_vm import RSA_KEY
 
 
 def test_cancelled_wizard_writes_nothing(tmp_path, monkeypatch):
@@ -62,6 +66,33 @@ def test_wizard_writes_selected_configuration(tmp_path, monkeypatch):
     assert 'default = "example-project"' in (tmp_path / "variables.tf").read_text()
 
 
+@pytest.mark.parametrize("workload", ["virtual_machine", "windows_virtual_machine"])
+def test_vm_wizard_explains_access_without_claiming_it_installs_a_web_server(
+    tmp_path, monkeypatch, workload
+):
+    answers = iter(["aws", "example", workload, False, True])
+    prompt = lambda *args, **kwargs: Mock(ask=lambda: next(answers))
+    for name in ("select", "text", "confirm"):
+        monkeypatch.setattr(f"terraforma.cli.questionary.{name}", prompt)
+    monkeypatch.setattr(
+        "terraforma.cli.collect_recipe_inputs",
+        lambda config: ProjectSpecification(
+            recipe=config,
+            inputs={
+                "aws_account_id": "123456789012",
+                "ssh_public_key": RSA_KEY if workload == "windows_virtual_machine" else KEY,
+                "allowed_cidr": "10.20.0.0/24",
+            },
+        ),
+    )
+    result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    assert "Private access requires a routed path" in result.output
+    assert "no application startup script" in result.output
+    assert "serves HTTP" not in result.output
+    assert "Add TLS" not in result.output
+
+
 def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
     answers = iter(
         [
@@ -88,6 +119,8 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
     result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
     assert result.exit_code == 0, result.output
     variables = (tmp_path / "variables.tf").read_text()
+    assert "serves HTTP" in result.output
+    assert "Add TLS" in result.output
     assert 'default = "us-west-2"' in variables
     assert 'default = "t3.small"' in variables
     assert 'default = "ami-0123456789abcdef0"' in variables

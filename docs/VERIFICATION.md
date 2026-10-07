@@ -1,5 +1,10 @@
 # Verification record
 
+## Terminal workload guidance checkpoint
+
+- The CLI/artifact regression run passes 38 cases with two Unix permission cases skipped on Windows. Linux and Windows VM questionnaire tests generate real project files and verify routed-access guidance without a claim that the VM serves HTTP. The existing web-server test retains HTTP/TLS guidance.
+- This adjusts questionnaire language only; it does not install guest applications, provide a private access path or verify cloud connectivity.
+
 ## Artifact recovery checkpoint
 
 - The default suite passes 1,302 tests with 216 optional native cases skipped. Ruff checks and formatting pass across 76 Python files.
