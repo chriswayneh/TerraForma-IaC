@@ -118,6 +118,22 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
     ]
     project["notes"].append(compiled["verification"])
     if payload.recipe.architecture_type == "virtual_machine" and payload.inputs.get(
+        "enable_workload_identity", False
+    ):
+        project["guide"]["components"].append(
+            {
+                "name": "Workload identity",
+                "explanation": {
+                    "aws": "The VM uses the supplied existing IAM instance profile. Review its role permissions, EC2 trust and pass-role authorization; the recipe creates no IAM role or policy grant.",
+                    "azure": "A system-assigned managed identity is created with the VM. Its principal ID is exported, but no role assignments are granted; deletion of the VM removes this identity.",
+                    "gcp": "The VM uses the supplied user-managed service account and cloud-platform OAuth scope. Actual access depends on existing IAM roles; this recipe creates no key or IAM grant. Service account changes require a stopped VM, and automatic stopping is disabled.",
+                }[payload.recipe.provider],
+            }
+        )
+        project["notes"].append(
+            "Review workload identity permissions and attachment authorization separately. An identity reference is not a credential or a verification of least privilege. No role grants or credential keys are created by this recipe."
+        )
+    if payload.recipe.architecture_type == "virtual_machine" and payload.inputs.get(
         "enable_data_disk", False
     ):
         project["guide"]["components"].append(

@@ -70,6 +70,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "enable_data_disk": "Attach a data disk",
                     "data_disk_size_gb": "Data disk size (GiB)",
                     "data_disk_type": "Data disk type",
+                    "enable_workload_identity": "Enable workload identity",
+                    "workload_identity": "Existing IAM instance profile name"
+                    if config.provider == "aws"
+                    else "Existing service account email",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
@@ -187,6 +191,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter an RFC1918 private subnet or a single IPv4 /32 administrator address."
         elif definition.get("network_policy") == "database_address":
             message = "Enter one client IPv4 address outside 0/8, loopback, and 224/3; Azure-wide service access is unsupported."
+        elif definition.get("required_when"):
+            message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
             message = "Choose one of: " + ", ".join(definition["choices"]) + "."
         elif definition["name"] == "aws_account_id":
@@ -277,6 +283,18 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    for definition in contract:
+        if (
+            definition.get("required_when")
+            and all(
+                effective.get(name) == expected
+                for name, expected in definition["required_when"].items()
+            )
+            and not effective.get(definition["name"])
+        ):
+            raise ProjectInputError(
+                definition["name"], "This input is required when workload identity is enabled."
+            )
     if (
         specification.recipe.provider == "gcp"
         and "zone" in effective

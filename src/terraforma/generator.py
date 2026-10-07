@@ -51,7 +51,7 @@ AZURE_RESERVED_USERNAMES = (
 class WizardConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     provider: Literal["aws", "azure", "gcp"]
-    project_name: str = Field(pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$")
+    project_name: str = Field(pattern=r"^[a-z][a-z0-9\-]{1,18}[a-z0-9]$")
     architecture_type: Literal[
         "virtual_machine",
         "single_web_server",
@@ -132,6 +132,7 @@ class TerraformGenerator:
         prefix_minimum: int | None = None,
         prefix_maximum: int | None = None,
         visible_when: dict[str, bool] | None = None,
+        required_when: dict[str, bool] | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
         forbidden_values: tuple[str, ...] | None = None,
@@ -165,10 +166,13 @@ class TerraformGenerator:
                 )
             )
         if pattern:
+            pattern_condition = f"can(regex({value_hcl(pattern)}, var.{name}))"
+            if required_when:
+                pattern_condition = f'var.{name} == "" || {pattern_condition}'
             validations.append(
                 block(
                     "validation",
-                    condition=ref(f"can(regex({value_hcl(pattern)}, var.{name}))"),
+                    condition=ref(pattern_condition),
                     error_message="Use the required identifier format for this field.",
                 )
             )
@@ -230,6 +234,7 @@ class TerraformGenerator:
             "forbidden_values": list(forbidden_values) if forbidden_values else None,
             "network_policy": network_policy,
             "visible_when": visible_when,
+            "required_when": required_when,
         }
         self.variables.append(block("variable", name, children=validations, **attributes))
 
@@ -273,7 +278,7 @@ class TerraformGenerator:
             }[self.config.provider]
             + " Use a distinct project name per environment; this label does not isolate state or change resource names.",
             "development",
-            pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$",
+            pattern=r"^[a-z][a-z0-9\-]{1,18}[a-z0-9]$",
         )
         if self.config.architecture_type == "load_balanced_tier":
             self.variable(
@@ -310,6 +315,7 @@ class TerraformGenerator:
                 prefix_maximum=28 if self.config.provider == "gcp" else 20,
             )
             self._data_disk_inputs()
+            self._workload_identity_inputs()
             self.variable(
                 "allowed_cidr",
                 "Administrator network permitted to connect on SSH port 22. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
@@ -327,6 +333,43 @@ class TerraformGenerator:
             "variables.tf": "\n\n".join(item.render() for item in self.variables) + "\n",
             "outputs.tf": "\n\n".join(item.render() for item in self.outputs) + "\n",
         }
+
+    def _workload_identity_inputs(self) -> None:
+        self.variable(
+            "enable_workload_identity",
+            {
+                "aws": "Attach an existing IAM instance profile for workload API access. Review its role policies and trust relationship; provisioning requires permission to pass its role. This recipe creates no IAM role or policy grant.",
+                "azure": "Create a system-assigned managed identity for this VM. It receives no role assignments from this recipe; grant only reviewed access separately. The identity's lifecycle is tied to the VM.",
+                "gcp": "Attach an existing user-managed service account for workload API access, using the cloud-platform OAuth scope with access controlled by its IAM roles. Review those roles and attachment permissions separately. This recipe creates no service account, key or IAM grant; changing the account requires a stopped VM.",
+            }[self.config.provider],
+            False,
+            type_name="bool",
+        )
+        if self.config.provider != "azure":
+            self.variable(
+                "workload_identity",
+                "Existing IAM instance profile name, not a role name or ARN. Its permissions, account and trust configuration remain unverified."
+                if self.config.provider == "aws"
+                else "Existing user-managed service account email (name@project.iam.gserviceaccount.com). Compute default service accounts and credential keys are unsupported. Identity and permissions remain unverified.",
+                "",
+                pattern=r"^[A-Za-z0-9_+=,.@\-]{1,128}$"
+                if self.config.provider == "aws"
+                else r"^[a-z][a-z0-9\-]{4,28}[a-z0-9]@[a-z][a-z0-9\-]{4,28}[a-z0-9]\.iam\.gserviceaccount\.com$",
+                visible_when={"enable_workload_identity": True},
+                required_when={"enable_workload_identity": True},
+            )
+
+    def _identity_precondition(self) -> Block:
+        return block(
+            "lifecycle",
+            children=[
+                block(
+                    "precondition",
+                    condition=ref('!var.enable_workload_identity || var.workload_identity != ""'),
+                    error_message="Supply the existing workload identity reference when workload identity is enabled.",
+                )
+            ],
+        )
 
     def _data_disk_inputs(self) -> None:
         disk_types = {
@@ -553,6 +596,15 @@ class TerraformGenerator:
             ami=ref("data.aws_ami.linux.id"),
             instance_type=ref("var.instance_type"),
             monitoring=ref("var.detailed_monitoring"),
+            **(
+                {
+                    "iam_instance_profile": ref(
+                        "var.enable_workload_identity ? var.workload_identity : null"
+                    )
+                }
+                if standalone
+                else {}
+            ),
             **({"disable_api_termination": ref("var.protect_vm")} if standalone else {}),
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
@@ -577,7 +629,8 @@ class TerraformGenerator:
             children=[
                 block("root_block_device", **disk),
                 block("metadata_options", http_tokens="required"),
-            ],
+            ]
+            + ([self._identity_precondition()] if standalone else []),
             **({"depends_on": [ref("aws_route_table_association.private")]} if private else {}),
         )
         if standalone:
@@ -856,7 +909,7 @@ class TerraformGenerator:
             "admin_username",
             "Linux administrator username: 3–32 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Azure reserved names are rejected; password authentication stays disabled.",
             "terraforma",
-            pattern=r"^[a-z][a-z0-9_-]{1,30}[a-z0-9]$",
+            pattern=r"^[a-z][a-z0-9_\-]{1,30}[a-z0-9]$",
             forbidden_values=AZURE_RESERVED_USERNAMES,
         )
         self.variable(
@@ -1085,7 +1138,19 @@ class TerraformGenerator:
                 "azurerm_linux_virtual_machine",
                 size=ref("var.vm_size"),
                 network_interface_ids=[ref("azurerm_network_interface.this.id")],
-                children=[disk, image, key],
+                children=[disk, image, key]
+                + (
+                    [
+                        block(
+                            "dynamic",
+                            "identity",
+                            for_each=ref("var.enable_workload_identity ? [1] : []"),
+                            children=[block("content", type="SystemAssigned")],
+                        )
+                    ]
+                    if standalone
+                    else []
+                ),
                 **compute,
             )
             endpoint = (
@@ -1094,6 +1159,11 @@ class TerraformGenerator:
                 else "azurerm_network_interface.this.private_ip_address"
             )
         if standalone:
+            self.output(
+                "managed_identity_principal_id",
+                "var.enable_workload_identity ? azurerm_linux_virtual_machine.this.identity[0].principal_id : null",
+                "Optional system-assigned identity principal. No role assignments are created; the identity is removed with the VM.",
+            )
             self.resource(
                 "azurerm_managed_disk",
                 "data",
@@ -1509,6 +1579,7 @@ class TerraformGenerator:
                 labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
                 machine_type=ref("var.machine_type"),
                 zone=ref("var.zone"),
+                **({"allow_stopping_for_update": False} if standalone else {}),
                 tags=["terraforma-web"],
                 **(
                     {"metadata": {"enable-oslogin": "TRUE", "block-project-ssh-keys": "TRUE"}}
@@ -1516,6 +1587,27 @@ class TerraformGenerator:
                     else {"metadata_startup_script": startup}
                 ),
                 children=[disk, network]
+                + (
+                    [
+                        self._identity_precondition(),
+                        block(
+                            "dynamic",
+                            "service_account",
+                            for_each=ref(
+                                "var.enable_workload_identity ? [var.workload_identity] : []"
+                            ),
+                            children=[
+                                block(
+                                    "content",
+                                    email=ref("service_account.value"),
+                                    scopes=["cloud-platform"],
+                                )
+                            ],
+                        ),
+                    ]
+                    if standalone
+                    else []
+                )
                 + (
                     [
                         block(

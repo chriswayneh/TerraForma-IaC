@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add optional workload identity to standalone Linux VMs: existing AWS instance profiles, Azure system-assigned identities, and existing GCP user-managed service accounts, with conditional required references and no role grants or credential keys.
+
+- Restore browser format checks for supported identifiers by escaping literal hyphens in shared input patterns.
+
 - Ask for a new private IPv4 network range on standalone VMs, with provider-specific recipe bounds, derived subnet layouts and matching shared/Terraform validation.
 
 - Extend local plan review with AWS/GCP VM protection changes and unsafe forced AWS disk detach checks, using policy version `0.2.0`.

@@ -69,6 +69,13 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         )
         if standalone:
             fixed.append(
+                {
+                    "aws": "Optional workload identity attaches an existing IAM instance profile; no roles or policy grants are created. Pass-role permission and existing policies require preflight.",
+                    "azure": "Optional system-assigned managed identity is tied to this VM; no role assignments are created.",
+                    "gcp": "Optional workload identity attaches an existing user-managed service account with cloud-platform scope; IAM roles and attachment permissions require preflight. Account changes require a stopped VM; automatic stopping is disabled.",
+                }[config.provider]
+            )
+            fixed.append(
                 "One optional empty data disk is configurable (default off); formatting, mounting, backups and recovery are not configured. Teardown can delete this managed disk."
             )
             unsupported.extend(

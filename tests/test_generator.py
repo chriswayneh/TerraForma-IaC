@@ -281,3 +281,53 @@ def test_native_vm_network_validation_matches_shared_contract(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(json.loads(result.stdout)) == expected
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("enabled", [True, False])
+def test_native_workload_identity(native_directories, provider, enabled):
+    from test_workload_identity import identity_spec
+
+    from terraforma.project import compile_project
+
+    assert_native_files(
+        native_directories[provider], compile_project(identity_spec(provider, enabled))["files"]
+    )
+
+
+@pytest.mark.parametrize("provider", ["aws", "gcp"])
+def test_native_identity_checks_require_reference_only_when_enabled(
+    native_directories, tmp_path, provider
+):
+    from test_workload_identity import REFERENCES, identity_spec
+
+    generator = TerraformGenerator(identity_spec(provider, True).recipe)
+    generator.generate()
+    variable = next(item for item in generator.variables if item.labels == ("workload_identity",))
+    format_condition = variable.children[0].attributes["condition"].value
+    required_condition = (
+        generator._identity_precondition().children[0].attributes["condition"].value
+    )
+    expressions = []
+    for enabled, reference in [
+        (False, ""),
+        (True, ""),
+        (True, REFERENCES[provider]),
+        (True, "private invalid value"),
+    ]:
+        condition = "(" + format_condition + ") && (" + required_condition + ")"
+        condition = condition.replace("var.enable_workload_identity", value_hcl(enabled)).replace(
+            "var.workload_identity", value_hcl(reference)
+        )
+        expressions.append(condition)
+    result = subprocess.run(
+        [shutil.which("terraform"), "console", "-no-color"],
+        input="jsonencode([" + ",".join(expressions) + "])\n",
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(json.loads(result.stdout)) == [True, False, True, False]

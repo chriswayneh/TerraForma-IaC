@@ -17,6 +17,7 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 | Data storage | Enable one data disk, size from 32–2048 GiB, supported disk class | Disabled by default; one new empty disk, no formatting/mounting, backup, or recovery policy |
 | Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
+| Workload identity | AWS instance profile, Azure system-assigned identity, or GCP user-managed service account | Disabled by default; no IAM/RBAC grants or credential keys are created |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 
@@ -73,3 +74,21 @@ Choose a private IPv4 range that does not overlap networks you intend to connect
 These are recipe bounds rather than the providers' complete capabilities. Individual subnet sizing, additional ranges, IPv6 and attachment to existing networks remain planned. Changing an exported project's range can replace network and dependent resources; review the Terraform plan and access/data preservation before applying changes. The administrator CIDR remains a separate access decision and is not automatically changed to match this range.
 
 Provider references: [AWS VPC address ranges](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html), [Azure networking FAQ](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-faq), and [GCP subnets](https://docs.cloud.google.com/vpc/docs/subnets).
+
+## Workload identity
+
+Enable **Workload identity** when software running inside the VM needs authenticated cloud API access. This is separate from the credentials used to provision infrastructure and from the human administrator's SSH/OS Login access. The option is disabled by default.
+
+![Configuring workload identity for a GCP VM](images/workload-identity.png)
+
+| Provider | Questions and output | Permission and lifecycle checks |
+| --- | --- | --- |
+| AWS | Supply an existing IAM **instance profile name**, not a role name or ARN. The profile is attached to the VM. | Check the profile's account, EC2 trust relationship and role policies, plus the provisioner's `iam:PassRole` authorization. No profile, IAM role or policy grant is created. |
+| Azure | Enable a **system-assigned managed identity**. The generated `managed_identity_principal_id` output identifies its principal when enabled. | No role assignments are granted. Arrange reviewed RBAC access separately. The identity is tied to this VM and is removed with it; recreating the VM creates a different principal. |
+| GCP | Supply an existing **user-managed service account email**, such as `vm-workload@example-project.iam.gserviceaccount.com`. Its OAuth scope is `cloud-platform`; actual access is constrained by the service account's existing IAM roles. | Check attachment/act-as permissions and the service account's roles. No service account, key or IAM grant is created. Changing the attached account or scopes requires a stopped VM; the recipe does not allow automatic stopping for updates. |
+
+AWS/GCP reference questions appear only when enabled. Missing references fail before export, and the generated Terraform includes a corresponding resource precondition. Turning the option off omits the reference from browser exports and the configuration summary. Explicitly supplied malformed references are rejected even when inactive.
+
+Identity references are identifiers, not credentials. TerraForma validates their structure but cannot establish whether the referenced identity exists, belongs to the intended account, can be attached, or has appropriate permissions. Review least privilege, organization policy, metadata access and the Terraform plan before provisioning. Enabling an identity does not grant its workload access to any particular service. User-assigned Azure identities, Compute default service accounts, custom OAuth scopes, web-tier identities and IAM/RBAC policy creation remain outside this recipe.
+
+Provider references: [EC2 roles and instance profiles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html), [Azure managed identity lifecycle](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview), and [GCP service accounts and access scopes](https://docs.cloud.google.com/compute/docs/access/service-accounts).

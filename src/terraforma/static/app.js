@@ -125,7 +125,9 @@ async function loadRecipeInputs() {
       label.htmlFor = input.id;
       help.textContent =
         definition.description +
-        (definition.default !== null
+        (definition.required_when
+          ? " Required when this option is enabled."
+          : definition.default !== null
           ? " A default is provided; review it for your project."
           : " Required for this recipe.");
       group.append(label, input, help);
