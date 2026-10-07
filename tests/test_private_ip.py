@@ -201,6 +201,12 @@ def test_terminal_shows_range_and_rejects_wrong_subnet_during_question(
             assert options["validate"]("192.168.250.10") is not True
             answer = address
         else:
+            if message == "Boot disk IOPS (gp3):":
+                assert options["validate"]("10000") is True
+                assert options["validate"]("10001") is not True
+            if message == "Boot disk throughput (MiB/s, gp3):":
+                assert options["validate"]("750") is True
+                assert options["validate"]("751") is not True
             answer = required.get(message, options.get("default"))
         return Mock(ask=lambda: answer)
 

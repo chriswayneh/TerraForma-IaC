@@ -86,6 +86,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     else "Existing service account email",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
+                    "boot_disk_iops": "Boot disk IOPS (gp3)",
+                    "boot_disk_throughput": "Boot disk throughput (MiB/s, gp3)",
+                    "data_disk_iops": "Data disk IOPS (gp3)",
+                    "data_disk_throughput": "Data disk throughput (MiB/s, gp3)",
                     "gcp_project_id": "Google Cloud project ID",
                     "subscription_id": "Azure subscription ID",
                     "aws_account_id": "Target AWS account ID",
@@ -296,6 +300,30 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if (
+        specification.recipe.provider == "aws"
+        and specification.recipe.architecture_type == "virtual_machine"
+    ):
+        for prefix in ("boot_disk", "data_disk"):
+            active = (prefix == "boot_disk" or effective["enable_data_disk"]) and effective[
+                f"{prefix}_type"
+            ] == "gp3"
+            if not active:
+                for suffix, baseline in (("iops", 3000), ("throughput", 125)):
+                    if effective[f"{prefix}_{suffix}"] != baseline:
+                        raise ProjectInputError(
+                            f"{prefix}_{suffix}",
+                            "Custom performance is supported only for an enabled gp3 disk; select gp3 or restore the baseline value.",
+                        )
+            elif effective[f"{prefix}_iops"] > effective[f"{prefix}_size_gb"] * 500:
+                raise ProjectInputError(
+                    f"{prefix}_iops", "Use no more than 500 IOPS per GiB of gp3 disk size."
+                )
+            elif effective[f"{prefix}_throughput"] * 4 > effective[f"{prefix}_iops"]:
+                raise ProjectInputError(
+                    f"{prefix}_throughput",
+                    "Use throughput no greater than one quarter of provisioned gp3 IOPS.",
+                )
     if (
         specification.recipe.provider == "gcp"
         and effective.get("image_version", "latest") != "latest"

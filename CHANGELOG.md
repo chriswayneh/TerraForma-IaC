@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added gp3 boot/data disk IOPS and throughput inputs for standalone AWS VMs, defaulting to the included baseline. Conditional questions, export/import, ratio checks and Terraform preconditions preserve requested settings and reject incompatible combinations; template limits remain explicit.
+
 - Added optional fixed private IPv4 addresses for standalone VMs across AWS/Azure/GCP. Shared input/export handling and generated Terraform preconditions reject addresses outside the chosen subnet or in provider-reserved ranges; blank retains cloud allocation, with availability and independent reservation left unverified.
 
 - Added Azure encryption-at-host support checks to the existing opt-in compute-size read when encryption is requested. Incompatible and unknown capabilities require review; malformed metadata fails closed, with subscription feature registration left for separate verification.

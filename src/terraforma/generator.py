@@ -134,7 +134,7 @@ class TerraformGenerator:
         maximum: int | None = None,
         prefix_minimum: int | None = None,
         prefix_maximum: int | None = None,
-        visible_when: dict[str, bool] | None = None,
+        visible_when: dict[str, bool | str] | None = None,
         required_when: dict[str, bool] | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
@@ -381,6 +381,7 @@ class TerraformGenerator:
                     error_message="Supply the existing workload identity reference when workload identity is enabled.",
                 ),
                 self._private_ip_precondition(),
+                *([self._gp3_precondition("boot_disk")] if self.config.provider == "aws" else []),
             ],
         )
 
@@ -418,6 +419,39 @@ class TerraformGenerator:
             disk_types[0],
             choices=disk_types,
             visible_when={"enable_data_disk": True},
+        )
+        if self.config.provider == "aws":
+            self._gp3_inputs("data_disk", {"enable_data_disk": True, "data_disk_type": "gp3"})
+
+    def _gp3_inputs(self, prefix: str, conditions: dict[str, bool | str]) -> None:
+        self.variable(
+            f"{prefix}_iops",
+            "Provisioned gp3 disk input/output operations per second. 3,000 IOPS is included with storage; additional IOPS adds charges. This recipe supports 3,000–16,000 IOPS and at most 500 IOPS per GiB. This is a template limit, not AWS's full service limit. Instance EBS limits, workload behavior and account availability can reduce achieved performance; no performance or cost guarantee is made.",
+            3000,
+            type_name="number",
+            minimum=3000,
+            maximum=16000,
+            visible_when=conditions,
+        )
+        self.variable(
+            f"{prefix}_throughput",
+            "Provisioned gp3 disk throughput in MiB/s. 125 MiB/s is included with storage; additional throughput adds charges. This recipe supports 125–1,000 MiB/s and at most one quarter of provisioned IOPS. This is a template limit, not AWS's full service limit. Confirm instance EBS bandwidth and review pricing before increasing it.",
+            125,
+            type_name="number",
+            minimum=125,
+            maximum=1000,
+            visible_when=conditions,
+        )
+
+    def _gp3_precondition(self, prefix: str) -> Block:
+        return block(
+            "precondition",
+            condition=ref(
+                ("!var.enable_data_disk || " if prefix == "data_disk" else "")
+                + f'var.{prefix}_type != "gp3" || '
+                + f"(var.{prefix}_iops <= var.{prefix}_size_gb * 500 && var.{prefix}_throughput * 4 <= var.{prefix}_iops)"
+            ),
+            error_message="For gp3, choose no more than 500 IOPS per GiB and throughput no greater than one quarter of provisioned IOPS.",
         )
 
     def _aws(self) -> None:
@@ -609,11 +643,18 @@ class TerraformGenerator:
             maximum=2048,
         )
         self.variable("boot_disk_type", "EBS boot disk class.", "gp3", choices=("gp3", "gp2"))
+        if standalone:
+            self._gp3_inputs("boot_disk", {"boot_disk_type": "gp3"})
         disk = {
             "volume_type": ref("var.boot_disk_type"),
             "volume_size": ref("var.boot_disk_size_gb"),
             "encrypted": self.config.enable_encryption,
         }
+        if standalone:
+            disk.update(
+                iops=ref('var.boot_disk_type == "gp3" ? var.boot_disk_iops : null'),
+                throughput=ref('var.boot_disk_type == "gp3" ? var.boot_disk_throughput : null'),
+            )
         if self.config.enable_encryption:
             disk["kms_key_id"] = ref("aws_kms_key.this.arn")
         if standalone:
@@ -679,7 +720,10 @@ class TerraformGenerator:
                 availability_zone=ref("aws_instance.web[0].availability_zone"),
                 size=ref("var.data_disk_size_gb"),
                 type=ref("var.data_disk_type"),
+                iops=ref('var.data_disk_type == "gp3" ? var.data_disk_iops : null'),
+                throughput=ref('var.data_disk_type == "gp3" ? var.data_disk_throughput : null'),
                 encrypted=True,
+                children=[block("lifecycle", children=[self._gp3_precondition("data_disk")])],
                 **(
                     {"kms_key_id": ref("aws_kms_key.this.arn")}
                     if self.config.enable_encryption

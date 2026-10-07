@@ -171,6 +171,16 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             try:
                 value = int(text) if definition["kind"] == "integer" else text
                 validate_answer(definition, value)
+                if definition["name"] in {"boot_disk_iops", "data_disk_iops"}:
+                    prefix = definition["name"].removesuffix("_iops")
+                    if value > inputs[f"{prefix}_size_gb"] * 500:
+                        return "Use no more than 500 IOPS per GiB of the selected gp3 disk size."
+                if definition["name"] in {"boot_disk_throughput", "data_disk_throughput"}:
+                    prefix = definition["name"].removesuffix("_throughput")
+                    if value * 4 > inputs[f"{prefix}_iops"]:
+                        return (
+                            "Use throughput no greater than one quarter of the selected gp3 IOPS."
+                        )
                 if (
                     definition["name"] == "private_ip_address"
                     and value

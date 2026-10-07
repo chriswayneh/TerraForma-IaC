@@ -95,10 +95,16 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     "Existing disks or snapshots",
                     "Automatic disk formatting/mounting",
                     "Data disk backup policy",
-                    "Custom disk IOPS/throughput",
+                    "Custom performance for non-gp3 disks or above template limits"
+                    if config.provider == "aws"
+                    else "Custom disk IOPS/throughput",
                 ]
             )
         if standalone and config.provider in {"aws", "gcp"}:
+            if config.provider == "aws":
+                fixed.append(
+                    "gp3 boot/data disks expose 3,000–16,000 IOPS and 125–1,000 MiB/s throughput, defaulting to the included baseline. Extra performance adds charges; size/IOPS ratios are checked. Instance EBS performance and pricing require separate review."
+                )
             fixed.append(
                 "VM deletion protection is configurable (default enabled); disable and apply that change before deliberate deletion or replacement. It is not a backup."
             )

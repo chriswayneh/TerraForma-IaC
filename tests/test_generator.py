@@ -332,6 +332,94 @@ def test_native_fixed_private_ip(native_directories, provider, public):
     )
 
 
+@pytest.mark.parametrize("disk_type", ["gp3", "gp2"])
+@pytest.mark.parametrize("enabled", [True, False])
+def test_native_gp3_performance_options(native_directories, disk_type, enabled):
+    from terraforma.project import compile_project
+    from tests.test_private_ip import specification
+
+    spec = specification("aws")
+    spec.inputs.update(boot_disk_type=disk_type, data_disk_type=disk_type, enable_data_disk=enabled)
+    if disk_type == "gp3":
+        spec.inputs.update(boot_disk_iops=6000, boot_disk_throughput=1000)
+        if enabled:
+            spec.inputs.update(data_disk_iops=16000, data_disk_throughput=1000)
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("prefix", ["boot_disk", "data_disk"])
+@pytest.mark.parametrize(
+    "iops,throughput,boot_valid,data_valid",
+    [
+        (3000, 125, True, True),
+        (3000, 750, True, True),
+        (3000, 751, False, False),
+        (3000, 1000, False, False),
+        (10000, 1000, True, True),
+        (10001, 1000, False, True),
+        (16000, 1000, False, True),
+    ],
+)
+def test_native_gp3_throughput_precondition(
+    tmp_path, prefix, iops, throughput, boot_valid, data_valid
+):
+    if os.environ.get("TERRAFORMA_NATIVE_TESTS") != "1":
+        pytest.skip("Set TERRAFORMA_NATIVE_TESTS=1 to run native validation.")
+    executable = shutil.which("terraform")
+    if not executable:
+        pytest.fail("Native tests require Terraform on PATH.")
+    from terraforma.generator import block
+
+    generator = TerraformGenerator(
+        WizardConfig(provider="aws", project_name="disk-test", architecture_type="virtual_machine")
+    )
+    generator.generate()
+    variables = [
+        item.render()
+        for item in generator.variables
+        if item.labels[0].startswith(prefix + "_") or item.labels[0] == "enable_data_disk"
+    ]
+    resource = block(
+        "resource",
+        "terraform_data",
+        "performance_check",
+        children=[block("lifecycle", children=[generator._gp3_precondition(prefix)])],
+    )
+    (tmp_path / "main.tf").write_text(
+        "\n\n".join([*variables, resource.render()]), encoding="utf-8"
+    )
+    initialized = subprocess.run(
+        [executable, "init", "-backend=false", "-input=false", "-no-color"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert initialized.returncode == 0, initialized.stdout + initialized.stderr
+    result = subprocess.run(
+        [
+            executable,
+            "plan",
+            "-input=false",
+            "-lock=false",
+            "-no-color",
+            "-var=enable_data_disk=true",
+            f"-var={prefix}_iops={iops}",
+            f"-var={prefix}_throughput={throughput}",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    valid = boot_valid if prefix == "boot_disk" else data_valid
+    assert result.returncode == (0 if valid else 1), result.stdout + result.stderr
+    if not valid:
+        assert "throughput no greater than one quarter" in " ".join(result.stderr.split())
+
+
 @pytest.mark.parametrize(
     "provider,public,network,subnet",
     [
