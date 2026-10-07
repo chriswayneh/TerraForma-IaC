@@ -66,6 +66,27 @@ def test_invalid_ai_responses_fail_cleanly(body):
         diagnose(lambda request: httpx.Response(200, json=body))
 
 
+def test_duplicate_completion_envelope_is_rejected_without_echoing_response():
+    content = b'{"choices":[],"choices":[{"finish_reason":"stop","message":{"content":"private-marker"}}]}'
+    with pytest.raises(DiagnosticsError, match="invalid diagnostic response") as error:
+        diagnose(lambda request: httpx.Response(200, content=content))
+    assert "private-marker" not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        '{"friendly_explanation":"private-marker","friendly_explanation":"hi","recommended_fix":"fix"}',
+        '{"friendly_explanation":"hi","recommended_fix":"fix","ignored":1e999}',
+        "[" * 65 + "0" + "]" * 65,
+    ],
+)
+def test_ambiguous_diagnostic_content_is_rejected_without_echoing_response(content):
+    with pytest.raises(DiagnosticsError, match="invalid diagnostic response") as error:
+        diagnose(lambda request: httpx.Response(200, json=completion(content)))
+    assert "private-marker" not in str(error.value)
+
+
 def test_transient_status_retries():
     calls = []
 

@@ -1,11 +1,12 @@
 import hashlib
 import ipaddress
-import json
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+
+from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
@@ -517,20 +518,7 @@ def review_bytes(raw: bytes) -> dict:
     if len(raw) > MAX_PLAN_BYTES:
         raise ValueError("Plan JSON exceeds the 8 MiB review limit.")
     try:
-        data = json.loads(raw, object_pairs_hook=unique_object, parse_constant=reject_constant)
+        data = strict_json(raw)
     except (ValueError, UnicodeError, RecursionError):
         raise ValueError("Plan file is not valid JSON.") from None
     return review_plan(data, artifact_sha256=hashlib.sha256(raw).hexdigest())
-
-
-def unique_object(pairs: list[tuple[str, Any]]) -> dict:
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError("Duplicate JSON keys are unsupported.")
-        result[key] = value
-    return result
-
-
-def reject_constant(value: str):
-    raise ValueError("Non-finite JSON numbers are unsupported.")

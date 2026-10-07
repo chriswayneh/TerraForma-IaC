@@ -1,6 +1,6 @@
 # Architecture
 
-[Getting started](GETTING_STARTED.md) · [Screenshots](../README.md#screenshots) · [Roadmap](ROADMAP.md) · [Verification](VERIFICATION.md)
+[Getting started](GETTING_STARTED.md) Â· [Screenshots](../README.md#screenshots) Â· [Roadmap](ROADMAP.md) Â· [Verification](VERIFICATION.md)
 
 TerraForma-IaC is a Python package with two interfaces over one generation and validation core. The local web UI uses plain browser assets served by FastAPI; it requires no Node.js installation or frontend build.
 
@@ -35,6 +35,7 @@ flowchart LR
 - `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
 - `cli.py` exposes generation, validation, local plan review, and local serving commands.
 - `plan_review.py` inspects bounded plan JSON exports and produces reports without raw resource values. Its initial rules have limited coverage and never grant apply approval.
+- `json_input.py` shares strict UTF-8, duplicate-key, finite-number and nesting checks across local imports, tool metadata and AI diagnostics. Local files accept a UTF-8 BOM; API JSON bodies do not.
 - `request_limits.py` bounds mutation bodies to 64 KiB before route parsing, with an explicit 8 MiB exception for the plan-review route. JSON requests require UTF-8, unique object keys, finite numbers and at most 64 nesting levels; rejected input values are omitted from errors. Non-JSON content remains subject to route-specific parsing.
 - `web.py` exposes generation, validation, ZIP download, project import, and local plan-review routes. It accepts validated specifications or plan JSON, not arbitrary HCL or arbitrary host paths. Native checks and plan review run off the event loop, with one validation and one review at a time.
 - `static/` contains the buildless browser application. It keeps the current questionnaire in browser memory, optionally saves non-secret choices locally, and displays server-returned text using text nodes.

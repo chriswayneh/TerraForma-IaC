@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from terraforma import __version__
-from terraforma.plan_review import reject_constant, unique_object
+from terraforma.json_input import strict_json
 
 ArtifactName = Literal["main.tf", "variables.tf", "outputs.tf", "terraforma.project.json"]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
@@ -89,11 +89,7 @@ def verify_project(directory: Path) -> dict:
         raw = stream.read(64 * 1024 + 1)
     if len(raw) > 64 * 1024:
         raise ValueError("Generation receipt exceeds 64 KiB.")
-    receipt = GenerationReceipt.model_validate(
-        json.loads(
-            raw.decode("utf-8-sig"), object_pairs_hook=unique_object, parse_constant=reject_constant
-        )
-    )
+    receipt = GenerationReceipt.model_validate(strict_json(raw))
     results = []
     specification_bytes = bytearray()
     specification_status = "unavailable"
@@ -126,11 +122,7 @@ def verify_project(directory: Path) -> dict:
         results.append({"file": name, "status": status})
         if name == "terraforma.project.json" and status in {"match", "modified"}:
             try:
-                specification = json.loads(
-                    specification_bytes.decode("utf-8-sig"),
-                    object_pairs_hook=unique_object,
-                    parse_constant=reject_constant,
-                )
+                specification = strict_json(bytes(specification_bytes))
                 if not isinstance(specification, dict) or not isinstance(
                     specification.get("template_version"), str
                 ):

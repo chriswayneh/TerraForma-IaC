@@ -141,6 +141,8 @@ def test_invalid_metadata_fails_without_echoing_values(provider, data, monkeypat
         b"private-invalid-json",
         b'{"Account":"123456789012","Account":"999999999999"}',
         b'{"Account":NaN}',
+        b'{"Account":"123456789012","ignored":1e999}',
+        pytest.param(b"[" * 65 + b"0" + b"]" * 65, id="excessive-depth"),
         b"\xff",
     ],
 )

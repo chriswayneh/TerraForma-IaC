@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Apply shared bounded UTF-8 JSON parsing to API requests, project imports, receipts, cloud CLI metadata and AI responses; reject duplicate keys, non-finite numeric overflow and nesting beyond 64 levels.
+- Require actual boolean consent before API validation can request an AI explanation.
+- Include a generated `.gitignore` for common private Terraform artifacts, preserve existing ignore files, and retain provider lock files for version control.
+- Offer Secure Boot for standalone GCP VMs, enabled by default with vTPM and integrity monitoring; document compatibility and stopped-VM update requirements.
+- Extend plan review to GCP Shielded VM controls and removal of existing protections, using policy version `0.4.0`.
+
 - Add browser cloud-target checks with one-time explicit consent, shared native-tool concurrency limits, readable results and invalidation after questionnaire edits.
 
 - Add explicit CLI opt-in for bounded AWS account, Azure subscription and GCP project target reads, with mismatch/state checks, specification digests and reports omitting raw responses and credentials.
@@ -68,9 +74,9 @@
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.
 
-## v0.2.0 — October 6, 2026
+## v0.2.0 â€” October 6, 2026
 
-First public release. [Download](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) · [Release notes](docs/RELEASE_0.2.0.md) · [Verification](docs/VERIFICATION.md)
+First public release. [Download](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) Â· [Release notes](docs/RELEASE_0.2.0.md) Â· [Verification](docs/VERIFICATION.md)
 
 - Guided local web UI and CLI for AWS, Azure, and Google Cloud recipes.
 - Terraform file previews, ZIP export, resource explanations, and required-input guidance.

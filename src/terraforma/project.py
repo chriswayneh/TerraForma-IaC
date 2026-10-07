@@ -1,7 +1,6 @@
 import base64
 import binascii
 import ipaddress
-import json
 import re
 from pathlib import Path
 from typing import Literal
@@ -12,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
 from terraforma.generator import TerraformGenerator, WizardConfig
-from terraforma.plan_review import reject_constant, unique_object
+from terraforma.json_input import strict_json
 
 
 class ProjectSpecification(BaseModel):
@@ -170,7 +169,7 @@ def validate_input(name: str, value: str, kind: str):
             raise ValueError("Region, zone, or machine-size identifier has an invalid format.")
     elif name == "gcp_project_id" and not re.fullmatch(r"[a-z][a-z0-9-]{4,28}[a-z0-9]", value):
         raise ValueError(
-            "Google Cloud project ID must use 6–30 lowercase letters, digits, or hyphens."
+            "Google Cloud project ID must use 6â€“30 lowercase letters, digits, or hyphens."
         )
 
 
@@ -199,7 +198,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
         elif definition["name"] == "aws_account_id":
             message = "Enter the 12-digit target AWS account ID."
         elif definition["name"] == "admin_username":
-            message = "Enter a non-reserved username using 3–32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
+            message = "Enter a non-reserved username using 3â€“32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
         else:
             message = {
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
@@ -376,8 +375,4 @@ def load_specification(path: Path) -> ProjectSpecification:
 def parse_specification(raw: bytes) -> ProjectSpecification:
     if len(raw) > 64 * 1024:
         raise ValueError("Project specification exceeds the 64 KiB limit.")
-    return ProjectSpecification.model_validate(
-        json.loads(
-            raw.decode("utf-8-sig"), object_pairs_hook=unique_object, parse_constant=reject_constant
-        )
-    )
+    return ProjectSpecification.model_validate(strict_json(raw))

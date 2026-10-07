@@ -1,4 +1,3 @@
-import json
 import math
 import os
 import re
@@ -7,7 +6,7 @@ import tempfile
 from uuid import UUID
 
 from terraforma.artifacts import specification_digest
-from terraforma.plan_review import reject_constant, unique_object
+from terraforma.json_input import strict_json
 from terraforma.process import run_bounded
 from terraforma.project import ProjectSpecification, compile_project
 
@@ -105,11 +104,7 @@ def target_preflight(
         )
         return report
     try:
-        data = json.loads(
-            result.stdout.decode("utf-8-sig"),
-            object_pairs_hook=unique_object,
-            parse_constant=reject_constant,
-        )
+        data = strict_json(result.stdout)
         if not isinstance(data, dict):
             raise TypeError("Expected an object.")
         field = {"aws": "Account", "azure": "subscriptionId", "gcp": "projectId"}[provider]

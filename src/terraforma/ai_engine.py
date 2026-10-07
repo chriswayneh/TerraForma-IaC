@@ -6,6 +6,8 @@ import re
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from terraforma.json_input import strict_json
+
 
 class DiagnosticsError(RuntimeError):
     pass
@@ -135,14 +137,16 @@ class AIDiagnosticsEngine:
                     f"OpenAI returned HTTP {response.status_code}. Check API access, billing, and connectivity."
                 )
             try:
-                choice = response.json()["choices"][0]
+                choice = strict_json(response.content)["choices"][0]
                 if not isinstance(choice, dict) or not isinstance(choice.get("message"), dict):
                     raise TypeError("Malformed completion envelope.")
                 if choice.get("finish_reason") != "stop" or choice["message"].get("refusal"):
                     raise DiagnosticsError(
                         "OpenAI refused the request or returned an incomplete explanation."
                     )
-                return DiagnosticSuggestion.model_validate_json(choice["message"]["content"])
-            except (ValueError, KeyError, IndexError, TypeError, ValidationError):
+                return DiagnosticSuggestion.model_validate(
+                    strict_json(choice["message"]["content"])
+                )
+            except (ValueError, KeyError, IndexError, TypeError, RecursionError, ValidationError):
                 raise DiagnosticsError("OpenAI returned an invalid diagnostic response.") from None
         raise DiagnosticsError("OpenAI retry limit reached.")
