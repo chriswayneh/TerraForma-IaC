@@ -799,6 +799,17 @@ def test_native_azure_refreshed_windows_offer(native_directories, public, versio
 
 
 @pytest.mark.parametrize(
+    "public,version", list(itertools.product([False, True], ["latest", "20348.1.1"]))
+)
+def test_native_azure_windows_core(native_directories, public, version):
+    from terraforma.project import compile_project
+    from tests.test_azure_windows_core import specification
+
+    spec = specification(public=public, os_image="windows-server-2022-core", image_version=version)
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize(
     "public,version",
     list(itertools.product([False, True], ["latest", "windows-server-2022-dc-core-v20261001"])),
 )

@@ -220,7 +220,7 @@ class TerraformGenerator:
                     (
                         "Windows Server 2022 English Full Base or Core Base from Amazon, using x86_64. Full Base includes Desktop Experience; Core omits the standard desktop and needs compatible applications and administration tools. Switching installation options requires replacement rather than an in-place conversion. "
                         if self.config.provider == "aws"
-                        else "Windows Server 2022 Gen2 from MicrosoftWindowsServer, using x86_64. "
+                        else "Windows Server 2022 desktop or Core Gen2 from MicrosoftWindowsServer, using x86_64. Core omits the standard desktop; verify application and administration-tool compatibility. Switching installation options replaces the VM. "
                         if self.config.provider == "azure"
                         else "Windows Server 2022 desktop or Core from windows-cloud, using x86_64. Core omits the standard desktop; verify application and administration-tool compatibility. Switching installation options replaces the VM. "
                     )
@@ -233,9 +233,6 @@ class TerraformGenerator:
                 if self.config.architecture_type == "windows_virtual_machine"
                 else LINUX_IMAGE_CHOICES[self.config.provider][0],
                 choices=("windows-server-2022", "windows-server-2022-core")
-                if self.config.architecture_type == "windows_virtual_machine"
-                and self.config.provider in {"aws", "gcp"}
-                else ("windows-server-2022",)
                 if self.config.architecture_type == "windows_virtual_machine"
                 else LINUX_IMAGE_CHOICES[self.config.provider],
             )

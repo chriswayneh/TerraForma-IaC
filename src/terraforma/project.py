@@ -144,8 +144,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                         if config.provider == "aws"
                         else "Windows Server 2022 Core",
                     }
-                    if config.provider in {"aws", "gcp"}
-                    and config.architecture_type == "windows_virtual_machine"
+                    if config.architecture_type == "windows_virtual_machine"
                     else {},
                     "admin_access_method": {
                         "administrator_network": "Direct administrator network",

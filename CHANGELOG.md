@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Azure Windows standalone VMs now offer Server 2022 Core Gen2 alongside the desktop default under Microsoft's refreshed windowsserver2022 offer. External credentials, patching and Trusted Launch controls are preserved; installation changes require replacement and compatibility review.
+
 - GCP Windows standalone VMs now offer the published Server 2022 Core family or a matching supported exact image name. Desktop remains the default; input and Terraform guards reject mismatched desktop/Core pins. Existing IAP, activation and boot controls are preserved.
 
 - Azure Windows generation now references the refreshed windowsserver2022 offer after Microsoft's legacy-offer deprecation. The form and generated guidance warn that regeneration can replace existing VMs, old pins need revalidation and application dependencies must be reviewed. Existing guests are not migrated.

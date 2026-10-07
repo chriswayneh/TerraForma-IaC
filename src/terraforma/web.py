@@ -229,8 +229,7 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             "dependencies and backups before planning; old pins are not translated."
         )
     if (
-        payload.recipe.provider in {"aws", "gcp"}
-        and payload.recipe.architecture_type == "windows_virtual_machine"
+        payload.recipe.architecture_type == "windows_virtual_machine"
         and payload.inputs.get("os_image") == "windows-server-2022-core"
     ):
         project["notes"].append(

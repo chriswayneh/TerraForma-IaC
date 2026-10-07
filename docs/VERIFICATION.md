@@ -1,5 +1,12 @@
 # Verification record
 
+## Azure Windows Core checkpoint
+
+- The default suite passes 1,818 tests with 274 optional/native/platform cases skipped. Ruff checks and formatting pass across 95 Python files; whitespace checks pass.
+- Eleven new regressions cover private/public Core selection, latest/exact versions, Secure Boot choices, preserved password/patch/vTPM controls, unsupported versions and API import. The former Azure exclusion case was removed; desktop remains the default.
+- Four separately enabled private/public latest/pin cases pass real Terraform validation and TFLint against the cached AzureRM provider. Synthetic versions are structural examples; regional availability, activation and guest boot remain unverified.
+- A temporary browser tab imported an Azure Windows project, selected Core and generated the matching summary and replacement guidance. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, connection or apply was run.
+
 ## GCP Windows Core checkpoint
 
 - The default suite passes 1,808 tests with 270 optional/native/platform cases skipped. Ruff checks and formatting pass across 94 Python files; whitespace checks pass.

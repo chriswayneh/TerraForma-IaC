@@ -36,7 +36,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             image = (
                 "Windows Server 2022 English Full Base or Core Base from Amazon"
                 if config.provider == "aws"
-                else "Windows Server 2022 Gen2 from MicrosoftWindowsServer"
+                else "Windows Server 2022 desktop or Core Gen2 from MicrosoftWindowsServer"
                 if config.provider == "azure"
                 else "Windows Server 2022 desktop or Core from windows-cloud"
             )
@@ -46,7 +46,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 + (
                     "Image version is configurable: latest selected windows-2022/windows-2022-core family or a matching exact Windows Server 2022 Datacenter image name from windows-cloud. Availability and deprecation remain unverified."
                     if windows and config.provider == "gcp"
-                    else "Uses the refreshed windowsserver2022/2022-datacenter-g2 offer with latest or an exact version. Regenerating older WindowsServer-offer projects can replace the VM; confirm version availability and application dependencies before migration."
+                    else "Uses the refreshed windowsserver2022 offer with the selected desktop/Core Gen2 SKU with latest or an exact version. Regenerating older WindowsServer-offer projects can replace the VM; confirm version availability and application dependencies before migration."
                     if windows and config.provider == "azure"
                     else "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
                     if config.provider == "azure"

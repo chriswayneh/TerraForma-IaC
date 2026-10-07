@@ -266,7 +266,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         )
     builder.variable(
         "image_version",
-        "Azure Windows marketplace version for MicrosoftWindowsServer/windowsserver2022/2022-datacenter-g2: latest or exact Major.Minor.Build. The refreshed offer excludes deprecated .NET 6 packages. Regenerating older WindowsServer-offer projects changes the image reference and can replace the VM and delete boot data. Verify the exact version in the new offer, region and application dependencies; old-offer pins are not automatically translated. Review backups and the Terraform plan before migration."
+        "Azure Windows marketplace version for MicrosoftWindowsServer/windowsserver2022 with the selected desktop 2022-datacenter-g2 or Core 2022-datacenter-core-g2 SKU: latest or exact Major.Minor.Build. The refreshed offer excludes deprecated .NET 6 packages. Regenerating older WindowsServer-offer projects changes the image reference and can replace the VM and delete boot data. Verify the exact version in the new offer, region and application dependencies; old-offer pins are not automatically translated. Review backups and the Terraform plan before migration."
         if windows
         else "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
         "latest",
@@ -280,7 +280,9 @@ def build_azure(builder: TerraformGenerator) -> None:
         else ref(
             'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
         ),
-        sku=ref('{"windows-server-2022" = "2022-datacenter-g2"}[var.os_image]')
+        sku=ref(
+            '{"windows-server-2022" = "2022-datacenter-g2", "windows-server-2022-core" = "2022-datacenter-core-g2"}[var.os_image]'
+        )
         if windows
         else ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
         version=ref("var.image_version"),
