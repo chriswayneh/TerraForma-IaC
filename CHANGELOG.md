@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- GCP Windows standalone VMs accept latest or a supported exact Windows Server 2022 Datacenter image name from the fixed windows-cloud publisher. Input and Terraform guards reject other image variants; availability and cloud boot remain unverified.
+
 - GCP standalone Linux/Windows questionnaires now offer an IAP tunnel connection path, with one targeted administrator port and the unused direct network question hidden. Direct access remains the default; IAM grants and guest authentication remain outside generation. Added connection guidance without opening live tunnels.
 
 - Local plan policy 0.9.0 recognizes narrowly targeted Google IAP IPv4 administrator firewall rules as mandatory manual review. Broader or unresolved rules retain the block; tunnel IAM, guest authentication and effective access remain unverified. Guided IAP generation remains planned.

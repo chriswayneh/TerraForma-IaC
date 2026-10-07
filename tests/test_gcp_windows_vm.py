@@ -99,7 +99,7 @@ def test_gcp_windows_rejects_invalid_user_references(username):
 @pytest.mark.parametrize(
     "name,value",
     [
-        ("image_version", "windows-server-2022-dc-v20261001"),
+        ("image_version", "windows-server-2019-dc-v20261001"),
         ("image_version", "ubuntu-2404-noble-v20261001"),
         ("boot_disk_size_gb", 63),
         ("boot_disk_size_gb", 2049),
@@ -119,7 +119,8 @@ def test_gcp_windows_defaults_and_api_guidance():
     contract = {item["name"]: item for item in input_contract(spec.recipe)}
     assert contract["boot_disk_size_gb"]["default"] == 64
     assert contract["machine_type"]["default"] == "e2-standard-2"
-    assert contract["image_version"]["choices"] == ["latest"]
+    assert contract["image_version"]["choices"] is None
+    assert contract["image_version"]["default"] == "latest"
     assert "BitLocker" in contract["enable_secure_boot"]["description"]
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
         headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}

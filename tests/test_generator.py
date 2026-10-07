@@ -755,6 +755,15 @@ def test_native_gcp_iap_access(native_directories, windows, public):
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize("public", [False, True])
+def test_native_gcp_windows_exact_image(native_directories, public):
+    from terraforma.project import compile_project
+    from tests.test_gcp_windows_vm import specification
+
+    spec = specification(public=public, image_version="windows-server-2022-dc-v20261001")
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

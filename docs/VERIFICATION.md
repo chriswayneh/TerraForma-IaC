@@ -1,5 +1,12 @@
 # Verification record
 
+## GCP Windows image pin checkpoint
+
+- The default suite passes 1,755 tests with 250 optional/native/platform cases skipped. Ruff checks and formatting pass across 91 Python files; whitespace checks pass.
+- Twenty new regressions cover latest/exact names, private/public and direct/IAP combinations, the fixed windows-cloud publisher, API import preservation and rejection of other OS variants, publisher paths or expressions. Existing defaults remain latest.
+- Two separately enabled private/public cases pass real Terraform validation and TFLint against the cached Google provider. The example image name is synthetic; validation does not establish that it exists or boots.
+- A temporary browser tab imported an older Windows project, generated with an exact name, rejected a mismatched OS through field validation and restored the valid example. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, tunnel or apply was run.
+
 ## Google IAP generation checkpoint
 
 - The default suite passes 1,735 tests with 248 optional/native/platform cases skipped. Ruff checks and formatting pass across 90 Python files; JavaScript syntax passes.

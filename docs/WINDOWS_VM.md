@@ -66,16 +66,18 @@ The standard Windows VM exposes host maintenance (`MIGRATE` or `TERMINATE`) and 
 
 | Choice | Supported behavior |
 | --- | --- |
-| Image | Latest `windows-cloud/windows-2022` family, x86_64; exact pins are not yet supported |
+| Image | Latest `windows-cloud/windows-2022` family or a supported exact Windows Server 2022 Datacenter image name from `windows-cloud`; x86_64 |
 | VM size | Configurable, default `e2-standard-2`; availability, licensing and price require review |
 | Boot disk | 64 GiB default/minimum through 2,048 GiB; pd-balanced, pd-standard or pd-ssd |
 | Data disk | One optional new empty persistent disk; no initialization, backup or retention policy |
 | Network | New regional private subnet; optional public IP and fixed private address |
-| Administrator access | Restricted RDP on TCP 3389; no SSH key or Linux OS Login configuration |
+| Administrator access | Restricted RDP on TCP 3389 through the selected direct network or IAP tunnel; no SSH key or Linux OS Login configuration |
 | Credentials | Requested local username, default `terraforma`; separate Google credential setup after provisioning |
 | Activation | Private Google Access, an Internet-gateway route to `35.190.247.13/32`, and tagged TCP 1688 egress |
 | Boot integrity | Secure Boot enabled by default and configurable; vTPM/integrity monitoring remain enabled |
 | Protection | Deletion protection enabled by default; automatic stopping for updates disabled |
+
+Enter `latest` or a published image name beginning `windows-server-2022-dc-v` followed by an 8–10 digit version suffix. Custom publisher projects, Server Core and other Windows versions are outside this initial input. Select the exact name from the official `windows-cloud` image catalog; TerraForma checks its supported shape, not its existence, license or boot compatibility. Google's [Windows VM guide](https://docs.cloud.google.com/compute/docs/instances/windows/creating-managing-windows-instances) explains image selection. Pinning does not install patches, and changing an image can replace the VM and delete boot data. Review backups and the Terraform plan first.
 | Workload identity | Optional existing user-managed service account; IAM permissions require separate review |
 | Outputs | VM path/name/zone/address, requested username and optional disk ID |
 

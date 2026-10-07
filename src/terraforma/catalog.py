@@ -44,7 +44,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             [
                 f"Operating system choices: {image}; x86_64/AMD64 only. "
                 + (
-                    "Latest Windows image family only; exact image pins are unsupported and resolved image availability remains unverified."
+                    "Image version is configurable: latest windows-2022 family or an exact supported Windows Server 2022 Datacenter image name from windows-cloud. Availability and deprecation remain unverified."
                     if windows and config.provider == "gcp"
                     else "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
                     if config.provider == "azure"

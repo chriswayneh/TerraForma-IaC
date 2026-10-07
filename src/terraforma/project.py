@@ -384,12 +384,16 @@ def compile_project(specification: ProjectSpecification) -> dict:
         and effective.get("image_version", "latest") != "latest"
     ):
         prefix = (
-            "debian-12-bookworm-v" if effective["os_image"] == "debian-12" else "ubuntu-2404-noble"
+            "windows-server-2022-dc-v"
+            if specification.recipe.architecture_type == "windows_virtual_machine"
+            else "debian-12-bookworm-v"
+            if effective["os_image"] == "debian-12"
+            else "ubuntu-2404-noble"
         )
         if not effective["image_version"].startswith(prefix):
             raise ProjectInputError(
                 "image_version",
-                "Choose an exact image name matching the selected Linux operating system.",
+                "Choose an exact image name matching the selected operating system.",
             )
     if effective.get("private_ip_address") and not usable_vm_address(
         specification.recipe.provider,
