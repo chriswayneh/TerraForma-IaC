@@ -4,7 +4,7 @@ The first public release provides a lightweight local interface for generating a
 
 ## Included
 
-- A sky-blue local web UI with dark/light themes and a terminal questionnaire.
+- A local web UI and terminal questionnaire for guided configuration.
 - AWS, Azure, and Google Cloud recipes for web servers, load-balanced tiers, PostgreSQL, and static-site storage.
 - HCL previews, resource explanations, required-input guidance, and ZIP export.
 - Optional saved non-secret questionnaire selections.

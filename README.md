@@ -23,7 +23,7 @@ A lightweight local workspace for creating Terraform through a guided questionna
 
 ## What you get
 
-- A three-step browser wizard with sky-blue dark and light themes, using locally bundled [Radix Colors](https://www.radix-ui.com/colors).
+- A three-step browser wizard with guided cloud, workload, and configuration choices.
 - AWS, Azure, and Google Cloud configurations with public/private access choices.
 - Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.
 - A simplified access diagram and plain-language resource explanations.
