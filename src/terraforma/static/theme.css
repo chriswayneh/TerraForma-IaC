@@ -27,6 +27,26 @@
 .recipe-input-group {
   margin: 22px 0;
 }
+#choice-summary-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+#choice-summary-list dt {
+  color: var(--muted);
+}
+#choice-summary-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 500px) {
+  #choice-summary-list > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
 .recipe-checkbox {
   display: block;
   width: 20px;

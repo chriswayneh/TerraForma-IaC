@@ -36,6 +36,15 @@ terraforma generate --spec terraforma.project.json --dir first-site
 
 Terminal generation writes the three Terraform files, the non-secret specification, a generation receipt, and checksums into a fresh output directory. It refuses to overwrite an existing Terraform configuration or metadata file and rolls back partial output on failure. Browser downloads include the same artifacts plus a project guide. See [artifact comparison](ARTIFACTS.md). Optional remembered browser choices still save only the original questionnaire selections; additional input answers are not retained in browser storage.
 
+After generation or import, **Your configuration choices** lists the effective answers without requiring you to read Terraform. The ZIP guide includes the same summary. `answer` means a value recorded in the saved questionnaire, even when you accepted a suggested default; `default` means an omitted input resolved through the recipe; `recipe` means a controlled value such as the project name. External secret requirements show environment-variable names, never their values. Page content and SSH keys receive short descriptions rather than full content. Long text is shortened only for display; the configuration keeps the full accepted value.
+
+To review a saved questionnaire from the terminal without running Terraform or writing files:
+
+```text
+terraforma describe --spec terraforma.project.json
+terraforma describe --spec terraforma.project.json --json-output
+```
+
 Generation also rejects common state files, variable-value files, `.terraform`, and the Terraform lock file in the destination. This prevents mixing a new questionnaire with an initialized project or saved values. The terminal wizard checks an explicit destination before asking questions. Use a fresh output directory; existing-project migration and managed updates are later lifecycle workflows.
 
 Replace the example account ID with your intended AWS account. Every AWS recipe now requires a 12-digit `aws_account_id` and writes the provider's [account allowlist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/html) to guard later provider operations against an unintended authenticated account. Azure recipes require a subscription ID; GCP recipes require a project ID. The compiled result records that target and explicitly marks identity unverified. These fields are account references, not credentials; generation does not sign in or prove access. Earlier development AWS manifests need this new input added before they can compile or import.

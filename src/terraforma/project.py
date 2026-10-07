@@ -278,6 +278,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
         "receipt": create_receipt(specification.model_dump(), files),
         "specification": specification.model_dump(),
         "input_contract": contract,
+        "choice_summary": choice_summary(contract, effective, specification.inputs),
         "capabilities": recipe_capabilities(specification.recipe),
         "target": {
             "provider": specification.recipe.provider,
@@ -292,6 +293,34 @@ def compile_project(specification: ProjectSpecification) -> dict:
         "required_secret_environment_variables": required_secrets,
         "verification": "Generated offline. Account permissions, region/image/SKU availability, quotas, and deployment remain unverified.",
     }
+
+
+def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> list[dict]:
+    choices = []
+    for definition in contract:
+        name = definition["name"]
+        value = effective.get(name)
+        source = "answer" if name in supplied else "default"
+        if definition["sensitive"]:
+            display = "Supplied externally through " + definition["environment_variable"]
+            source = "external"
+        elif name == "ssh_public_key":
+            display = "SSH public key provided"
+        elif name == "index_html":
+            display = "Website page content provided"
+        elif type(value) is bool:
+            display = "Enabled" if value else "Disabled"
+        else:
+            display = " ".join(str(value).splitlines())
+            display = "".join(char for char in display if char.isprintable())
+            if len(display) > 120:
+                display = display[:117] + "..."
+        if not definition["editable"] and not definition["sensitive"]:
+            source = "recipe"
+        choices.append(
+            {"name": name, "label": definition["label"], "value": display, "source": source}
+        )
+    return choices
 
 
 def load_specification(path: Path) -> ProjectSpecification:

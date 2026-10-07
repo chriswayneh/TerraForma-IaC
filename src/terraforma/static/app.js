@@ -360,6 +360,18 @@ function renderProject(result) {
       return item;
     }),
   );
+  byId("choice-summary").hidden = !result.choice_summary?.length;
+  byId("choice-summary-list").replaceChildren(
+    ...(result.choice_summary || []).map((choice) => {
+      const row = document.createElement("div");
+      const label = document.createElement("dt");
+      label.textContent = choice.label;
+      const value = document.createElement("dd");
+      value.textContent = `${choice.value} (${choice.source})`;
+      row.append(label, value);
+      return row;
+    }),
+  );
   const inputs = result.required_inputs.map((input) => {
     const item = document.createElement("div");
     item.className = "input-item";

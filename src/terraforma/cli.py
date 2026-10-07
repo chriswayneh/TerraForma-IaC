@@ -375,6 +375,34 @@ def generate_specification(spec: Path, target_dir: Path):
     click.echo(result["verification"])
 
 
+@main.command("describe")
+@click.option("--spec", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--json-output", is_flag=True, help="Print the configuration summary as JSON.")
+def describe_project(spec: Path, json_output: bool):
+    """Explain selected configuration answers and defaults without executing Terraform."""
+    try:
+        specification = load_specification(spec)
+        result = compile_project(specification)
+    except ProjectInputError as error:
+        raise click.ClickException(str(error)) from None
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "Unable to describe a supported, complete project specification; input values are omitted from this error."
+        ) from None
+    summary = {
+        "target": result["target"],
+        "choices": result["choice_summary"],
+        "verification": result["verification"],
+    }
+    if json_output:
+        click.echo(json.dumps(summary, indent=2))
+        return
+    click.echo(f"Configuration choices for {specification.recipe.project_name}")
+    for choice in summary["choices"]:
+        click.echo(f"{choice['label']}: {choice['value']} ({choice['source']})")
+    click.echo(summary["verification"])
+
+
 @main.command("verify-project")
 @click.option(
     "--dir",

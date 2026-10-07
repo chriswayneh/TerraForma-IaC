@@ -1,6 +1,7 @@
 import asyncio
 import io
 import os
+import re
 import secrets
 import shutil
 import zipfile
@@ -111,6 +112,7 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
     project["specification"] = compiled["specification"]
     project["target"] = compiled["target"]
     project["receipt"] = compiled["receipt"]
+    project["choice_summary"] = compiled["choice_summary"]
     project["required_inputs"] = [
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
@@ -289,6 +291,13 @@ def create_app() -> FastAPI:
                 ]
             )
         instructions.extend(["", "## What the configuration creates", ""])
+        if project.get("choice_summary"):
+            instructions.extend(["Your configuration choices:", ""])
+            for choice in project["choice_summary"]:
+                label = choice["label"].replace("|", "\\|")
+                value = re.sub(r"([\\`*_{}\[\]()#+.!|<>~-])", r"\\\1", choice["value"])
+                instructions.append(f"- {label}: {value} ({choice['source']}).")
+            instructions.append("")
         for component in project["guide"]["components"]:
             instructions.append(f"- {component['name']}: {component['explanation']}")
         instructions.extend(["", "## Recipe defaults and limits", ""])
