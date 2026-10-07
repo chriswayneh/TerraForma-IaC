@@ -24,6 +24,34 @@ def test_catalog_lists_all_recipes_without_claiming_deployment():
         assert recipe["fixed_choices"] and recipe["preflight_required"]
 
 
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("workload", ["virtual_machine", "windows_virtual_machine"])
+def test_catalog_images_match_questionnaire(provider, workload):
+    from terraforma.project import input_contract
+
+    config = WizardConfig(
+        provider=provider, project_name="catalog-check", architecture_type=workload
+    )
+    contract = {item["name"]: item for item in input_contract(config)}
+    metadata = recipe_capabilities(config)
+    assert metadata["image_choices"] == contract["os_image"]["choices"]
+    assert "Exact Windows image pins" not in metadata["unsupported"]
+
+
+def test_catalog_gp3_bounds_match_contract():
+    from terraforma.project import input_contract
+
+    config = WizardConfig(
+        provider="aws", project_name="catalog-check", architecture_type="virtual_machine"
+    )
+    contract = {item["name"]: item for item in input_contract(config)}
+    description = next(
+        item for item in recipe_capabilities(config)["fixed_choices"] if "gp3 boot/data" in item
+    )
+    assert f"{contract['boot_disk_iops']['maximum']:,}" in description
+    assert f"{contract['boot_disk_throughput']['maximum']:,}" in description
+
+
 @pytest.mark.parametrize(
     ("provider", "image", "description"),
     [

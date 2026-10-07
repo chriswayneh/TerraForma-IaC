@@ -1,5 +1,10 @@
 # Verification record
 
+## Catalog consistency checkpoint
+
+- Eighty-three catalog, GCP image-pin and gp3 regressions pass. Seven new checks compare Linux/Windows image choices across providers and the reported AWS performance ceilings against the input contract. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.
+- This corrects capability descriptions without changing Terraform generation or cloud behavior. No cloud request or apply was run.
+
 ## Expanded regional gp3 checkpoint
 
 - The default suite passes 1,898 tests with 284 optional/native/platform cases skipped. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.

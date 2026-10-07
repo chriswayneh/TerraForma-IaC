@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Corrected catalog image choices for Windows recipes, removed the stale GCP exact-pin exclusion and synchronized gp3 capability text with current input limits. Catalog metadata now has regressions against questionnaire choices and performance bounds.
+
 - Expanded AWS standalone gp3 tuning to the documented regional 80,000 IOPS/2,000 MiB/s ceilings while preserving included-performance defaults and size/IOPS/throughput ratios. Outposts remains unsupported; instance bandwidth, availability and achieved performance require separate verification.
 
 - Terminal generation now flushes and synchronizes generated file contents before reporting success. Sync errors and interrupts trigger existing cleanup, with redacted recovery messages; atomic multi-file publication and directory durability remain outside this change.

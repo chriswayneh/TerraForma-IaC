@@ -96,7 +96,6 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             fixed.append(
                 "Private Google Access and a default-internet-gateway route to 35.190.247.13/32 support Windows activation; an egress rule permits TCP 1688 for the VM tag. Cloud NAT is not the activation path. Organization policy and actual activation remain unverified."
             )
-            unsupported.append("Exact Windows image pins")
         elif standalone:
             fixed.append(
                 "Uses Google OS Login with project SSH keys blocked. OS Login IAM roles and organization policy must be checked before access; no metadata SSH key is collected."
@@ -156,7 +155,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         if standalone and config.provider in {"aws", "gcp"}:
             if config.provider == "aws":
                 fixed.append(
-                    "gp3 boot/data disks expose 3,000–16,000 IOPS and 125–1,000 MiB/s throughput, defaulting to the included baseline. Extra performance adds charges; size/IOPS ratios are checked. Instance EBS performance and pricing require separate review."
+                    "Regional gp3 boot/data disks expose 3,000–80,000 IOPS and 125–2,000 MiB/s throughput, defaulting to the included baseline. Extra performance adds charges; size/IOPS ratios are checked. Outposts is unsupported. Instance EBS performance and pricing require separate review."
                 )
             fixed.append(
                 "VM deletion protection is configurable (default enabled); disable and apply that change before deliberate deletion or replacement. It is not a backup."
@@ -204,7 +203,11 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         "workflow": "offline_generation",
         "access_modes": ["private", "public"],
         "fixed_choices": fixed,
-        "image_choices": list(LINUX_IMAGE_CHOICES[config.provider]) if compute else [],
+        "image_choices": ["windows-server-2022", "windows-server-2022-core"]
+        if windows
+        else list(LINUX_IMAGE_CHOICES[config.provider])
+        if compute
+        else [],
         "unsupported": unsupported,
         "account_checks": "unverified",
         "deployment_checks": "unverified",
