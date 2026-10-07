@@ -89,7 +89,7 @@ To enable optional AI explanations, set `OPENAI_API_KEY` in your environment bef
 
 ## Architecture
 
-The browser and CLI share one generation and validation core. A separate CLI reviewer inspects existing plan exports locally.
+The browser and CLI share generation, validation, and local plan-review cores. Development on main adds shared specifications and artifact receipts.
 
 ```mermaid
 flowchart LR

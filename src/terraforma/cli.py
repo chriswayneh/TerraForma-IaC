@@ -13,7 +13,7 @@ from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
 from terraforma.catalog import recipe_capabilities, recipe_catalog
-from terraforma.generator import WizardConfig, write_configuration
+from terraforma.generator import WizardConfig, project_destination, write_configuration
 from terraforma.plan_review import load_and_review
 from terraforma.project import (
     ProjectSpecification,
@@ -113,6 +113,13 @@ def catalog_command(json_output: bool):
 def wizard(target_dir: Path | None):
     """Create infrastructure files with a guided questionnaire."""
     click.secho("TerraForma-IaC infrastructure wizard", fg="cyan", bold=True)
+    if target_dir is not None:
+        try:
+            project_destination(target_dir)
+        except (ValueError, OSError):
+            raise click.ClickException(
+                "Choose a fresh, writable project directory without existing Terraform or generated artifacts."
+            ) from None
     provider = ask(questionary.select("Which cloud provider?", choices=["aws", "azure", "gcp"]))
     name = ask(
         questionary.text(
@@ -175,14 +182,17 @@ def wizard(target_dir: Path | None):
         )
         specification = collect_recipe_inputs(config)
         project = compile_project(specification)
+    except (ValueError, TypeError, ValidationError):
+        raise click.ClickException(
+            "Project inputs are invalid or incompatible. Review the recipe's input contract; values are omitted from this error."
+        ) from None
+    try:
         artifacts = project_artifacts(project)
         artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)
         directory = write_configuration(artifacts, target_dir or Path.cwd() / name)
-    except OSError as error:
-        raise click.ClickException(str(error)) from error
-    except (ValueError, ValidationError):
+    except (OSError, ValueError):
         raise click.ClickException(
-            "Project inputs are invalid or incompatible. Review the recipe's input contract; values are omitted from this error."
+            "Unable to write project files. Choose a fresh, writable project directory."
         ) from None
     click.secho(f"Created main.tf, variables.tf, and outputs.tf in {directory}", fg="green")
     click.echo(

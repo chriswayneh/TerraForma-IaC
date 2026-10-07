@@ -2,6 +2,7 @@ import hashlib
 import io
 import json
 import zipfile
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -76,7 +77,7 @@ def test_directory_in_place_of_artifact_is_not_read(tmp_path):
     ] == "missing_or_unsupported"
 
 
-def test_existing_manifest_is_preserved_and_partial_outputs_rolled_back(tmp_path):
+def test_existing_manifest_is_preserved_and_no_outputs_written(tmp_path):
     source = tmp_path / "terraforma.project.json"
     source.write_text("original")
     with pytest.raises(FileExistsError):
@@ -84,6 +85,23 @@ def test_existing_manifest_is_preserved_and_partial_outputs_rolled_back(tmp_path
     assert source.read_text() == "original"
     assert not list(tmp_path.glob("*.tf"))
     assert not (tmp_path / "terraforma.receipt.json").exists()
+
+
+def test_failed_write_rolls_back_only_new_files(tmp_path, monkeypatch):
+    note = tmp_path / "note.txt"
+    note.write_text("existing note")
+    original_open = Path.open
+
+    def fail_second_write(path, mode="r", *args, **kwargs):
+        if path.name == "variables.tf" and mode == "x":
+            raise OSError("simulated write failure")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", fail_second_write)
+    with pytest.raises(OSError):
+        write_configuration(project_artifacts(project()), tmp_path)
+    assert note.read_text() == "existing note"
+    assert list(tmp_path.iterdir()) == [note]
 
 
 def test_zip_checksums_and_receipt_cover_exact_exported_bytes(tmp_path):

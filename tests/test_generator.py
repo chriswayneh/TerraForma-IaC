@@ -68,11 +68,37 @@ def test_generation_refuses_existing_terraform(tmp_path):
     assert not (tmp_path / "main.tf").exists()
 
 
-def test_partial_write_rolls_back(tmp_path):
+def test_unexpected_filename_writes_nothing(tmp_path):
     with pytest.raises(ValueError, match="filename"):
         write_configuration({"main.tf": "new", "../escape.tf": "bad"}, tmp_path)
     assert not (tmp_path / "main.tf").exists()
     assert not (tmp_path.parent / "escape.tf").exists()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "terraform.tfstate",
+        "terraform.tfstate.backup",
+        "terraform.tfvars",
+        "choices.auto.tfvars.json",
+        ".terraform.lock.hcl",
+    ],
+)
+def test_generation_refuses_existing_state_values_and_initialization(tmp_path, name):
+    marker = tmp_path / name
+    marker.write_text("private-original-value")
+    with pytest.raises(ValueError, match="fresh project directory"):
+        write_configuration({"main.tf": "new"}, tmp_path)
+    assert marker.read_text() == "private-original-value"
+    assert not (tmp_path / "main.tf").exists()
+
+
+def test_generation_refuses_initialized_directory(tmp_path):
+    (tmp_path / ".terraform").mkdir()
+    with pytest.raises(ValueError, match="initialization"):
+        write_configuration({"main.tf": "new"}, tmp_path)
+    assert list(tmp_path.iterdir()) == [tmp_path / ".terraform"]
 
 
 @pytest.fixture(scope="module")

@@ -14,6 +14,20 @@ def test_cancelled_wizard_writes_nothing(tmp_path, monkeypatch):
     assert not list(tmp_path.iterdir())
 
 
+def test_wizard_checks_destination_before_asking_questions(tmp_path, monkeypatch):
+    (tmp_path / "terraform.tfstate").write_text("private-state-marker")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("An occupied destination should fail before prompts")
+
+    monkeypatch.setattr("terraforma.cli.questionary.select", forbidden)
+    result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "fresh, writable project directory" in result.output
+    assert "private-state-marker" not in result.output
+    assert not (tmp_path / "main.tf").exists()
+
+
 def test_json_diagnostics_are_readable():
     raw = 'terraform validate:\n{"diagnostics": [{"summary": "Missing variable", "detail": "Declare the variable", "range": {"filename": "main.tf", "start": {"line": 2}}}]}'
     assert (

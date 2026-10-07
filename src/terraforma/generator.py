@@ -1261,25 +1261,55 @@ class TerraformGenerator:
         )
 
 
-def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
+GENERATED_FILENAMES = frozenset(
+    {
+        "main.tf",
+        "variables.tf",
+        "outputs.tf",
+        "terraforma.project.json",
+        "terraforma.receipt.json",
+        "SHA256SUMS.txt",
+    }
+)
+
+
+def project_destination(directory: str | Path) -> Path:
     destination = Path(directory).resolve()
-    destination.mkdir(parents=True, exist_ok=True)
-    if any(destination.glob("*.tf")) or any(destination.glob("*.tf.json")):
-        raise ValueError(
-            "The destination already contains Terraform files. Choose a new directory."
+    if any(
+        any(destination.glob(pattern))
+        for pattern in (
+            "*.tf",
+            "*.tf.json",
+            "*.tfvars",
+            "*.tfvars.json",
+            "*.tfstate",
+            "*.tfstate.*",
         )
+    ) or any(
+        (destination / name).exists() or (destination / name).is_symlink()
+        for name in (".terraform", ".terraform.lock.hcl")
+    ):
+        raise ValueError(
+            "The destination already contains Terraform configuration, state, variable files, or initialization data. Choose a fresh project directory."
+        )
+    if any(
+        (destination / name).exists() or (destination / name).is_symlink()
+        for name in GENERATED_FILENAMES
+    ):
+        raise FileExistsError(
+            "The destination already contains generated artifacts. Choose a fresh project directory."
+        )
+    return destination
+
+
+def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
+    if not files or not set(files) <= GENERATED_FILENAMES:
+        raise ValueError("Unexpected or empty generated filename set.")
+    destination = project_destination(directory)
+    destination.mkdir(parents=True, exist_ok=True)
     created: list[Path] = []
     try:
         for name, content in files.items():
-            if name not in {
-                "main.tf",
-                "variables.tf",
-                "outputs.tf",
-                "terraforma.project.json",
-                "terraforma.receipt.json",
-                "SHA256SUMS.txt",
-            }:
-                raise ValueError("Unexpected generated filename.")
             path = destination / name
             with path.open("x", encoding="utf-8", newline="\n") as stream:
                 created.append(path)
