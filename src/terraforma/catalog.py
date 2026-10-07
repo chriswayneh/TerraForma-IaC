@@ -37,7 +37,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     if config.provider == "azure"
                     else "Image version is configurable: latest (default) or an exact supported published image name. Availability and deprecation remain unverified."
                     if config.provider == "gcp"
-                    else "Latest image at planning time (not pinned)."
+                    else "Image version is configurable: latest (default) or an exact AMI ID matching the trusted owner and selected x86 OS filters. Regional availability remains unverified."
                 ),
                 "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
                 if standalone

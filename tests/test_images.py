@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -104,7 +105,7 @@ def test_native_image_resolution_and_startup_match_selected_os(tmp_path):
                     [terraform, "console", "-no-color", f"-var=os_image={choice}"],
                     cwd=tmp_path,
                     env=environment,
-                    input=expression + "\n",
+                    input=expression.replace("var.image_version", '"latest"') + "\n",
                     capture_output=True,
                     text=True,
                     timeout=30,
@@ -112,3 +113,60 @@ def test_native_image_resolution_and_startup_match_selected_os(tmp_path):
                 )
                 assert result.returncode == 0, result.stderr
                 assert token in result.stdout
+
+
+@pytest.mark.parametrize(
+    "image,version,expected",
+    [
+        ("debian-12", "latest", "debian-cloud/debian-12"),
+        ("debian-12", "debian-12-bookworm-v20240213", "debian-cloud/debian-12-bookworm-v20240213"),
+        (
+            "ubuntu-24.04",
+            "ubuntu-2404-noble-amd64-v20261001",
+            "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20261001",
+        ),
+    ],
+)
+def test_native_gcp_exact_pin_resolves_to_fixed_publisher(tmp_path, image, version, expected):
+    if os.environ.get("TERRAFORMA_NATIVE_TESTS") != "1":
+        pytest.skip("Set TERRAFORMA_NATIVE_TESTS=1 to check native image selectors.")
+    terraform = shutil.which("terraform")
+    assert terraform
+    generator = TerraformGenerator(
+        WizardConfig(
+            provider="gcp", project_name="image-test", architecture_type="single_web_server"
+        )
+    )
+    generator.generate()
+    variables = [
+        item.render()
+        for item in generator.variables
+        if item.labels[0] in {"os_image", "image_version"}
+    ]
+    (tmp_path / "variables.tf").write_text("\n\n".join(variables), encoding="utf-8")
+    vm = next(item for item in generator.main if item.labels[:1] == ("google_compute_instance",))
+    disk = next(item for item in vm.children if item.kind == "boot_disk")
+    expression = disk.children[0].attributes["image"].value
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith(("TF_CLI_ARGS", "TF_VAR_", "TF_DATA_DIR", "TF_WORKSPACE"))
+    }
+    result = subprocess.run(
+        [
+            terraform,
+            "console",
+            "-no-color",
+            "-var=os_image=" + image,
+            "-var=image_version=" + version,
+        ],
+        cwd=tmp_path,
+        env=environment,
+        input=expression + "\n",
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == expected

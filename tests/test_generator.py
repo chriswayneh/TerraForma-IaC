@@ -191,6 +191,19 @@ def test_native_azure_pinned_image_versions(native_directories, image, workload)
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize("image", ["amazon-linux-2023", "ubuntu-24.04"])
+@pytest.mark.parametrize("workload", ["virtual_machine", "single_web_server", "load_balanced_tier"])
+def test_native_aws_pinned_image_versions(native_directories, image, workload):
+    from terraforma.project import compile_project
+    from tests.test_vm_protection import specification
+
+    spec = specification("aws", os_image=image, image_version="ami-0123456789abcdef0")
+    spec.recipe.architecture_type = workload
+    if workload != "virtual_machine":
+        spec.inputs.pop("ssh_public_key")
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize(
     "image,version",
     [

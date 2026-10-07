@@ -298,11 +298,7 @@ class TerraformGenerator:
             self.variable(
                 "os_image",
                 "Linux image from the supported publisher catalog, using x86_64/AMD64. "
-                + (
-                    "The image version can be pinned separately; latest resolves at planning time. "
-                    if self.config.provider in {"azure", "gcp"}
-                    else "Image versions resolve at planning time. "
-                )
+                + "The image version can be pinned separately; latest resolves at planning time. "
                 + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
                 LINUX_IMAGE_CHOICES[self.config.provider][0],
                 choices=LINUX_IMAGE_CHOICES[self.config.provider],
@@ -541,6 +537,12 @@ class TerraformGenerator:
             vpc_id=ref("aws_vpc.this.id"),
             children=[ingress, egress],
         )
+        self.variable(
+            "image_version",
+            "Use latest to resolve the selected AWS image at planning time, or an exact AMI ID in the chosen region. The AMI must match the selected OS name, trusted owner, x86_64 architecture and HVM filters; custom publishers are unsupported. Verify availability, access and compatibility before planning. Changing an image can replace the VM and destroy boot-disk data. Pinning does not automatically patch the VM.",
+            "latest",
+            pattern=r"^(latest|ami-([0-9a-f]{8}|[0-9a-f]{17}))$",
+        )
         self.main.append(
             block(
                 "data",
@@ -557,6 +559,13 @@ class TerraformGenerator:
                         ),
                     ),
                     block("filter", name="virtualization-type", values=["hvm"]),
+                    block("filter", name="architecture", values=["x86_64"]),
+                    block(
+                        "dynamic",
+                        "filter",
+                        for_each=ref('var.image_version == "latest" ? [] : [var.image_version]'),
+                        children=[block("content", name="image-id", values=[ref("filter.value")])],
+                    ),
                 ],
             )
         )

@@ -65,6 +65,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "os_image": "Linux operating system",
                     "image_version": "Azure image version (latest or exact version)"
                     if config.provider == "azure"
+                    else "AWS image version (latest or AMI ID)"
+                    if config.provider == "aws"
                     else "GCP image version (latest or exact image name)",
                     "admin_username": "Administrator username",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",

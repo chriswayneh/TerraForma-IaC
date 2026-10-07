@@ -75,6 +75,7 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
             "us-west-2",
             "123456789012",
             "10.0.0.0/16",
+            "ami-0123456789abcdef0",
             "t3.small",
             False,
             "100",
@@ -89,6 +90,7 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
     variables = (tmp_path / "variables.tf").read_text()
     assert 'default = "us-west-2"' in variables
     assert 'default = "t3.small"' in variables
+    assert 'default = "ami-0123456789abcdef0"' in variables
     assert "default = 100" in variables
     assert 'default = "gp2"' in variables
 

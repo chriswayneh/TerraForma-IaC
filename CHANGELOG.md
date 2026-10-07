@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added exact AWS AMI IDs for compute recipes while retaining trusted owner/OS/HVM constraints and adding an explicit x86_64 filter. A pin adds an image-ID filter; unsupported or unavailable pins do not fall back to latest.
+
 - Added exact GCP image names for compute recipes with fixed publisher projects, selected-OS matching and Terraform preconditions. Default family resolution remains available; ARM/custom references and mismatched OS pins are rejected.
 
 - Added an exact Azure marketplace image version input for VM and web-tier recipes, retaining `latest` as the default and the existing Canonical offer/SKU constraints. Export/import preserves the answer, with replacement/data-loss and availability guidance.

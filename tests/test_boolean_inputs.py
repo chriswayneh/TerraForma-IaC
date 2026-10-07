@@ -69,6 +69,7 @@ def test_terminal_boolean_question_writes_actual_boolean(tmp_path, monkeypatch):
             "us-east-1",
             "123456789012",
             "10.0.0.0/16",
+            "latest",
             "t3.micro",
             True,
             "20",
