@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- External-secret questions now display their complete contract guidance before generation, including Azure Windows password retention in Terraform state and plans.
+
 - Added Azure Linux/Windows VM host cache inputs for boot and optional data disks. OS caching defaults to ReadWrite and data caching to None. Unsupported modes and non-default data caching without an enabled disk fail closed; workload durability, capabilities and safe cache changes remain unverified.
 
 - The terminal questionnaire now shows each field's input guidance before the question, including defaults, compatibility limits and external-secret/state handling. Hidden conditional questions remain hidden.

@@ -2,6 +2,8 @@
 
 ## Azure disk caching development checkpoint
 
+A temporary browser tab verified cache defaults, hidden data cache questions before disk selection, and complete Azure Windows external-secret/state guidance before generation. It rendered zero password fields. The reference-only credential screenshot is published in the Windows guide; the user's existing tab was preserved.
+
 - The default suite passes 1,295 tests with 216 optional native cases skipped; Ruff checks and formatting pass across 76 Python files.
 - Sixteen cache-input cases cover Azure Linux/Windows generated bindings, preserved specification values, accepted modes, malformed answers, defaults and inactive-disk rejection. Seven enabled native cases pass: three cache modes plus four Windows public/private and Secure Boot combinations.
 - The existing cache defaults are retained. Tests do not verify cached I/O performance, VM/disk support in an account, guest flush behavior, safe cache changes or recovery.

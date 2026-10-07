@@ -87,7 +87,7 @@ async function loadRecipeInputs() {
     help.className = "input-help";
     help.id = `recipe-help-${definition.name}`;
     if (definition.sensitive) {
-      help.textContent = `Supply ${definition.environment_variable} through your environment before planning. Its value is not collected or saved here.`;
+      help.textContent = `${definition.description} Supply ${definition.environment_variable} through your environment before planning. Its value is not collected or saved here.`;
       group.append(label, help);
     } else {
       const input = document.createElement(

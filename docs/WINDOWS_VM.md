@@ -4,6 +4,8 @@ Development on `main` includes initial **AWS, Azure and Google Cloud Windows Ser
 
 ## Azure
 
+![Azure Windows external password reference and state guidance](images/azure-windows-credentials.png)
+
 | Choice | Supported behavior |
 | --- | --- |
 | Image | MicrosoftWindowsServer / WindowsServer / 2022-datacenter-g2, with latest or an exact marketplace version |
