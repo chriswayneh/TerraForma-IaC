@@ -10,7 +10,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.4.0"
+POLICY_VERSION = "0.5.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -116,6 +116,7 @@ NETWORK_TYPES = {
     "google_compute_firewall",
 }
 POLICY_TYPES = NETWORK_TYPES | {
+    "azurerm_linux_virtual_machine",
     "aws_instance",
     "aws_ebs_volume",
     "aws_volume_attachment",
@@ -311,6 +312,32 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                         resource_id,
                         "An IAM instance profile is attached, but this plan review does not establish its role policies, trust or attachment authorization. Review least privilege separately.",
                     )
+            elif resource_type == "azurerm_linux_virtual_machine":
+                before = change.get("before")
+                if before is not None and not isinstance(before, dict):
+                    raise TypeError("Previous resource values must be an object.")
+                for field, label in (
+                    ("secure_boot_enabled", "Secure Boot"),
+                    ("vtpm_enabled", "vTPM"),
+                ):
+                    enabled = planned_boolean(after, field)
+                    previously_enabled = planned_boolean(before or {}, field)
+                    if enabled is False:
+                        add(
+                            "vm_boot_protection_removed"
+                            if previously_enabled is True
+                            else "vm_boot_protection_disabled",
+                            "block" if previously_enabled is True else "review",
+                            resource_id,
+                            f"Azure VM {label} is disabled. Review workload compatibility and the protection change separately; this report does not approve the change.",
+                        )
+                    elif enabled is None:
+                        add(
+                            "vm_boot_protection_unknown",
+                            "review",
+                            resource_id,
+                            f"The plan does not establish Azure VM {label}. Verify Trusted Launch support and effective settings before provisioning.",
+                        )
             elif resource_type == "google_compute_instance":
                 shielded = after.get("shielded_instance_config")
                 before = change.get("before")
