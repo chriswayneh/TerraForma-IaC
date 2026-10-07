@@ -2,9 +2,9 @@
 
 # TerraForma-IaC
 
-### Answer questions. Get a clearer cloud blueprint.
+### Create Terraform configuration files from simple answers.
 
-TerraForma turns your answers into cloud setup files, explains what they describe, and helps check them before use. It makes a complicated, manual process easier and more repeatable.
+TerraForma creates Terraform configuration files from scratch based on answers to simple questions. Terraform is a tool that uses those files to set up cloud servers, networks, and other resources. TerraForma helps explain and check the files before they’re used.
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
@@ -21,9 +21,11 @@ TerraForma turns your answers into cloud setup files, explains what they describ
 
 ## What does it actually do?
 
-Setting up a cloud system means deciding which servers, networks, storage, and access rules you need. TerraForma turns answers to straightforward questions into **cloud setup files**, explains what they describe, and helps you check them before use. The goal is to make a complicated, manual process easier and more repeatable.
+**Terraform** uses text files to describe the servers, networks, storage, and access rules a cloud system needs. It can use those files to build and update that system, making the setup repeatable instead of a series of manual steps.
 
-**For example:** you need a small server to host a website. Choose a supported cloud service, name the project, and decide whether people should be able to reach it from the internet. TerraForma produces files describing the server and its supporting network, shows an explanation, and lets you download the result for review.
+**TerraForma creates those Terraform configuration files from scratch** through a guided questionnaire using supported, built-in templates. You answer questions about the setup you want; TerraForma generates new files, explains what they describe, and helps check them. The goal is to make a complicated, manual process easier and more repeatable.
+
+**For example:** you need a small server to host a website. Choose a supported cloud service, name the project, and decide whether people should be able to reach it from the internet. TerraForma produces Terraform files describing the server and its supporting network, shows an explanation, and lets you download the result for review.
 
 **Available now:** a guided interface that runs in your browser on your own computer, downloadable setup files, resource explanations, and optional local checks for configuration errors. You can also use it from a terminal.
 
