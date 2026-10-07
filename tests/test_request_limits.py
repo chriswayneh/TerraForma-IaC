@@ -4,8 +4,15 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from terraforma.request_limits import RequestSizeLimitMiddleware
+from terraforma.request_limits import RequestSizeLimitMiddleware, bounded_json_depth
 from terraforma.web import create_app
+
+
+def test_json_depth_boundary_ignores_escaped_quotes_and_brackets_in_strings():
+    value = json.dumps('brackets [[[ with quote " and backslash \\')
+    bounded_json_depth("[" * 64 + value + "]" * 64)
+    with pytest.raises(ValueError, match="nesting"):
+        bounded_json_depth("[" * 65 + value + "]" * 65)
 
 
 @pytest.mark.parametrize(

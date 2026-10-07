@@ -13,6 +13,28 @@ def finite_float(value: str) -> float:
     return number
 
 
+def bounded_json_depth(raw: str, maximum: int = 64) -> None:
+    depth = 0
+    quoted = False
+    escaped = False
+    for character in raw:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            if depth > maximum:
+                raise ValueError("JSON nesting exceeds the supported depth.")
+        elif character in "]}":
+            depth -= 1
+
+
 class RequestSizeLimitMiddleware:
     def __init__(self, app, max_bytes: int = 64 * 1024, path_limits: dict[str, int] | None = None):
         self.app = app
@@ -60,8 +82,10 @@ class RequestSizeLimitMiddleware:
             or (content_type.startswith("application/") and content_type.endswith("+json"))
         ):
             try:
+                raw = b"".join(message.get("body", b"") for message in messages).decode("utf-8")
+                bounded_json_depth(raw)
                 json.loads(
-                    b"".join(message.get("body", b"") for message in messages).decode("utf-8"),
+                    raw,
                     object_pairs_hook=unique_object,
                     parse_constant=reject_constant,
                     parse_float=finite_float,
@@ -69,7 +93,7 @@ class RequestSizeLimitMiddleware:
             except (ValueError, TypeError, RecursionError):
                 response = JSONResponse(
                     {
-                        "detail": "Request must contain unambiguous UTF-8 JSON with finite numbers and unique object keys. Input values are omitted."
+                        "detail": "Request must contain unambiguous UTF-8 JSON with finite numbers, unique object keys and at most 64 nesting levels. Input values are omitted."
                     },
                     status_code=422,
                 )
