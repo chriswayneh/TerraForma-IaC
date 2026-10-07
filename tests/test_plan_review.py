@@ -121,6 +121,68 @@ def test_storage_and_database_protections(resource_type, after, code):
     assert code in codes(plan(resource_type, after))
 
 
+@pytest.mark.parametrize(
+    "resource_type,field",
+    [
+        ("aws_instance", "disable_api_termination"),
+        ("google_compute_instance", "deletion_protection"),
+    ],
+)
+@pytest.mark.parametrize("protected", [True, False, None])
+def test_vm_protection_state_requires_manual_review(resource_type, field, protected):
+    data = plan(resource_type, {field: protected})
+    findings = codes(data)
+    assert ("vm_protection_disabled" in findings) is (protected is False)
+    assert ("vm_protection_unknown" in findings) is (protected is None)
+    assert "limited_policy_coverage" in findings
+    assert review_plan(data, artifact_sha256="test")["approval_granted"] is False
+
+
+@pytest.mark.parametrize(
+    "resource_type,field",
+    [
+        ("aws_instance", "disable_api_termination"),
+        ("google_compute_instance", "deletion_protection"),
+    ],
+)
+def test_removing_existing_vm_protection_is_blocked_and_private(resource_type, field):
+    data = plan(resource_type, {field: False}, ["update"])
+    data["resource_changes"][0]["change"]["before"] = {field: True, "secret": "private-secret"}
+    report = review_plan(data, artifact_sha256="test")
+    assert report["status"] == "blocked"
+    assert "vm_protection_removed" in codes(data)
+    assert "private-secret" not in json.dumps(report)
+
+
+@pytest.mark.parametrize("forced", [True, False, None])
+def test_forced_attachment_detach_policy(forced):
+    data = plan("aws_volume_attachment", {"force_detach": forced})
+    findings = codes(data)
+    assert ("forced_disk_detach" in findings) is (forced is True)
+    assert ("disk_detach_unknown" in findings) is (forced is None)
+    report = review_plan(data, artifact_sha256="test")
+    assert report["status"] == ("blocked" if forced is True else "manual_review_required")
+
+
+@pytest.mark.parametrize(
+    "resource_type,field",
+    [
+        ("aws_instance", "disable_api_termination"),
+        ("google_compute_instance", "deletion_protection"),
+        ("aws_volume_attachment", "force_detach"),
+    ],
+)
+@pytest.mark.parametrize("malformed", ["false", 0, [], {}])
+def test_lifecycle_control_types_fail_closed(resource_type, field, malformed):
+    assert "unresolved_policy_input" in codes(plan(resource_type, {field: malformed}))
+
+
+def test_malformed_previous_vm_protection_fails_closed():
+    data = plan("google_compute_instance", {"deletion_protection": False}, ["update"])
+    data["resource_changes"][0]["change"]["before"] = {"deletion_protection": "true"}
+    assert "unresolved_policy_input" in codes(data)
+
+
 def test_unknown_configuration_and_coverage_remain_visible():
     data = plan("azurerm_linux_virtual_machine", {"password": "private-secret-value"})
     data["resource_changes"][0]["change"]["after_unknown"] = {"disk": [True]}

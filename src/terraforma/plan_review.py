@@ -9,7 +9,7 @@ from typing import Any
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.1.0"
+POLICY_VERSION = "0.2.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -114,7 +114,20 @@ NETWORK_TYPES = {
     "azurerm_network_security_rule",
     "google_compute_firewall",
 }
-POLICY_TYPES = NETWORK_TYPES | {"aws_instance", "aws_ebs_volume", "aws_db_instance"}
+POLICY_TYPES = NETWORK_TYPES | {
+    "aws_instance",
+    "aws_ebs_volume",
+    "aws_volume_attachment",
+    "aws_db_instance",
+    "google_compute_instance",
+}
+
+
+def planned_boolean(values: dict, field: str) -> bool | None:
+    value = values.get(field)
+    if value is not None and not isinstance(value, bool):
+        raise TypeError("Policy control must be boolean.")
+    return value
 
 
 def review_plan(data: dict, *, artifact_sha256: str) -> dict:
@@ -248,6 +261,55 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
             "Only the documented initial checks are implemented; manual review remains required.",
         )
         try:
+            if resource_type in {"aws_instance", "google_compute_instance"}:
+                field = (
+                    "disable_api_termination"
+                    if resource_type == "aws_instance"
+                    else "deletion_protection"
+                )
+                protected = planned_boolean(after, field)
+                before = change.get("before")
+                if before is not None and not isinstance(before, dict):
+                    raise TypeError("Previous resource values must be an object.")
+                previously_protected = planned_boolean(before or {}, field)
+                if protected is False:
+                    if previously_protected is True:
+                        add(
+                            "vm_protection_removed",
+                            "block",
+                            resource_id,
+                            "This change disables an existing VM deletion protection control. Review the lifecycle intent and data preservation separately.",
+                        )
+                    else:
+                        add(
+                            "vm_protection_disabled",
+                            "review",
+                            resource_id,
+                            "VM deletion protection is disabled. Review whether this matches the intended lifecycle; this control does not protect every deletion path or connected disk.",
+                        )
+                elif protected is None:
+                    add(
+                        "vm_protection_unknown",
+                        "review",
+                        resource_id,
+                        "The plan does not establish VM deletion protection. Verify the provider setting before provisioning.",
+                    )
+            if resource_type == "aws_volume_attachment":
+                forced = planned_boolean(after, "force_detach")
+                if forced is True:
+                    add(
+                        "forced_disk_detach",
+                        "block",
+                        resource_id,
+                        "The attachment permits forced disk detach, which can damage the filesystem or lose data. Review recovery and data preservation separately.",
+                    )
+                elif forced is None:
+                    add(
+                        "disk_detach_unknown",
+                        "review",
+                        resource_id,
+                        "The plan does not establish whether forced disk detach is disabled.",
+                    )
             for sources, ports, protocol in network_rules(resource_type, after):
                 if not isinstance(sources, list) or not isinstance(ports, list):
                     raise TypeError("Malformed network rule.")
