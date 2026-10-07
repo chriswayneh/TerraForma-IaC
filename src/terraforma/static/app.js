@@ -15,6 +15,7 @@ let selectedFile = "main.tf";
 let aiAvailable = false;
 let contractKey = "";
 let contract = [];
+let templateVersion = "";
 
 function projectSpecification() {
   const inputs = {};
@@ -23,12 +24,14 @@ function projectSpecification() {
     if (definition.sensitive) {
       secret_references[definition.name] = definition.environment_variable;
     } else if (definition.editable) {
-      inputs[definition.name] = byId(`recipe-${definition.name}`).value;
+      const value = byId(`recipe-${definition.name}`).value;
+      inputs[definition.name] =
+        definition.kind === "integer" ? Number(value) : value;
     }
   });
   return {
     schema_version: 1,
-    template_version: "0.2.0",
+    template_version: templateVersion,
     recipe: configuration(),
     inputs,
     secret_references,
@@ -56,6 +59,7 @@ async function loadRecipeInputs() {
   }
   const result = await (await api("/api/input-contract", config)).json();
   contract = result.inputs;
+  templateVersion = result.template_version;
   const container = byId("recipe-inputs");
   container.replaceChildren();
   contract.forEach((definition) => {
@@ -73,12 +77,28 @@ async function loadRecipeInputs() {
       group.append(label, help);
     } else {
       const input = document.createElement(
-        definition.kind === "multiline" ? "textarea" : "input",
+        definition.choices
+          ? "select"
+          : definition.kind === "multiline"
+            ? "textarea"
+            : "input",
       );
       input.id = `recipe-${definition.name}`;
       input.className = "text-input";
-      if (definition.kind === "multiline") input.rows = 4;
-      else input.type = "text";
+      if (definition.choices) {
+        definition.choices.forEach((choice) => {
+          const option = document.createElement("option");
+          option.value = choice;
+          option.textContent = choice;
+          input.append(option);
+        });
+      } else if (definition.kind === "multiline") input.rows = 4;
+      else input.type = definition.kind === "integer" ? "number" : "text";
+      if (definition.kind === "integer") {
+        input.min = definition.minimum;
+        input.max = definition.maximum;
+        input.step = 1;
+      }
       input.required = true;
       input.maxLength = 16384;
       input.value = retained[definition.name] ?? definition.default ?? "";
@@ -195,7 +215,7 @@ function notify(message, error = false) {
 
 function setBusy(value) {
   busy = value;
-  form.querySelectorAll("input, textarea").forEach((input) => {
+  form.querySelectorAll("input, textarea, select").forEach((input) => {
     input.disabled = value;
   });
   byId("next-button").disabled = value;
@@ -388,7 +408,7 @@ form.addEventListener("submit", async (event) => {
     await loadRecipeInputs();
     setBusy(false);
     const invalid = Array.from(
-      byId("recipe-inputs").querySelectorAll("input, textarea"),
+      byId("recipe-inputs").querySelectorAll("input, textarea, select"),
     ).find((input) => !input.checkValidity());
     if (invalid) {
       notify("Complete the required recipe inputs before generating.", true);

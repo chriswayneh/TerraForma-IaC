@@ -5,6 +5,7 @@
 - Add a versioned project specification and a contract derived from every declared recipe variable.
 - Ask for non-secret recipe inputs in the browser and preserve them across preview, validation, and ZIP export.
 - Add `project-inputs` and `generate --spec` commands; reject unsupported/secret inputs and omit values from validation errors.
+- Expose VM sizes and boot-disk size/type in the existing compute recipes; apply shared typed constraints in the questionnaire and Terraform.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

@@ -16,8 +16,8 @@ The next stages turn that workflow into a guided provisioning platform. Users de
 
 ### What remains in Phase 1
 
-- A versioned project specification shared by the UI, CLI, and generator.
-- One input contract per supported resource, keeping questions and Terraform variables aligned.
+- Extend the initial shared project specification to account/environment identity and resource dependencies.
+- Extend the implemented recipe input contracts as the resource catalog grows.
 - Account/environment identity, capability metadata, and explicit unsupported choices.
 - Artifact, credential, state, and execution controls needed before adding apply.
 
@@ -82,7 +82,7 @@ Exit criteria: invalid specifications fail closed; review reports expose no raw 
 
 Target: **v0.4.0**.
 
-Status: planned after the foundation.
+Status: planned after the foundation; existing compute recipes already expose region, VM size, boot-disk size/type, and their current required inputs. Full Linux/Windows, image, network, identity, and lifecycle adapters remain planned.
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.

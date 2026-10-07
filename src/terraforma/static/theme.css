@@ -27,6 +27,17 @@
 .recipe-input-group {
   margin: 22px 0;
 }
+.recipe-input-group textarea,
+.recipe-input-group select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+}
+.recipe-input-group textarea {
+  resize: vertical;
+  min-height: 110px;
+  height: auto;
+}
 .remember-choice {
   display: flex;
   align-items: center;

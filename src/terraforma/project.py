@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.plan_review import reject_constant, unique_object
@@ -14,10 +14,17 @@ from terraforma.plan_review import reject_constant, unique_object
 class ProjectSpecification(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     schema_version: Literal[1] = 1
-    template_version: Literal["0.2.0"] = "0.2.0"
+    template_version: Literal["0.3.0.dev0"] = "0.3.0.dev0"
     recipe: WizardConfig
-    inputs: dict[str, str] = Field(default_factory=dict, max_length=32)
+    inputs: dict[str, str | int] = Field(default_factory=dict, max_length=32)
     secret_references: dict[str, str] = Field(default_factory=dict, max_length=16)
+
+    @field_validator("schema_version", mode="before")
+    @classmethod
+    def exact_schema_version(cls, value):
+        if type(value) is not int or value != 1:
+            raise ValueError("Schema version must be the integer 1.")
+        return value
 
 
 def input_contract(config: WizardConfig) -> list[dict]:
@@ -41,6 +48,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "label": {
                     "allowed_cidr": "Allowed client network (CIDR)",
                     "instance_type": "VM size",
+                    "vm_size": "VM size",
+                    "machine_type": "VM size",
+                    "boot_disk_size_gb": "Boot disk size (GiB)",
+                    "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
                     "subscription_id": "Azure subscription ID",
                     "ssh_public_key": "Administrator SSH public key",
@@ -48,13 +59,18 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "index_html": "Website HTML",
                 }.get(name, name.replace("_", " ").capitalize()),
                 "description": attributes["description"],
-                "type": "string",
-                "kind": "external_secret" if sensitive else kind,
+                "type": attributes["type"].value,
+                "kind": "external_secret"
+                if sensitive
+                else "integer"
+                if attributes["type"].value == "number"
+                else kind,
                 "required": "default" not in attributes,
                 "default": None if sensitive else attributes.get("default"),
                 "sensitive": sensitive,
                 "editable": name != "project_name",
                 "environment_variable": f"TF_VAR_{name}" if sensitive else None,
+                **generator.input_constraints[name],
             }
         )
     return contract
@@ -79,7 +95,10 @@ def validate_input(name: str, value: str, kind: str):
             value,
         ):
             raise ValueError("Supply an OpenSSH public key, not a private key.")
-    elif name in {"region", "location", "zone", "instance_type"}:
+    elif name == "vm_size":
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{1,63}", value):
+            raise ValueError("Azure VM-size identifier has an invalid format.")
+    elif name in {"region", "location", "zone", "instance_type", "machine_type"}:
         if not re.fullmatch(r"[a-z][a-z0-9.-]{1,63}", value):
             raise ValueError("Region, zone, or machine-size identifier has an invalid format.")
     elif name == "gcp_project_id" and not re.fullmatch(r"[a-z][a-z0-9-]{4,28}[a-z0-9]", value):
@@ -95,7 +114,18 @@ def compile_project(specification: ProjectSpecification) -> dict:
         definition = definitions.get(name)
         if definition is None or definition["sensitive"] or not definition["editable"]:
             raise ValueError("Project input is unsupported, secret, or controlled by the recipe.")
-        validate_input(name, value, definition["kind"])
+        if definition["kind"] == "integer":
+            if (
+                type(value) is not int
+                or not definition["minimum"] <= value <= definition["maximum"]
+            ):
+                raise ValueError("Numeric input is outside the supported whole-number range.")
+        else:
+            if not isinstance(value, str):
+                raise TypeError("This input requires a string.")
+            validate_input(name, value, definition["kind"])
+            if definition["choices"] and value not in definition["choices"]:
+                raise ValueError("Input is not one of the supported choices.")
     for name, reference in specification.secret_references.items():
         definition = definitions.get(name)
         if definition is None or not definition["sensitive"] or reference != f"TF_VAR_{name}":

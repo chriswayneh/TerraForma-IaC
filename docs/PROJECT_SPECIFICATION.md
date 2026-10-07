@@ -7,7 +7,7 @@ A project specification records a recipe and its non-secret Terraform inputs. Th
 ```json
 {
   "schema_version": 1,
-  "template_version": "0.2.0",
+  "template_version": "0.3.0.dev0",
   "recipe": {
     "provider": "aws",
     "project_name": "first-site",
@@ -41,5 +41,7 @@ Unknown input names, private keys, secret values in declared sensitive fields, m
 ## Current scope
 
 The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still hardcoded in those recipes, such as all image, disk, OS, network, and availability choices. The complete VM adapter work remains on the roadmap.
+
+Existing compute recipes now expose VM size, boot-disk size, and supported disk classes. Boot sizes are whole numbers in a bounded range: 20–2048 GiB for AWS/GCP and 30–2048 GiB for Azure. These are the current recipe limits, not universal cloud limits. Both the contract and generated Terraform enforce them. The selected image can impose a higher minimum, and live account/SKU/storage compatibility still requires preflight.
 
 Generation is offline. Provider permissions, account identity, live image/SKU availability, quotas, and deployment are not established by the input checks. Schema/template versions are recorded; the current development workflow does not yet promise cross-version migration or reproducible generation across changing development commits.

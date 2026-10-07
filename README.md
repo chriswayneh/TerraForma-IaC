@@ -25,6 +25,10 @@ The local workspace guides cloud, workload, and configuration choices, then prev
 
 ![TerraForma-IaC local workspace](docs/images/workspace.png)
 
+Development on `main` adds a questionnaire for declared recipe inputs, including VM size and boot-disk choices. These controls are being developed for v0.3.0.
+
+![Configure recipe inputs and preview Terraform](docs/images/configuration.png)
+
 ## Project status
 
 | Milestone | Status |

@@ -119,7 +119,11 @@ def create_app() -> FastAPI:
 
     @app.post("/api/input-contract")
     async def recipe_inputs(config: WizardConfig):
-        return {"schema_version": 1, "inputs": input_contract(config)}
+        return {
+            "schema_version": 1,
+            "template_version": ProjectSpecification.model_fields["template_version"].default,
+            "inputs": input_contract(config),
+        }
 
     @app.post("/api/projects/compile")
     async def project_compile(specification: ProjectSpecification):

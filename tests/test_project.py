@@ -99,6 +99,71 @@ def test_user_strings_remain_literal_hcl():
     assert "%%{if true}" in result["files"]["variables.tf"]
 
 
+@pytest.mark.parametrize(
+    "provider,inputs",
+    [
+        ("aws", {"instance_type": "t3.small", "boot_disk_size_gb": 100, "boot_disk_type": "gp2"}),
+        (
+            "azure",
+            {
+                "subscription_id": "12345678-1234-1234-1234-123456789abc",
+                "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "vm_size": "Standard_B2s",
+                "boot_disk_size_gb": 100,
+                "boot_disk_type": "Premium_LRS",
+            },
+        ),
+        (
+            "gcp",
+            {
+                "gcp_project_id": "my-project",
+                "machine_type": "e2-medium",
+                "boot_disk_size_gb": 100,
+                "boot_disk_type": "pd-ssd",
+            },
+        ),
+    ],
+)
+def test_compute_dimensions_are_typed_and_configurable(provider, inputs):
+    result = compile_project(
+        ProjectSpecification(recipe=recipe(provider, "single_web_server"), inputs=inputs)
+    )
+    assert "default = 100" in result["files"]["variables.tf"]
+    assert "var.boot_disk_size_gb" in result["files"]["main.tf"]
+    assert "var.boot_disk_type" in result["files"]["main.tf"]
+    definition = next(
+        item for item in result["input_contract"] if item["name"] == "boot_disk_size_gb"
+    )
+    assert definition["type"] == "number"
+    assert definition["kind"] == "integer"
+    assert definition["maximum"] == 2048
+    assert "floor(var.boot_disk_size_gb)" in result["files"]["variables.tf"]
+
+
+@pytest.mark.parametrize("value", [19, 2049, "100", True, 100.5])
+def test_disk_limits_and_types_reject_invalid_inputs(value):
+    with pytest.raises(ValueError):
+        compile_project(
+            ProjectSpecification(
+                recipe=recipe("aws", "single_web_server"), inputs={"boot_disk_size_gb": value}
+            )
+        )
+
+
+def test_unsupported_disk_classes_are_not_silently_used():
+    with pytest.raises(ValueError):
+        compile_project(
+            ProjectSpecification(
+                recipe=recipe("aws", "single_web_server"), inputs={"boot_disk_type": "io1"}
+            )
+        )
+
+
+def test_boolean_schema_version_is_rejected():
+    with pytest.raises(ValueError):
+        ProjectSpecification(schema_version=True, recipe=recipe())
+
+
 def test_cli_specification_workflow_and_private_error(tmp_path):
     source = tmp_path / "project.json"
     source.write_text(

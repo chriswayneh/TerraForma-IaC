@@ -71,16 +71,50 @@ class TerraformGenerator:
         self.main: list[Block] = []
         self.variables: list[Block] = []
         self.outputs: list[Block] = []
+        self.input_constraints: dict[str, dict] = {}
 
     def variable(
-        self, name: str, description: str, default: Any = None, *, sensitive: bool = False
+        self,
+        name: str,
+        description: str,
+        default: Any = None,
+        *,
+        sensitive: bool = False,
+        type_name: str = "string",
+        minimum: int | None = None,
+        maximum: int | None = None,
+        choices: tuple[str, ...] | None = None,
     ) -> None:
-        attributes = {"description": description, "type": ref("string")}
+        attributes = {"description": description, "type": ref(type_name)}
         if default is not None:
             attributes["default"] = default
         if sensitive:
             attributes["sensitive"] = True
-        self.variables.append(block("variable", name, **attributes))
+        validations = []
+        if minimum is not None and maximum is not None:
+            validations.append(
+                block(
+                    "validation",
+                    condition=ref(
+                        f"var.{name} >= {minimum} && var.{name} <= {maximum} && floor(var.{name}) == var.{name}"
+                    ),
+                    error_message=f"Use a whole number between {minimum} and {maximum}.",
+                )
+            )
+        if choices:
+            validations.append(
+                block(
+                    "validation",
+                    condition=ref(f"contains({value_hcl(list(choices))}, var.{name})"),
+                    error_message="Use a supported value: " + ", ".join(choices),
+                )
+            )
+        self.input_constraints[name] = {
+            "minimum": minimum,
+            "maximum": maximum,
+            "choices": list(choices) if choices else None,
+        }
+        self.variables.append(block("variable", name, children=validations, **attributes))
 
     def resource(
         self,
@@ -246,7 +280,20 @@ class TerraformGenerator:
             )
         )
         self.variable("instance_type", "EC2 instance size.", "t3.micro")
-        disk = {"volume_type": "gp3", "volume_size": 20, "encrypted": self.config.enable_encryption}
+        self.variable(
+            "boot_disk_size_gb",
+            "Boot disk size in GiB; review the image minimum and ongoing storage cost.",
+            20,
+            type_name="number",
+            minimum=20,
+            maximum=2048,
+        )
+        self.variable("boot_disk_type", "EBS boot disk class.", "gp3", choices=("gp3", "gp2"))
+        disk = {
+            "volume_type": ref("var.boot_disk_type"),
+            "volume_size": ref("var.boot_disk_size_gb"),
+            "encrypted": self.config.enable_encryption,
+        }
         if self.config.enable_encryption:
             disk["kms_key_id"] = ref("aws_kms_key.this.arn")
         self.resource(
@@ -550,7 +597,31 @@ class TerraformGenerator:
                 sku="Standard",
                 **common,
             )
-        disk = block("os_disk", caching="ReadWrite", storage_account_type="Standard_LRS")
+        self.variable(
+            "vm_size",
+            "Azure VM size; availability and encryption-at-host support require account preflight.",
+            "Standard_B1s",
+        )
+        self.variable(
+            "boot_disk_size_gb",
+            "OS disk size in GiB; cannot be smaller than the selected image.",
+            30,
+            type_name="number",
+            minimum=30,
+            maximum=2048,
+        )
+        self.variable(
+            "boot_disk_type",
+            "Azure managed OS disk class.",
+            "Standard_LRS",
+            choices=("Standard_LRS", "StandardSSD_LRS", "Premium_LRS"),
+        )
+        disk = block(
+            "os_disk",
+            caching="ReadWrite",
+            storage_account_type=ref("var.boot_disk_type"),
+            disk_size_gb=ref("var.boot_disk_size_gb"),
+        )
         image = block(
             "source_image_reference",
             publisher="Canonical",
@@ -623,7 +694,7 @@ class TerraformGenerator:
             )
             self.resource(
                 "azurerm_linux_virtual_machine_scale_set",
-                sku="Standard_B1s",
+                sku=ref("var.vm_size"),
                 instances=2,
                 children=[
                     disk,
@@ -654,7 +725,7 @@ class TerraformGenerator:
             )
             self.resource(
                 "azurerm_linux_virtual_machine",
-                size="Standard_B1s",
+                size=ref("var.vm_size"),
                 network_interface_ids=[ref("azurerm_network_interface.this.id")],
                 children=[disk, image, key],
                 **compute,
@@ -867,11 +938,33 @@ class TerraformGenerator:
             subnetwork=ref("google_compute_subnetwork.this.id"),
             children=[block("access_config")] if self.config.is_public and not balanced else [],
         )
+        self.variable(
+            "machine_type",
+            "Google Compute Engine machine type; zone availability requires account preflight.",
+            "e2-micro",
+        )
+        self.variable(
+            "boot_disk_size_gb",
+            "Boot disk size in GiB; review image requirements and storage cost.",
+            20,
+            type_name="number",
+            minimum=20,
+            maximum=2048,
+        )
+        self.variable(
+            "boot_disk_type",
+            "Google persistent boot disk class.",
+            "pd-balanced",
+            choices=("pd-balanced", "pd-standard", "pd-ssd"),
+        )
         disk = block(
             "boot_disk",
             children=[
                 block(
-                    "initialize_params", image="debian-cloud/debian-12", size=20, type="pd-balanced"
+                    "initialize_params",
+                    image="debian-cloud/debian-12",
+                    size=ref("var.boot_disk_size_gb"),
+                    type=ref("var.boot_disk_type"),
                 )
             ],
         )
@@ -879,7 +972,7 @@ class TerraformGenerator:
             self.resource(
                 "google_compute_instance_template",
                 name_prefix=ref('"${var.project_name}-"'),
-                machine_type="e2-micro",
+                machine_type=ref("var.machine_type"),
                 tags=["terraforma-web"],
                 metadata_startup_script=startup,
                 children=[
@@ -888,8 +981,8 @@ class TerraformGenerator:
                         source_image="debian-cloud/debian-12",
                         auto_delete=True,
                         boot=True,
-                        disk_size_gb=20,
-                        disk_type="pd-balanced",
+                        disk_size_gb=ref("var.boot_disk_size_gb"),
+                        disk_type=ref("var.boot_disk_type"),
                     ),
                     network,
                 ],
@@ -981,7 +1074,7 @@ class TerraformGenerator:
             self.resource(
                 "google_compute_instance",
                 name=ref("var.project_name"),
-                machine_type="e2-micro",
+                machine_type=ref("var.machine_type"),
                 zone=ref("var.zone"),
                 tags=["terraforma-web"],
                 metadata_startup_script=startup,

@@ -14,7 +14,14 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 - Desktop, 390-pixel, and 320-pixel layouts were inspected. Dark/light theme switching was exercised; the narrow layout had no horizontal document overflow.
 - Optional saved choices were checked through selection, reload, restoration, and removal in the browser.
 
-## GitHub Actions
+## Development toward v0.3.0
+
+- 165 local unit/API/generator/guidance/plan-review tests pass, including shared specifications, input contracts, numeric bounds, and export preservation.
+- All 48 native generator cases pass with Terraform 1.14.0 and TFLint 0.61.0 after adding VM-size and boot-disk inputs. These checks validate provider schemas; they do not deploy resources.
+- Browser checks confirm required-field validation, numeric disk bounds, and configured values in the generated Terraform preview. The 390-pixel layout has no horizontal document overflow.
+- Python lint and formatting checks pass. The [shared specification checkpoint](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37559663074) passed all CI jobs; subsequent changes have their own workflow results.
+
+## Release CI
 
 The [onboarding GitHub Actions run](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37556530184) passed all four unit-test jobs (Windows/Linux, Python 3.11/3.14), the native provider-validation job, and a clean installed-wheel smoke test. Check the [latest workflow runs](https://github.com/chriswayneh/TerraForma-IaC/actions) for current commit results.
 
