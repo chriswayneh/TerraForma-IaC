@@ -445,6 +445,13 @@ class TerraformGenerator:
             )
         )
         self.variable("instance_type", "EC2 instance size.", "t3.micro")
+        if standalone:
+            self.variable(
+                "protect_vm",
+                "Enable EC2 API termination protection. Turn this off and apply that change before intentionally deleting or replacing the VM. This does not prevent stopping the VM and is not a backup or a guarantee against every deletion path.",
+                True,
+                type_name="bool",
+            )
         self.variable(
             "detailed_monitoring",
             "Publish most EC2 metrics every minute instead of the basic five-minute interval. Detailed monitoring can add CloudWatch charges per instance; status checks already use one-minute periods. This does not install an agent or configure logs/alarms.",
@@ -480,6 +487,7 @@ class TerraformGenerator:
             ami=ref("data.aws_ami.linux.id"),
             instance_type=ref("var.instance_type"),
             monitoring=ref("var.detailed_monitoring"),
+            **({"disable_api_termination": ref("var.protect_vm")} if standalone else {}),
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
             vpc_security_group_ids=[ref("aws_security_group.web.id")],
@@ -1168,6 +1176,13 @@ class TerraformGenerator:
             return
         self.variable("zone", "Compute zone in the chosen region.", "us-central1-a")
         standalone = self.config.architecture_type == "virtual_machine"
+        if standalone:
+            self.variable(
+                "protect_vm",
+                "Enable Google Compute Engine VM deletion protection. Turn this off and apply that change before intentionally deleting or replacing the VM. This is not a backup and does not protect the whole project from deletion.",
+                True,
+                type_name="bool",
+            )
         if not standalone:
             self.variable(
                 "allowed_cidr",
@@ -1346,6 +1361,7 @@ class TerraformGenerator:
             self.resource(
                 "google_compute_instance",
                 name=ref("var.project_name"),
+                **({"deletion_protection": ref("var.protect_vm")} if standalone else {}),
                 labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
                 machine_type=ref("var.machine_type"),
                 zone=ref("var.zone"),

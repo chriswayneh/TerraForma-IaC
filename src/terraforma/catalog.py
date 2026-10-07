@@ -65,6 +65,12 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 "TLS setup",
             ]
         )
+        if standalone and config.provider in {"aws", "gcp"}:
+            fixed.append(
+                "VM deletion protection is configurable (default enabled); disable and apply that change before deliberate deletion or replacement. It is not a backup."
+            )
+        elif standalone:
+            unsupported.append("Azure VM deletion locks")
     elif config.architecture_type == "secure_database":
         fixed.extend(
             [

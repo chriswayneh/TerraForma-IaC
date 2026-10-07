@@ -115,6 +115,16 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
     project["notes"].append(compiled["verification"])
+    if payload.recipe.architecture_type == "virtual_machine" and payload.recipe.provider in {
+        "aws",
+        "gcp",
+    }:
+        protection = payload.inputs.get("protect_vm", True)
+        project["notes"].append(
+            "VM deletion protection is "
+            + ("enabled" if protection else "disabled")
+            + ". To intentionally delete or replace a protected VM, first disable protection and apply that configuration change in your Terraform workflow. Protection is not a backup or protection for every connected resource."
+        )
     return project
 
 

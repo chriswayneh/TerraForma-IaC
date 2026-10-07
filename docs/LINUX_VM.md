@@ -15,12 +15,15 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 | Operating system | Supported provider-specific Linux choice | x86_64/AMD64 only; latest matching publisher image at planning time |
 | Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no data disks, autoscaling, custom images, or custom initialization |
 | Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
+| Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 
 Public mode requires an explicit single IPv4 `/32` client address or RFC1918 private subnet. Private mode defaults to `10.0.0.0/16`; review it against your actual routed client network. Broader public administrator ranges, including `0.0.0.0/0`, are rejected in both forms and generated Terraform. Firewall permission alone does not provide routing or prove successful login.
 
 ## Provider access
+
+AWS/GCP standalone VMs ask **Protect this VM from accidental deletion**. AWS maps this to EC2 API termination protection; GCP maps it to VM deletion protection. Before intentionally deleting or replacing a protected VM, disable this choice and apply that configuration change through your Terraform workflow. Protection does not cover every deletion path, connected resource, or data-loss scenario. See [AWS termination protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html) and [GCP provider deletion-protection requirements](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance).
 
 For AWS VMs and web tiers, **Enable detailed EC2 monitoring** changes most EC2 metrics from five-minute to one-minute periods. Status checks already use one-minute periods. Detailed monitoring can add CloudWatch charges for each instance, including every VM in a tier; it does not provide guest memory metrics, application logs, or alarms. Review [AWS monitoring behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-detailed-monitoring.html) and [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) before enabling it.
 

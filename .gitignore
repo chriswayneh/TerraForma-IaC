@@ -8,6 +8,7 @@ build/
 dist/
 .tools/
 .verification/
+.codex-remote-attachments/
 .terraform/
 *.tfstate
 *.tfstate.*

@@ -64,6 +64,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "os_image": "Linux operating system",
                     "admin_username": "Administrator username",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
+                    "protect_vm": "Protect this VM from accidental deletion",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",

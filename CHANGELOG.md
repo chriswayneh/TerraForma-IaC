@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ask for deletion protection on standalone AWS/GCP VMs, enabled by default, and explain the configuration change required before deliberate deletion or replacement.
+
 - Bound validation command output to 512 KiB per stream, fail on overflow, and disable terminal input while retaining partial timeout diagnostics.
 
 - Add an opt-in detailed EC2 monitoring question to AWS VM and web-tier recipes, with cost guidance and typed boolean preservation through CLI, browser, import, and export.
