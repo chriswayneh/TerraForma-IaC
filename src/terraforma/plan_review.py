@@ -9,7 +9,7 @@ from typing import Any
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.3.0"
+POLICY_VERSION = "0.4.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -311,6 +311,47 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                         "An IAM instance profile is attached, but this plan review does not establish its role policies, trust or attachment authorization. Review least privilege separately.",
                     )
             elif resource_type == "google_compute_instance":
+                shielded = after.get("shielded_instance_config")
+                before = change.get("before")
+                if before is not None and not isinstance(before, dict):
+                    raise TypeError("Previous resource values must be an object.")
+                previous_shielded = (before or {}).get("shielded_instance_config")
+                for settings in (shielded, previous_shielded):
+                    if (
+                        settings is not None
+                        and settings != []
+                        and (
+                            not isinstance(settings, list)
+                            or len(settings) != 1
+                            or not isinstance(settings[0], dict)
+                        )
+                    ):
+                        raise TypeError("Shielded VM settings must contain one object.")
+                current = shielded[0] if shielded else {}
+                previous = previous_shielded[0] if previous_shielded else {}
+                for field, label in (
+                    ("enable_secure_boot", "Secure Boot"),
+                    ("enable_vtpm", "vTPM"),
+                    ("enable_integrity_monitoring", "integrity monitoring"),
+                ):
+                    enabled = planned_boolean(current, field)
+                    previously_enabled = planned_boolean(previous, field)
+                    if enabled is False:
+                        add(
+                            "vm_boot_protection_removed"
+                            if previously_enabled is True
+                            else "vm_boot_protection_disabled",
+                            "block" if previously_enabled is True else "review",
+                            resource_id,
+                            f"Shielded VM {label} is disabled. Review workload compatibility and the protection change separately; this report does not approve the change.",
+                        )
+                    elif enabled is None:
+                        add(
+                            "vm_boot_protection_unknown",
+                            "review",
+                            resource_id,
+                            f"The plan does not establish Shielded VM {label}. Review image support and effective settings before provisioning.",
+                        )
                 accounts = after.get("service_account")
                 if accounts is not None and accounts != []:
                     if (

@@ -286,6 +286,85 @@ def test_unknown_configuration_and_coverage_remain_visible():
     assert report["approval_granted"] is False
 
 
+@pytest.mark.parametrize(
+    "field", ["enable_secure_boot", "enable_vtpm", "enable_integrity_monitoring"]
+)
+@pytest.mark.parametrize("previously_enabled", [None, False, True])
+def test_shielded_vm_disabled_controls_and_removal_require_review(field, previously_enabled):
+    settings = {
+        "enable_secure_boot": True,
+        "enable_vtpm": True,
+        "enable_integrity_monitoring": True,
+    }
+    data = plan(
+        "google_compute_instance", {"shielded_instance_config": [{**settings, field: False}]}
+    )
+    data["resource_changes"][0]["change"]["before"] = {
+        "shielded_instance_config": [{**settings, field: previously_enabled}]
+    }
+    report = review_plan(data, artifact_sha256="test")
+    expected = (
+        "vm_boot_protection_removed"
+        if previously_enabled is True
+        else "vm_boot_protection_disabled"
+    )
+    finding = next(item for item in report["findings"] if item["code"] == expected)
+    assert finding["severity"] == ("block" if previously_enabled is True else "review")
+    assert report["approval_granted"] is False
+
+
+@pytest.mark.parametrize("settings", [None, [], [{}], [{"enable_secure_boot": None}]])
+def test_missing_shielded_controls_remain_review_gaps(settings):
+    assert "vm_boot_protection_unknown" in codes(
+        plan("google_compute_instance", {"shielded_instance_config": settings})
+    )
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        "private-invalid-value",
+        {},
+        [False],
+        [{}, {}],
+        [{"enable_vtpm": "false"}],
+        [{"enable_secure_boot": 0}],
+    ],
+)
+@pytest.mark.parametrize("side", ["after", "before"])
+def test_malformed_shielded_controls_fail_closed_without_exposing_values(settings, side):
+    data = plan("google_compute_instance", {})
+    data["resource_changes"][0]["change"][side] = {"shielded_instance_config": settings}
+    report = review_plan(data, artifact_sha256="test")
+    assert "unresolved_policy_input" in {finding["code"] for finding in report["findings"]}
+    assert "private-invalid-value" not in json.dumps(report)
+
+
+def test_enabled_shielded_controls_do_not_hide_other_policy_gaps():
+    data = plan(
+        "google_compute_instance",
+        {
+            "shielded_instance_config": [
+                {
+                    "enable_secure_boot": True,
+                    "enable_vtpm": True,
+                    "enable_integrity_monitoring": True,
+                }
+            ]
+        },
+    )
+    found = codes(data)
+    assert (
+        not {
+            "vm_boot_protection_unknown",
+            "vm_boot_protection_disabled",
+            "vm_boot_protection_removed",
+        }
+        & found
+    )
+    assert {"limited_policy_coverage", "vm_protection_unknown"} <= found
+
+
 def test_malformed_network_values_fail_closed():
     data = plan(
         "aws_security_group", {"ingress": [{"protocol": "tcp", "from_port": "bad", "to_port": 22}]}
