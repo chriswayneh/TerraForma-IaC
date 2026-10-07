@@ -42,6 +42,8 @@ jobs:
           assert client.get('/static/app.js').status_code == 200"
   native-validation:
     runs-on: ubuntu-latest
+    env:
+      TF_PLUGIN_CACHE_DIR: ${{ runner.temp }}/terraform-plugin-cache
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -57,7 +59,9 @@ jobs:
         with:
           tflint_version: 'v0.61.0'
       - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest tests/test_generator.py tests/test_network_inputs.py tests/test_images.py tests/test_admin_username.py -q
+      - name: Prepare the native provider cache
+        run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - run: python -m pytest tests/test_generator.py tests/test_network_inputs.py tests/test_images.py tests/test_admin_username.py tests/test_aws_placement.py -q
         env:
           TERRAFORMA_NATIVE_TESTS: '1'
       - name: Prepare a cloud-free Action smoke configuration

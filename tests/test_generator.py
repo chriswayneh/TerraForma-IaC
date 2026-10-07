@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import subprocess
+from pathlib import Path
 
 import hcl2
 import pytest
@@ -762,3 +763,31 @@ def test_native_aws_standalone_placement(native_directories, windows, zone):
 
     spec = specification(windows, availability_zone=zone, enable_data_disk=True)
     assert_native_files(native_directories["aws"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("incompatible", [False, True])
+def test_native_validation_preserves_locks_and_rejects_conflicting_requirements(
+    native_directories, tmp_path, incompatible
+):
+    from terraforma.sandbox import ValidationSandbox
+
+    locked = (native_directories["aws"] / ".terraform.lock.hcl").read_bytes()
+    files = TerraformGenerator(
+        WizardConfig(provider="aws", project_name="lock-test", architecture_type="static_site")
+    ).generate()
+    if incompatible:
+        assert '"~> 6.0"' in files["main.tf"]
+        files["main.tf"] = files["main.tf"].replace('"~> 6.0"', '"< 6.0"')
+    for name, content in files.items():
+        (tmp_path / name).write_text(content, encoding="utf-8")
+    (tmp_path / ".terraform.lock.hcl").write_bytes(locked)
+    with ValidationSandbox(target_dir=tmp_path) as sandbox:
+        result = sandbox.execute_checks()
+        assert result["is_valid"] is not incompatible, result["logs"]
+        copied = (Path(sandbox.temp_dir) / ".terraform.lock.hcl").read_bytes()
+        assert copied == locked
+        if incompatible:
+            assert "[terraform validate;" not in result["logs"]
+            assert result["errors"][0]["tool"] == "terraform_validate"
+    assert (tmp_path / ".terraform.lock.hcl").read_bytes() == locked
+    assert (native_directories["aws"] / ".terraform.lock.hcl").read_bytes() == locked

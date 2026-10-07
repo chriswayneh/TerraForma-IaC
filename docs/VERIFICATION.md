@@ -1,5 +1,10 @@
 # Verification record
 
+## Native CI coverage checkpoint
+
+- The generator/placement default regression run passes 101 cases with 228 optional native cases skipped. Two separately enabled real AWS provider lock cases pass: matching requirements validate without changing source/copied locks, and conflicting requirements fail initialization without a writable retry.
+- Native CI now includes the six offline AWS placement expression cases and both provider lock cases. Its job creates a private runner-local provider cache to reuse downloaded plugins; registry checks and lock checksums remain enforced. No cloud API or apply is introduced.
+
 ## AWS standalone placement checkpoint
 
 - The default suite passes 1,494 tests with 238 optional/native/platform cases skipped. Ruff checks and formatting pass across 84 Python files; JavaScript syntax passes.
