@@ -711,7 +711,12 @@ def test_native_azure_windows_vm_validation_and_lint(native_directories, public,
     from terraforma.project import compile_project
     from tests.test_azure_windows_vm import specification
 
-    spec = specification(public, enable_data_disk=True, enable_secure_boot=secure_boot)
+    spec = specification(
+        public,
+        enable_data_disk=True,
+        enable_secure_boot=secure_boot,
+        enable_patch_assessment=public,
+    )
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 

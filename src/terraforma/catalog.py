@@ -74,6 +74,11 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 if windows
                 else "Administrator username is configurable (default terraforma); password authentication is disabled."
             )
+            if windows:
+                fixed.append(
+                    "Automatic platform patch assessment is optional; image assessment defaults are retained initially. Automatic OS updates and the VM Agent stay enabled. Guest health, assessment and installation success remain unverified."
+                )
+                unsupported.extend(["Custom Windows patch schedules", "Hotpatching"])
         elif standalone and config.provider == "aws":
             fixed.append(
                 "Imports an RSA public key for EC2 Windows password recovery. The administrator is Administrator; recover the password through EC2 using the matching private key after provisioning. TerraForma neither collects nor decrypts passwords/private keys."
@@ -149,7 +154,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 "Accelerated networking is optional (default off). Check selected VM-size and guest-driver support; changing an existing VM's setting can require stopping and deallocating it. Firewall access is unchanged."
             )
             fixed.append(
-                "Trusted Launch Secure Boot is configurable (default enabled); vTPM stays enabled. Check selected VM-size support and unsigned driver compatibility. Guest attestation and Defender monitoring are not configured."
+                "Trusted Launch Secure Boot is configurable (default enabled); vTPM stays enabled. Changing Secure Boot replaces the VM and can delete its OS disk; review the plan and backups first. Check selected VM-size support and unsigned driver compatibility. Guest attestation and Defender monitoring are not configured."
             )
             fixed.append(
                 "Optional boot diagnostics use Azure-managed storage (default off). Console output/screenshots can contain sensitive data; retention is not configurable and managed diagnostic blobs are currently not billed; application logging, alerts and custom diagnostic storage are not configured."

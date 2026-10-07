@@ -86,6 +86,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - Azure standalone Linux/Windows boot and optional data disks expose supported host cache modes with durability guidance. Actual workload behavior and safe cache changes require live verification.
+- Azure Windows offers automatic platform patch assessment separately from automatic OS installation; guest health, assessment and installation success remain unverified.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.
 - Boot/data disk size, type, encryption, managed-key references, and deletion behavior.
 - New or existing networks/subnets, private/public addresses, explicit inbound rules, and egress choices.

@@ -17,6 +17,7 @@ Development on `main` includes initial **AWS, Azure and Google Cloud Windows Ser
 | Licensing | Standard licensing (`None`) by default; `Windows_Server` requires independently verified Azure Hybrid Benefit eligibility |
 | Protection | Secure Boot enabled by default and configurable, vTPM enabled; optional diagnostics, accelerated networking and managed identity |
 | Guest updates | Windows automatic updates and VM agent enabled with `AutomaticByOS`; patch completion is not verified |
+| Patch assessment | Optional automatic platform assessment; default keeps image assessment behavior. Installation mode stays AutomaticByOS and assessment success is unverified |
 
 **Protect Terraform state and saved plans before using the Azure recipe.** AzureRM retains the administrator password in those artifacts even when it comes from an environment variable and is marked sensitive. The exported project stores only the environment-variable reference; it does not configure a protected backend. Password changes replace the VM. See the [credential and state boundary](AZURE_WINDOWS_DESIGN.md).
 

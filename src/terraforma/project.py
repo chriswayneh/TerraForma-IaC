@@ -82,6 +82,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "protect_vm": "Protect this VM from accidental deletion",
                     "enable_secure_boot": "Verify signed boot components (Secure Boot)",
                     "enable_boot_diagnostics": "Capture Azure boot diagnostics",
+                    "enable_patch_assessment": "Assess Windows patches automatically",
                     "enable_accelerated_networking": "Enable Azure accelerated networking",
                     "enable_data_disk": "Attach a data disk",
                     "data_disk_size_gb": "Data disk size (GiB)",

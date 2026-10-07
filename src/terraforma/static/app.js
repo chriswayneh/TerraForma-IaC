@@ -22,7 +22,7 @@ const inputSections = [
   ["Image and capacity", ["os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_count", "computer_name", "license_type"]],
   ["Network and access", ["network_cidr", "private_ip_address", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
   ["Storage", ["enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching"]],
-  ["Operations and identity", ["enable_workload_identity", "workload_identity", "detailed_monitoring", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking"]],
+  ["Operations and identity", ["enable_workload_identity", "workload_identity", "detailed_monitoring", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment"]],
   ["Workload inputs", []],
 ];
 

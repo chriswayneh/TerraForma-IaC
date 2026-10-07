@@ -101,6 +101,12 @@ def build_azure(builder: TerraformGenerator) -> None:
             "None",
             choices=("None", "Windows_Server"),
         )
+        builder.variable(
+            "enable_patch_assessment",
+            "Request automatic platform assessment of available Windows updates. When off, keep the image's default assessment behavior. This is independent of patch installation: automatic OS updates remain enabled. The VM Agent stays enabled; image support, guest-agent health and assessment success need cloud verification. No maintenance schedule or custom patch installation workflow is configured.",
+            False,
+            type_name="bool",
+        )
     else:
         builder.variable(
             "ssh_public_key",
@@ -297,6 +303,9 @@ def build_azure(builder: TerraformGenerator) -> None:
             license_type=ref("var.license_type"),
             automatic_updates_enabled=True,
             patch_mode="AutomaticByOS",
+            patch_assessment_mode=ref(
+                'var.enable_patch_assessment ? "AutomaticByPlatform" : "ImageDefault"'
+            ),
             provision_vm_agent=True,
         )
     if balanced:

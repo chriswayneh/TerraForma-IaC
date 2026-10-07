@@ -1,5 +1,13 @@
 # Verification record
 
+## Azure Windows assessment checkpoint
+
+- The default suite passes 1,298 tests with 216 optional native cases skipped. Ruff checks/formatting and JavaScript syntax checks pass.
+- Four native Azure Windows public/private and Secure Boot combinations pass provider validation and lint with platform assessment enabled in public cases and image defaults in private cases. OS update installation and the enabled VM Agent are retained.
+- A temporary browser tab verified the assessment checkbox defaults off in Operations and identity. Enabling it and generating files produced the success notice and a true Terraform variable default; zero password fields were rendered.
+- These checks do not verify guest-agent health, image support in an account, assessment execution, installation or maintenance schedules. Custom Windows patch schedules and hotpatching remain outside the recipe.
+- The preceding provider floor checkpoint passed [all CI jobs](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37593906691).
+
 ## Azure Windows provider floor checkpoint
 
 The Windows/provider generator regression run passes 93 cases with 208 optional native cases skipped. A separately initialized AzureRM 4.81 workspace passes Terraform validation and TFLint with the new Windows provider constraint. Official versioned provider documentation confirms the older 4.0 automatic-update argument name differs; non-Windows Azure constraints remain unchanged. Native test configuration files explicitly use UTF-8.

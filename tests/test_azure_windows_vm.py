@@ -104,6 +104,7 @@ def test_windows_contract_defaults_and_secret_boundary():
     assert contract["boot_disk_size_gb"]["default"] == 128
     assert contract["computer_name"]["default"] == "terraforma"
     assert contract["license_type"]["choices"] == ["None", "Windows_Server"]
+    assert contract["enable_patch_assessment"]["default"] is False
     assert contract["admin_password"]["kind"] == "external_secret"
     assert contract["admin_password"]["environment_variable"] == "TF_VAR_admin_password"
     assert "BitLocker" in contract["enable_secure_boot"]["description"]
@@ -125,6 +126,20 @@ def test_windows_provider_floor_excludes_older_argument_names():
     assert '"version" = "~> 4.81"' in windows
     assert '"version" = "~> 4.0"' in linux
     assert "automatic_updates_enabled = true" in windows
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_patch_assessment_keeps_os_updates_and_agent_enabled(enabled):
+    result = compile_project(specification(enable_patch_assessment=enabled))
+    main = result["files"]["main.tf"]
+    assert (
+        'patch_assessment_mode = var.enable_patch_assessment ? "AutomaticByPlatform" : "ImageDefault"'
+        in main
+    )
+    assert 'patch_mode = "AutomaticByOS"' in main
+    assert "automatic_updates_enabled = true" in main
+    assert "provision_vm_agent = true" in main
+    assert result["specification"]["inputs"]["enable_patch_assessment"] is enabled
 
 
 def test_windows_terminal_never_reads_password_value(monkeypatch):
