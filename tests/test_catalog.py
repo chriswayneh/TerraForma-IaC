@@ -12,8 +12,8 @@ from terraforma.web import create_app
 
 def test_catalog_lists_all_recipes_without_claiming_deployment():
     recipes = recipe_catalog()
-    assert len(recipes) == 12
-    assert len({recipe["id"] for recipe in recipes}) == 12
+    assert len(recipes) == 15
+    assert len({recipe["id"] for recipe in recipes}) == 15
     for recipe in recipes:
         assert recipe["workflow"] == "offline_generation"
         assert recipe["account_checks"] == recipe["deployment_checks"] == "unverified"

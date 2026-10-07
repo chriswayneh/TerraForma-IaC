@@ -169,6 +169,8 @@ def validate_answer(definition: dict, value: str | int) -> None:
             )
         elif definition.get("network_policy") == "database_cidr":
             message = "Enter an RFC1918 private subnet or an IPv4 /24 through /32 client network; prefer /32 for one client."
+        elif definition.get("network_policy") == "administrator_cidr":
+            message = "Enter an RFC1918 private subnet or a single IPv4 /32 administrator address."
         elif definition.get("network_policy") == "database_address":
             message = "Enter one client IPv4 address outside 0/8, loopback, and 224/3; Azure-wide service access is unsupported."
         elif definition["choices"]:
@@ -200,13 +202,14 @@ def _validate_answer(definition: dict, value: str | int) -> None:
             raise ValueError("Input does not match the required identifier format.")
         if definition["choices"] and value not in definition["choices"]:
             raise ValueError("Input is not one of the supported choices.")
-        if definition.get("network_policy") == "database_cidr":
+        if definition.get("network_policy") in {"database_cidr", "administrator_cidr"}:
             network = ipaddress.IPv4Network(value, strict=True)
             private = any(
                 network.subnet_of(ipaddress.IPv4Network(cidr))
                 for cidr in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
             )
-            if network.prefixlen < 24 and not private:
+            minimum_prefix = 32 if definition["network_policy"] == "administrator_cidr" else 24
+            if network.prefixlen < minimum_prefix and not private:
                 raise ValueError("Use an RFC1918 private network or an IPv4 /24 through /32.")
         elif definition.get("network_policy") == "database_address":
             first = int(value.split(".")[0])

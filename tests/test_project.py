@@ -106,7 +106,14 @@ def test_import_is_bounded_and_requires_local_session():
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
 @pytest.mark.parametrize(
-    "workload", ["single_web_server", "load_balanced_tier", "secure_database", "static_site"]
+    "workload",
+    [
+        "virtual_machine",
+        "single_web_server",
+        "load_balanced_tier",
+        "secure_database",
+        "static_site",
+    ],
 )
 def test_contract_matches_every_generated_variable(provider, workload):
     config = recipe(provider, workload)

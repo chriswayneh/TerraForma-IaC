@@ -17,7 +17,11 @@ class WizardConfig(BaseModel):
     provider: Literal["aws", "azure", "gcp"]
     project_name: str = Field(pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$")
     architecture_type: Literal[
-        "single_web_server", "load_balanced_tier", "secure_database", "static_site"
+        "virtual_machine",
+        "single_web_server",
+        "load_balanced_tier",
+        "secure_database",
+        "static_site",
     ]
     is_public: bool = False
     enable_encryption: bool = True
@@ -91,7 +95,8 @@ class TerraformGenerator:
         maximum: int | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
-        network_policy: Literal["database_cidr", "database_address"] | None = None,
+        network_policy: Literal["database_cidr", "database_address", "administrator_cidr"]
+        | None = None,
     ) -> None:
         attributes = {"description": description, "type": ref(type_name)}
         if default is not None:
@@ -127,18 +132,21 @@ class TerraformGenerator:
             )
         if network_policy:
             address = f"var.{name}"
-            if network_policy == "database_cidr":
+            if network_policy in {"database_cidr", "administrator_cidr"}:
+                public_prefix = 32 if network_policy == "administrator_cidr" else 24
                 prefix = f'tonumber(split("/", {address})[1])'
                 network = f"cidrhost({address}, 0)"
                 private_172 = value_hcl(r"^172\.(1[6-9]|2[0-9]|3[01])\.")
                 condition = (
                     f"can(cidrnetmask({address})) && try("
-                    f"{prefix} >= 24 || "
+                    f"{prefix} >= {public_prefix} || "
                     f'(startswith({network}, "10.") && {prefix} >= 8) || '
                     f"(can(regex({private_172}, {network})) && {prefix} >= 12) || "
                     f'(startswith({network}, "192.168.") && {prefix} >= 16), false)'
                 )
                 message = "Use an RFC1918 private network or an IPv4 /24 through /32 client network; prefer /32 for one client."
+                if network_policy == "administrator_cidr":
+                    message = "Use an RFC1918 private subnet or a single IPv4 /32 administrator address. Public network ranges are unsupported."
             else:
                 octet = f'tonumber(split(".", {address})[0])'
                 condition = (
@@ -209,13 +217,29 @@ class TerraformGenerator:
                 minimum=2,
                 maximum=20,
             )
-        if self.config.architecture_type in {"single_web_server", "load_balanced_tier"}:
+        if self.config.architecture_type in {
+            "virtual_machine",
+            "single_web_server",
+            "load_balanced_tier",
+        }:
             self.variable(
                 "os_image",
                 "Linux image from the supported publisher catalog, using x86_64/AMD64. Image versions resolve at planning time; region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
                 LINUX_IMAGE_CHOICES[self.config.provider][0],
                 choices=LINUX_IMAGE_CHOICES[self.config.provider],
             )
+        if self.config.architecture_type == "virtual_machine":
+            self.variable(
+                "allowed_cidr",
+                "Administrator network permitted to connect on SSH port 22. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
+                None if self.config.is_public else "10.0.0.0/16",
+                network_policy="administrator_cidr",
+            )
+            if self.config.provider == "aws":
+                self.variable(
+                    "ssh_public_key",
+                    "Existing administrator Ed25519 or RSA public key to import into EC2. Keep the matching private key outside this project.",
+                )
         getattr(self, f"_{self.config.provider}")()
         return {
             "main.tf": "\n\n".join(item.render() for item in self.main) + "\n",
@@ -300,11 +324,13 @@ class TerraformGenerator:
         if self.config.architecture_type == "secure_database":
             self._aws_database()
             return
-        self.variable(
-            "allowed_cidr",
-            "Clients allowed to access HTTP.",
-            "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
-        )
+        standalone = self.config.architecture_type == "virtual_machine"
+        if not standalone:
+            self.variable(
+                "allowed_cidr",
+                "Clients allowed to access HTTP.",
+                "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
+            )
         balanced = self.config.architecture_type == "load_balanced_tier"
         private = balanced or not self.config.is_public
         if private:
@@ -337,8 +363,8 @@ class TerraformGenerator:
         egress = block("egress", from_port=0, to_port=0, protocol="-1", cidr_blocks=["0.0.0.0/0"])
         ingress = block(
             "ingress",
-            from_port=80,
-            to_port=80,
+            from_port=22 if standalone else 80,
+            to_port=22 if standalone else 80,
             protocol="tcp",
             **(
                 {"security_groups": [ref("aws_security_group.lb.id")]}
@@ -389,6 +415,12 @@ class TerraformGenerator:
         }
         if self.config.enable_encryption:
             disk["kms_key_id"] = ref("aws_kms_key.this.arn")
+        if standalone:
+            self.resource(
+                "aws_key_pair",
+                key_name_prefix=ref('"${var.project_name}-"'),
+                public_key=ref("var.ssh_public_key"),
+            )
         self.resource(
             "aws_instance",
             "web",
@@ -398,15 +430,21 @@ class TerraformGenerator:
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
             vpc_security_group_ids=[ref("aws_security_group.web.id")],
-            user_data=ref(
-                'var.os_image == "amazon-linux-2023" ? '
-                + value_hcl(
-                    "#!/bin/bash\nset -eu\ndnf install -y nginx\nsystemctl enable --now nginx\n"
-                )
-                + " : "
-                + value_hcl(
-                    "#!/bin/bash\nset -eu\napt-get update\napt-get install -y nginx\nsystemctl enable --now nginx\n"
-                )
+            **(
+                {"key_name": ref("aws_key_pair.this.key_name")}
+                if standalone
+                else {
+                    "user_data": ref(
+                        'var.os_image == "amazon-linux-2023" ? '
+                        + value_hcl(
+                            "#!/bin/bash\nset -eu\ndnf install -y nginx\nsystemctl enable --now nginx\n"
+                        )
+                        + " : "
+                        + value_hcl(
+                            "#!/bin/bash\nset -eu\napt-get update\napt-get install -y nginx\nsystemctl enable --now nginx\n"
+                        )
+                    )
+                }
             ),
             tags={"Name": ref("var.project_name")},
             children=[
@@ -474,6 +512,18 @@ class TerraformGenerator:
             )
         else:
             address = "public_ip" if self.config.is_public else "private_ip"
+            if standalone:
+                self.output(
+                    "vm_address",
+                    f"aws_instance.web[0].{address}",
+                    "VM IPv4 address; SSH requires the allowed client network and matching private key.",
+                )
+                self.output(
+                    "ssh_username",
+                    'var.os_image == "amazon-linux-2023" ? "ec2-user" : "ubuntu"',
+                    "Default administrator username for the selected publisher image.",
+                )
+                return
             self.output(
                 "endpoint",
                 f'"http://${{aws_instance.web[0].{address}}}"',
@@ -640,32 +690,54 @@ class TerraformGenerator:
             self._azure_database(common, subnet)
             return
         self.resource("azurerm_subnet", **subnet)
+        standalone = self.config.architecture_type == "virtual_machine"
         self.variable(
             "ssh_public_key",
-            "Administrator SSH public key. SSH is not exposed by the generated firewall.",
+            "Administrator SSH public key for the terraforma user. Keep the matching private key outside this project."
+            if standalone
+            else "Administrator SSH public key. SSH is not exposed by the generated firewall.",
         )
-        self.variable(
-            "allowed_cidr",
-            "Clients allowed to access HTTP.",
-            "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
-        )
+        if not standalone:
+            self.variable(
+                "allowed_cidr",
+                "Clients allowed to access HTTP.",
+                "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
+            )
         self.resource(
             "azurerm_network_security_group",
             name=ref('"${var.project_name}-nsg"'),
             children=[
                 block(
                     "security_rule",
-                    name="HTTP",
+                    name="SSH" if standalone else "HTTP",
                     priority=100,
                     direction="Inbound",
                     access="Allow",
                     protocol="Tcp",
                     source_port_range="*",
-                    destination_port_range="80",
+                    destination_port_range="22" if standalone else "80",
                     source_address_prefix=ref("var.allowed_cidr"),
                     destination_address_prefix="*",
                 )
-            ],
+            ]
+            + (
+                [
+                    block(
+                        "security_rule",
+                        name="DenyOtherInbound",
+                        priority=4096,
+                        direction="Inbound",
+                        access="Deny",
+                        protocol="*",
+                        source_port_range="*",
+                        destination_port_range="*",
+                        source_address_prefix="*",
+                        destination_address_prefix="*",
+                    )
+                ]
+                if standalone
+                else []
+            ),
             **common,
         )
         self.resource(
@@ -756,6 +828,8 @@ class TerraformGenerator:
             ],
             **common,
         }
+        if standalone:
+            compute.pop("custom_data")
         if balanced:
             frontend = {"name": "frontend"}
             if self.config.is_public:
@@ -847,7 +921,19 @@ class TerraformGenerator:
                 if self.config.is_public
                 else "azurerm_network_interface.this.private_ip_address"
             )
-        self.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
+        if standalone:
+            self.output(
+                "vm_address",
+                endpoint,
+                "VM IPv4 address; SSH requires the allowed client network and matching private key.",
+            )
+            self.output(
+                "ssh_username",
+                '"terraforma"',
+                "Administrator username; password authentication is disabled.",
+            )
+        else:
+            self.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
 
     def _azure_database(self, common: dict, subnet: dict) -> None:
         self.variable(
@@ -1017,18 +1103,22 @@ class TerraformGenerator:
             self._gcp_database()
             return
         self.variable("zone", "Compute zone in the chosen region.", "us-central1-a")
-        self.variable(
-            "allowed_cidr",
-            "Clients allowed to access HTTP.",
-            "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
-        )
+        standalone = self.config.architecture_type == "virtual_machine"
+        if not standalone:
+            self.variable(
+                "allowed_cidr",
+                "Clients allowed to access HTTP.",
+                "0.0.0.0/0" if self.config.is_public else "10.0.0.0/16",
+            )
         self.resource(
             "google_compute_firewall",
-            name=ref('"${var.project_name}-http"'),
+            name=ref('"${var.project_name}-ssh"' if standalone else '"${var.project_name}-http"'),
             network=ref("google_compute_network.this.name"),
-            source_ranges=[ref("var.allowed_cidr"), "35.191.0.0/16", "130.211.0.0/22"],
+            source_ranges=[ref("var.allowed_cidr")]
+            if standalone
+            else [ref("var.allowed_cidr"), "35.191.0.0/16", "130.211.0.0/22"],
             target_tags=["terraforma-web"],
-            children=[block("allow", protocol="tcp", ports=["80"])],
+            children=[block("allow", protocol="tcp", ports=["22" if standalone else "80"])],
         )
         self.resource(
             "google_compute_router",
@@ -1196,7 +1286,11 @@ class TerraformGenerator:
                 machine_type=ref("var.machine_type"),
                 zone=ref("var.zone"),
                 tags=["terraforma-web"],
-                metadata_startup_script=startup,
+                **(
+                    {"metadata": {"enable-oslogin": "TRUE", "block-project-ssh-keys": "TRUE"}}
+                    if standalone
+                    else {"metadata_startup_script": startup}
+                ),
                 children=[disk, network],
                 depends_on=[ref("google_compute_router_nat.this")],
             )
@@ -1205,7 +1299,14 @@ class TerraformGenerator:
                 if self.config.is_public
                 else "google_compute_instance.this.network_interface[0].network_ip"
             )
-        self.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
+        if standalone:
+            self.output(
+                "vm_address",
+                endpoint,
+                "VM IPv4 address; use OS Login with the required IAM role and allowed client network. Private VMs require routed access.",
+            )
+        else:
+            self.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
 
     def _gcp_database(self) -> None:
         self.variable(

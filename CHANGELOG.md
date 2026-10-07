@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add standalone Linux VM recipes for AWS, Azure, and GCP with supported image/disk inputs, restricted SSH networks, public-key or OS Login authentication, and VM address outputs.
+
 - Show field-specific input correction hints without reflecting submitted values; focus the invalid browser field and clear errors on edits.
 
 - Offer supported Linux image choices from official publishers across AWS, Azure, and GCP, with image-specific AWS startup scripts and visible compatibility limits.

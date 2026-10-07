@@ -2,6 +2,7 @@ from terraforma.generator import LINUX_IMAGE_CHOICES, WizardConfig
 
 PROVIDERS = ("aws", "azure", "gcp")
 WORKLOADS = {
+    "virtual_machine": "Linux virtual machine",
     "single_web_server": "Single web server",
     "load_balanced_tier": "Load-balanced application",
     "secure_database": "Managed PostgreSQL",
@@ -10,7 +11,12 @@ WORKLOADS = {
 
 
 def recipe_capabilities(config: WizardConfig) -> dict:
-    compute = config.architecture_type in {"single_web_server", "load_balanced_tier"}
+    compute = config.architecture_type in {
+        "virtual_machine",
+        "single_web_server",
+        "load_balanced_tier",
+    }
+    standalone = config.architecture_type == "virtual_machine"
     fixed = []
     unsupported = [
         "Automatic provisioning",
@@ -26,16 +32,26 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         fixed.extend(
             [
                 f"Operating system choices: {image}; x86_64/AMD64 only, latest image at planning time (not pinned).",
-                "Startup installs nginx and serves HTTP on port 80.",
+                "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
+                if standalone
+                else "Startup installs nginx and serves HTTP on port 80.",
                 "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
-                if config.architecture_type == "single_web_server"
+                if config.architecture_type in {"virtual_machine", "single_web_server"}
                 else "Creates a tier with 2–20 instances (default 2); placement is fixed and automatic scaling is not configured.",
             ]
         )
         if config.provider == "azure":
             fixed.append(
                 "Administrator username is terraforma; password authentication is disabled."
+            )
+        elif standalone and config.provider == "aws":
+            fixed.append(
+                "Imports the supplied public key into EC2; image username is ec2-user for Amazon Linux or ubuntu for Ubuntu. No private key is generated or stored."
+            )
+        elif standalone:
+            fixed.append(
+                "Uses Google OS Login with project SSH keys blocked. OS Login IAM roles and organization policy must be checked before access; no metadata SSH key is collected."
             )
         else:
             fixed.append("Administrator access is not configured by this recipe.")

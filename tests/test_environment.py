@@ -6,15 +6,26 @@ from terraforma.project import ProjectSpecification, compile_project
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
 @pytest.mark.parametrize(
-    "workload", ["single_web_server", "load_balanced_tier", "secure_database", "static_site"]
+    "workload",
+    [
+        "virtual_machine",
+        "single_web_server",
+        "load_balanced_tier",
+        "secure_database",
+        "static_site",
+    ],
 )
 def test_environment_answer_maps_to_generated_label_and_target(provider, workload):
     inputs = {"environment": "production"}
     if provider == "aws":
         inputs["aws_account_id"] = "123456789012"
+        if workload == "virtual_machine":
+            inputs["ssh_public_key"] = (
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            )
     elif provider == "azure":
         inputs["subscription_id"] = "12345678-1234-1234-1234-123456789abc"
-        if workload in {"single_web_server", "load_balanced_tier"}:
+        if workload in {"virtual_machine", "single_web_server", "load_balanced_tier"}:
             inputs["ssh_public_key"] = (
                 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
             )

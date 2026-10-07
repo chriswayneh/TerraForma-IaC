@@ -12,7 +12,11 @@ def definition(provider, workload="secure_database"):
     config = WizardConfig(
         provider=provider, project_name="network-test", architecture_type=workload, is_public=True
     )
-    name = "database_client_ip" if provider == "azure" else "allowed_cidr"
+    name = (
+        "database_client_ip"
+        if provider == "azure" and workload == "secure_database"
+        else "allowed_cidr"
+    )
     return next(item for item in input_contract(config) if item["name"] == name)
 
 
@@ -42,6 +46,25 @@ ADDRESS_CASES = [
     ("10.0.0.1", True),
     ("::1", False),
 ]
+
+ADMIN_CASES = [
+    ("0.0.0.0/0", False),
+    ("203.0.113.0/24", False),
+    ("203.0.113.7/32", True),
+    ("10.0.0.0/8", True),
+    ("192.168.0.0/16", True),
+]
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("value,accepted", ADMIN_CASES)
+def test_administrator_network_policy(provider, value, accepted):
+    field = definition(provider, "virtual_machine")
+    if accepted:
+        validate_answer(field, value)
+    else:
+        with pytest.raises(ValueError):
+            validate_answer(field, value)
 
 
 @pytest.mark.parametrize("provider", ["aws", "gcp"])
@@ -82,17 +105,21 @@ def test_native_database_conditions_match_questionnaire(tmp_path):
         for key, value in os.environ.items()
         if not key.upper().startswith(("TF_CLI_ARGS", "TF_VAR_", "TF_DATA_DIR", "TF_WORKSPACE"))
     }
-    for provider, cases in (("aws", CIDR_CASES), ("azure", ADDRESS_CASES)):
+    for provider, workload, cases in (
+        ("aws", "secure_database", CIDR_CASES),
+        ("azure", "secure_database", ADDRESS_CASES),
+        ("aws", "virtual_machine", ADMIN_CASES),
+    ):
         generator = TerraformGenerator(
             WizardConfig(
                 provider=provider,
                 project_name="network-test",
-                architecture_type="secure_database",
+                architecture_type=workload,
                 is_public=True,
             )
         )
         generator.generate()
-        field = definition(provider)
+        field = definition(provider, workload)
         variable = next(item for item in generator.variables if item.labels[0] == field["name"])
         (tmp_path / "variables.tf").write_text(variable.render(), encoding="utf-8")
         condition = variable.children[0].attributes["condition"].value

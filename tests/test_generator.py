@@ -13,7 +13,13 @@ from terraforma.generator import TerraformGenerator, WizardConfig, value_hcl, wr
 CASES = list(
     itertools.product(
         ["aws", "azure", "gcp"],
-        ["single_web_server", "load_balanced_tier", "secure_database", "static_site"],
+        [
+            "virtual_machine",
+            "single_web_server",
+            "load_balanced_tier",
+            "secure_database",
+            "static_site",
+        ],
         [False, True],
         [False, True],
     )

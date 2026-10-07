@@ -26,7 +26,21 @@ def infrastructure_guide(config: WizardConfig) -> dict:
                 "explanation": "A separate cloud network groups your resources. Subnets divide its address space into smaller sections.",
             }
         )
-    if config.architecture_type in {"single_web_server", "load_balanced_tier"}:
+    if config.architecture_type == "virtual_machine":
+        components.extend(
+            [
+                {
+                    "name": compute,
+                    "explanation": "One Linux VM uses the selected operating system, machine size, and boot disk. Application initialization is left for your workload setup.",
+                },
+                {
+                    "name": "Administrator access",
+                    "explanation": "Only SSH from the supplied administrator CIDR is added. AWS and Azure use your public key; Google uses OS Login and requires appropriate IAM roles. Private VMs also require an existing routed access path such as a VPN or bastion.",
+                },
+            ]
+        )
+        route = ["Allowed administrator network", "SSH access rules", "Linux VM"]
+    elif config.architecture_type in {"single_web_server", "load_balanced_tier"}:
         balanced = config.architecture_type == "load_balanced_tier"
         components.append(
             {

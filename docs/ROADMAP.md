@@ -31,7 +31,7 @@ Versions are targets, not date promises. A release ships only after its document
 | --- | --- | --- | --- |
 | **Released** | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) | Guided workspace | Generate, understand, export, validate, and locally review Terraform recipes |
 | **In progress** | v0.3.0 | [1 · Security and project foundation](#phase-1) | Shared project specification, complete input contracts, and execution safeguards |
-| Planned | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
+| Early development | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
 | Planned | v0.5.0 | [3 · Networks, storage, and identity](#phase-3) | Compose connected resources with explicit access and identity decisions |
 | Planned | v0.6.0 | [4 · State and plan workflow](#phase-4) | Protected state, account preflight, saved plans, and change review |
 | Planned | v0.7.0 | [5 · Approved provisioning and lifecycle](#phase-5) | Approve and apply reviewed plans; manage updates and controlled teardown |
@@ -82,7 +82,7 @@ Exit criteria: invalid specifications fail closed; review reports expose no raw 
 
 Target: **v0.4.0**.
 
-Status: planned after the foundation; existing compute recipes already expose region, supported Linux images, VM size, boot-disk size/type, load-balanced tier count, and their current required inputs. Full Linux/Windows, image, network, identity, and lifecycle adapters remain planned.
+Status: initial Linux patterns are in development alongside the foundation. [Standalone Linux VM recipes](LINUX_VM.md) collect region, supported Linux image, VM size, boot-disk size/type, and restricted administrator access. Web tiers also expose their initial count. Full Linux/Windows, custom image, network, identity, and lifecycle adapters remain planned; cloud creation/access/teardown has not been verified.
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.

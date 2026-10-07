@@ -53,6 +53,17 @@ def generate_project(config: WizardConfig) -> dict:
         if "default" not in variable.attributes
     ]
     notes = ["Review the Terraform plan and your cloud account before deployment."]
+    if config.architecture_type == "virtual_machine":
+        notes.extend(
+            [
+                "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",
+                "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur charges.",
+            ]
+        )
+        if config.provider == "gcp":
+            notes.append(
+                "Google OS Login needs an appropriate IAM role. Organization policy and login prerequisites remain unverified offline."
+            )
     if config.architecture_type in {"single_web_server", "load_balanced_tier"}:
         notes.extend(
             [

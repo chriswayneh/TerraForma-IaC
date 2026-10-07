@@ -137,9 +137,12 @@ def wizard(target_dir: Path | None):
         questionary.select(
             "What would you like to create?",
             choices=[
+                questionary.Choice(
+                    "A Linux virtual machine with restricted SSH", value="virtual_machine"
+                ),
                 questionary.Choice("A single web server", value="single_web_server"),
                 questionary.Choice(
-                    "Two web servers behind a load balancer", value="load_balanced_tier"
+                    "A web VM tier behind a load balancer", value="load_balanced_tier"
                 ),
                 questionary.Choice(
                     "A highly available PostgreSQL database", value="secure_database"

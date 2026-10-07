@@ -187,6 +187,7 @@ function restoreChoices() {
       !["aws", "azure", "gcp"].includes(config.provider) ||
       ![
         "single_web_server",
+        "virtual_machine",
         "load_balanced_tier",
         "secure_database",
         "static_site",
@@ -273,6 +274,7 @@ function updateGuidance() {
       ? "Also enable encryption at host. Requires subscription and VM-size support."
       : "Enable customer-managed KMS encryption for your stored data.";
   const notes = {
+    virtual_machine: "SSH is restricted to your administrator network. AWS/Azure need your public key; Google uses OS Login IAM access. Private VMs require a routed access path. No application is installed.",
     single_web_server: config.is_public
       ? "Public mode opens HTTP access. SSH stays closed by default. Add TLS before sensitive use."
       : "Your web server is reached through its cloud network. Outbound NAT may incur charges.",
