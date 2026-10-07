@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ask for a new private IPv4 network range on standalone VMs, with provider-specific recipe bounds, derived subnet layouts and matching shared/Terraform validation.
+
 - Extend local plan review with AWS/GCP VM protection changes and unsafe forced AWS disk detach checks, using policy version `0.2.0`.
 
 - Add one optional empty data disk to standalone AWS/Azure/GCP Linux VMs, with conditional size/type questions, provider-specific attachments, and explicit cost/data-lifecycle guidance.

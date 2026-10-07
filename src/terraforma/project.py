@@ -48,6 +48,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
         kind = {
             "ssh_public_key": "ssh_public_key",
             "allowed_cidr": "ipv4_cidr",
+            "network_cidr": "ipv4_cidr",
             "database_client_ip": "ipv4_address",
             "subscription_id": "uuid",
             "index_html": "multiline",
@@ -57,6 +58,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "name": name,
                 "label": {
                     "allowed_cidr": "Allowed client network (CIDR)",
+                    "network_cidr": "New network address range (CIDR)",
                     "instance_type": "VM size",
                     "vm_size": "VM size",
                     "machine_type": "VM size",
@@ -177,6 +179,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = (
                 f"Enter a whole number from {definition['minimum']} to {definition['maximum']}."
             )
+        elif definition.get("network_policy") == "vm_network":
+            message = f"Enter an RFC1918 private IPv4 network with a /{definition['prefix_minimum']} through /{definition['prefix_maximum']} prefix and no host bits."
         elif definition.get("network_policy") == "database_cidr":
             message = "Enter an RFC1918 private subnet or an IPv4 /24 through /32 client network; prefer /32 for one client."
         elif definition.get("network_policy") == "administrator_cidr":
@@ -219,7 +223,20 @@ def _validate_answer(definition: dict, value: str | int | bool) -> None:
             raise ValueError("Input is not one of the supported choices.")
         if value in (definition.get("forbidden_values") or []):
             raise ValueError("This value is reserved by the provider.")
-        if definition.get("network_policy") in {"database_cidr", "administrator_cidr"}:
+        if definition.get("network_policy") == "vm_network":
+            network = ipaddress.IPv4Network(value, strict=True)
+            if (
+                str(network) != value
+                or not definition["prefix_minimum"]
+                <= network.prefixlen
+                <= definition["prefix_maximum"]
+                or not any(
+                    network.subnet_of(ipaddress.IPv4Network(cidr))
+                    for cidr in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+                )
+            ):
+                raise ValueError("Use a supported canonical private network range.")
+        elif definition.get("network_policy") in {"database_cidr", "administrator_cidr"}:
             network = ipaddress.IPv4Network(value, strict=True)
             private = any(
                 network.subnet_of(ipaddress.IPv4Network(cidr))

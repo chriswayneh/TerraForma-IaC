@@ -63,7 +63,9 @@ Azure SSH inputs accept OpenSSH Ed25519 or RSA public keys, matching [Microsoft'
 
 ## Current scope
 
-The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still hardcoded in those recipes, such as all image, OS, network, and availability choices. The complete VM adapter work remains on the roadmap.
+The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still fixed by those recipes, such as custom image IDs, subnet count, and availability layouts. The complete VM adapter work remains on the roadmap.
+
+Standalone Linux VMs expose `network_cidr` for a newly created private IPv4 network. AWS/Azure accept `/16` through `/20` and derive subnets; GCP accepts `/16` through `/28` for its regional subnet. Shared input checks and generated Terraform enforce canonical RFC1918 ranges without host bits. See [network ranges and layouts](LINUX_VM.md#new-network-address-range). Existing-network overlap and connectivity remain manual preflight checks.
 
 Existing compute recipes now expose VM size, boot-disk size, and supported disk classes. Boot sizes are whole numbers in a bounded range: 20–2048 GiB for AWS/GCP and 30–2048 GiB for Azure. These are the current recipe limits, not universal cloud limits. Both the contract and generated Terraform enforce them. The selected image can impose a higher minimum, and live account/SKU/storage compatibility still requires preflight.
 

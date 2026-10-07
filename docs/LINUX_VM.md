@@ -11,7 +11,7 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 | Decision | What you provide | What stays fixed |
 | --- | --- | --- |
 | Target | AWS account ID, Azure subscription UUID, or Google Cloud project ID; environment label | Credentials use the cloud provider's normal credential chain; identity remains unverified offline |
-| Placement | Region/location, plus zone for GCP | New network address ranges; existing-network attachment is not supported |
+| Placement | Region/location, plus zone for GCP; new private network address range | Subnet layout is derived by the recipe; existing-network attachment is not supported |
 | Operating system | Supported provider-specific Linux choice | x86_64/AMD64 only; latest matching publisher image at planning time |
 | Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no autoscaling, custom images, or custom initialization |
 | Data storage | Enable one data disk, size from 32–2048 GiB, supported disk class | Disabled by default; one new empty disk, no formatting/mounting, backup, or recovery policy |
@@ -55,3 +55,17 @@ The `data_disk_id` output identifies the disk when enabled. Attachment alone doe
 This disk is managed by the exported Terraform project. Teardown can delete it, and VM deletion protection does not protect every disk or connected resource. Review data preservation before detaching, replacing, disabling, or removing it. Multiple disks, existing volumes/snapshots, custom IOPS/throughput, disk shrinking, and web-tier data disks remain unsupported.
 
 Provider references: [EBS volumes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume), [Azure disk attachments](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_data_disk_attachment), and [GCP persistent disks](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk).
+
+## New network address range
+
+Choose a private IPv4 range that does not overlap networks you intend to connect. TerraForma checks the input format and recipe bounds; it does not inspect existing networks or account connectivity. Only canonical RFC1918 ranges (`10/8`, `172.16/12`, `192.168/16`) are supported here. Host bits, IPv6, public ranges and carrier-grade NAT ranges are rejected.
+
+| Provider | Recipe range | Generated subnets |
+| --- | --- | --- |
+| AWS | `/16` through `/20`, default `10.0.0.0/16` | Two public and two private subnets in two available zones. Eight prefix bits are added; subnet indices are 0, 1, 10 and 11. A `/16` yields `/24` subnets; a `/20` yields `/28` subnets. |
+| Azure | `/16` through `/20`, default `10.0.0.0/16` | One workload subnet adds eight prefix bits at index 1. The default yields `10.0.1.0/24`. |
+| GCP | `/16` through `/28`, default `10.0.1.0/24` | One regional subnet uses the selected range directly. The VPC itself has no enclosing CIDR. |
+
+These are recipe bounds rather than the providers' complete capabilities. Individual subnet sizing, additional ranges, IPv6 and attachment to existing networks remain planned. Changing an exported project's range can replace network and dependent resources; review the Terraform plan and access/data preservation before applying changes. The administrator CIDR remains a separate access decision and is not automatically changed to match this range.
+
+Provider references: [AWS VPC address ranges](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html), [Azure networking FAQ](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-faq), and [GCP subnets](https://docs.cloud.google.com/vpc/docs/subnets).

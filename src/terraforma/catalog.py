@@ -35,7 +35,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
                 if standalone
                 else "Startup installs nginx and serves HTTP on port 80.",
-                "Creates a new network and subnets with fixed address ranges.",
+                "Creates a new network with a configurable private IPv4 range; subnet count and derivation are fixed by this recipe. Connected-network overlap requires manual preflight."
+                if standalone
+                else "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
                 if config.architecture_type in {"virtual_machine", "single_web_server"}
                 else "Creates a tier with 2–20 instances (default 2); placement is fixed and automatic scaling is not configured.",

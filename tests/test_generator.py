@@ -217,3 +217,67 @@ def test_native_optional_data_disk_types(native_directories, provider, disk_type
         },
     )
     assert_native_files(native_directories[provider], compile_project(specification)["files"])
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("cidr", ["10.80.0.0/16", "172.20.0.0/20", "192.168.16.0/20"])
+def test_native_vm_network_ranges(native_directories, provider, cidr):
+    from test_vm_networks import specification
+
+    from terraforma.project import compile_project
+
+    assert_native_files(
+        native_directories[provider], compile_project(specification(provider, cidr))["files"]
+    )
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+def test_native_vm_network_validation_matches_shared_contract(
+    native_directories, tmp_path, provider
+):
+    from test_vm_networks import specification
+
+    from terraforma.project import ProjectInputError, compile_project
+
+    generator = TerraformGenerator(specification(provider, "10.80.0.0/16").recipe)
+    generator.generate()
+    variable = next(item for item in generator.variables if item.labels == ("network_cidr",))
+    condition = variable.children[0].attributes["condition"].value
+    ranges = [
+        "10.80.0.0/16",
+        "172.16.0.0/20",
+        "172.31.0.0/16",
+        "192.168.0.0/16",
+        "10.0.0.0/21",
+        "10.0.0.0/28",
+        "10.0.0.1/16",
+        "172.32.0.0/16",
+        "192.169.0.0/16",
+        "203.0.113.0/24",
+        "fc00::/16",
+        "0.0.0.0/0",
+        "10.0.0.0/15",
+        "10.0.0.0/29",
+        "10.0.0.0/255.255.0.0",
+        "invalid-range",
+    ]
+    expected = []
+    for cidr in ranges:
+        try:
+            compile_project(specification(provider, cidr))
+        except ProjectInputError:
+            expected.append(False)
+        else:
+            expected.append(True)
+    expressions = [condition.replace("var.network_cidr", value_hcl(cidr)) for cidr in ranges]
+    result = subprocess.run(
+        [shutil.which("terraform"), "console", "-no-color"],
+        input="jsonencode([" + ",".join(expressions) + "])\n",
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(json.loads(result.stdout)) == expected

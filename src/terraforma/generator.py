@@ -129,11 +129,15 @@ class TerraformGenerator:
         type_name: str = "string",
         minimum: int | None = None,
         maximum: int | None = None,
+        prefix_minimum: int | None = None,
+        prefix_maximum: int | None = None,
         visible_when: dict[str, bool] | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
         forbidden_values: tuple[str, ...] | None = None,
-        network_policy: Literal["database_cidr", "database_address", "administrator_cidr"]
+        network_policy: Literal[
+            "database_cidr", "database_address", "administrator_cidr", "vm_network"
+        ]
         | None = None,
     ) -> None:
         attributes = {"description": description, "type": ref(type_name)}
@@ -178,7 +182,20 @@ class TerraformGenerator:
             )
         if network_policy:
             address = f"var.{name}"
-            if network_policy in {"database_cidr", "administrator_cidr"}:
+            if network_policy == "vm_network":
+                prefix = f'tonumber(split("/", {address})[1])'
+                network = f"cidrhost({address}, 0)"
+                private_172 = value_hcl(r"^172\.(1[6-9]|2[0-9]|3[01])\.")
+                condition = (
+                    f"can(cidrnetmask({address})) && try("
+                    f"{prefix} >= {prefix_minimum} && {prefix} <= {prefix_maximum} && "
+                    f'format("%s/%d", {network}, {prefix}) == {address} && '
+                    f'(startswith({network}, "10.") || '
+                    f"can(regex({private_172}, {network})) || "
+                    f'startswith({network}, "192.168.")), false)'
+                )
+                message = f"Use a canonical RFC1918 private IPv4 network with a /{prefix_minimum} through /{prefix_maximum} prefix, without host bits."
+            elif network_policy in {"database_cidr", "administrator_cidr"}:
                 public_prefix = 32 if network_policy == "administrator_cidr" else 24
                 prefix = f'tonumber(split("/", {address})[1])'
                 network = f"cidrhost({address}, 0)"
@@ -206,6 +223,8 @@ class TerraformGenerator:
         self.input_constraints[name] = {
             "minimum": minimum,
             "maximum": maximum,
+            "prefix_minimum": prefix_minimum,
+            "prefix_maximum": prefix_maximum,
             "choices": list(choices) if choices else None,
             "pattern": pattern,
             "forbidden_values": list(forbidden_values) if forbidden_values else None,
@@ -277,6 +296,19 @@ class TerraformGenerator:
                 choices=LINUX_IMAGE_CHOICES[self.config.provider],
             )
         if self.config.architecture_type == "virtual_machine":
+            self.variable(
+                "network_cidr",
+                "Address range for the new VM network. Check for overlap with networks you will connect; existing-network attachment is not configured. "
+                + {
+                    "aws": "The recipe creates two public and two private subnets with eight additional prefix bits, in two available zones.",
+                    "azure": "The recipe derives one workload subnet with eight additional prefix bits.",
+                    "gcp": "This range is used directly for one regional subnet; GCP VPC networks have no single enclosing address range.",
+                }[self.config.provider],
+                "10.0.1.0/24" if self.config.provider == "gcp" else "10.0.0.0/16",
+                network_policy="vm_network",
+                prefix_minimum=16,
+                prefix_maximum=28 if self.config.provider == "gcp" else 20,
+            )
             self._data_disk_inputs()
             self.variable(
                 "allowed_cidr",
@@ -352,7 +384,9 @@ class TerraformGenerator:
         self.main.append(block("data", "aws_availability_zones", "available", state="available"))
         self.resource(
             "aws_vpc",
-            cidr_block="10.0.0.0/16",
+            cidr_block=ref("var.network_cidr")
+            if self.config.architecture_type == "virtual_machine"
+            else "10.0.0.0/16",
             enable_dns_support=True,
             enable_dns_hostnames=True,
             tags={"Name": ref("var.project_name")},
@@ -800,14 +834,18 @@ class TerraformGenerator:
         self.resource(
             "azurerm_virtual_network",
             name=ref('"${var.project_name}-vnet"'),
-            address_space=["10.0.0.0/16"],
+            address_space=[ref("var.network_cidr")]
+            if self.config.architecture_type == "virtual_machine"
+            else ["10.0.0.0/16"],
             **common,
         )
         subnet = {
             "name": "workload",
             "resource_group_name": common["resource_group_name"],
             "virtual_network_name": ref("azurerm_virtual_network.this.name"),
-            "address_prefixes": ["10.0.1.0/24"],
+            "address_prefixes": [ref("cidrsubnet(var.network_cidr, 8, 1)")]
+            if self.config.architecture_type == "virtual_machine"
+            else ["10.0.1.0/24"],
         }
         if self.config.architecture_type == "secure_database":
             self._azure_database(common, subnet)
@@ -1253,7 +1291,9 @@ class TerraformGenerator:
         self.resource(
             "google_compute_subnetwork",
             name=ref("var.project_name"),
-            ip_cidr_range="10.0.1.0/24",
+            ip_cidr_range=ref("var.network_cidr")
+            if self.config.architecture_type == "virtual_machine"
+            else "10.0.1.0/24",
             region=ref("var.region"),
             network=ref("google_compute_network.this.id"),
             private_ip_google_access=True,
