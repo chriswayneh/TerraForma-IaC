@@ -1,5 +1,12 @@
 # Verification record
 
+## Azure data disk access checkpoint
+
+- The default suite passes 1,380 tests with 227 optional/native/platform cases skipped. Ruff checks and formatting pass across 81 Python files; JavaScript syntax passes.
+- Linux and Windows generation tests verify empty managed data disks deny remote import/export and disable public network access while retaining their VM attachment and existing external-secret requirements.
+- Four separately enabled Linux/Windows regional/zone-2 configurations pass Terraform validation and TFLint against AzureRM 4.81. Versioned AzureRM 4.0 documentation confirms both access attributes are supported by the existing Linux provider floor.
+- No cloud resources were created. OS disk access, guest encryption, backup/recovery, private endpoints and export workflows remain outside this change; local plan policy does not yet check these disk access attributes.
+
 ## Azure zone metadata checkpoint
 
 - The default suite passes 1,378 tests with 227 optional/native/platform cases skipped. Ruff checks/formatting pass across 81 Python files; JavaScript syntax passes.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Newly generated optional Azure managed data disks deny remote import/export and disable public network access. The recipe retains empty-disk attachment; exports, private endpoints and backup/recovery workflows remain unsupported.
+
 - The existing opt-in Azure VM size read now checks a selected availability zone against reported SKU location metadata. Unsupported, unknown and malformed zone results remain distinct; no extra cloud read or deployment approval is added.
 
 - Added Azure standalone Linux/Windows placement choices: regional or availability zone 1–3. The VM, optional data disk, Standard NAT gateway and generated public IPs share the selected placement. Changes can replace resources and lose data; zone support/capacity remain unverified.

@@ -84,6 +84,8 @@ The `data_disk_id` output identifies the disk when enabled. Attachment alone doe
 
 This disk is managed by the exported Terraform project. Teardown can delete it, and VM deletion protection does not protect every disk or connected resource. Review data preservation before detaching, replacing, disabling, or removing it. Multiple disks, existing volumes/snapshots, custom IOPS/throughput, disk shrinking, and web-tier data disks remain unsupported.
 
+Newly generated Azure optional data disks set `network_access_policy = "DenyAll"` and `public_network_access_enabled = false` to restrict remote import/export. They still attach as empty managed disks. This recipe has no disk export or private-endpoint workflow; it does not change OS disk export controls, create backups, prove guest encryption or protect state. Review [managed disk access controls](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk) and a saved plan before changing an existing disk.
+
 Provider references: [EBS volumes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume), [Azure disk attachments](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_data_disk_attachment), and [GCP persistent disks](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk).
 
 ## New network address range

@@ -135,6 +135,13 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     else "Custom disk IOPS/throughput",
                 ]
             )
+        if standalone and config.provider == "azure":
+            fixed.append(
+                "Optional managed data disks deny remote import/export and disable public network access. This recipe creates empty disks for attachment, not an export or private-endpoint workflow. OS disk access and backup policy require separate review."
+            )
+            unsupported.extend(
+                ["Managed data disk import/export", "Managed disk private endpoints"]
+            )
         if standalone and config.provider in {"aws", "gcp"}:
             if config.provider == "aws":
                 fixed.append(

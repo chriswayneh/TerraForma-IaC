@@ -38,6 +38,20 @@ def test_cache_choices_survive_generation_and_saved_inputs(windows, mode):
     assert result["files"]["variables.tf"].count(f'default = "{mode}"') >= 2
 
 
+@pytest.mark.parametrize("windows", [False, True])
+def test_empty_data_disk_disables_remote_export_and_public_network_access(windows):
+    result = compile_project(specification(windows, enable_data_disk=True))
+    main = result["files"]["main.tf"]
+    assert 'network_access_policy = "DenyAll"' in main
+    assert "public_network_access_enabled = false" in main
+    assert 'create_option = "Empty"' in main
+    assert '"azurerm_virtual_machine_data_disk_attachment"' in main
+    assert '"azurerm_private_endpoint"' not in main
+    assert result["required_secret_environment_variables"] == (
+        ["TF_VAR_admin_password"] if windows else []
+    )
+
+
 @pytest.mark.parametrize("name", ["boot_disk_caching", "data_disk_caching"])
 @pytest.mark.parametrize("value", ["writeback", "readonly", True, 1])
 def test_unknown_cache_modes_fail_closed(name, value):

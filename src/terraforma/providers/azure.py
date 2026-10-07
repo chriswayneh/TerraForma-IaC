@@ -469,6 +469,8 @@ def build_azure(builder: TerraformGenerator) -> None:
             disk_size_gb=ref("var.data_disk_size_gb"),
             storage_account_type=ref("var.data_disk_type"),
             zone=zone,
+            network_access_policy="DenyAll",
+            public_network_access_enabled=False,
             **common,
         )
         builder.resource(
