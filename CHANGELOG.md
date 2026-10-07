@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `terraforma doctor` for local package/PATH availability checks, capability-specific exit status and JSON output without tool execution or credential access.
+
 - Extend local plan review to block tokenless AWS metadata access and flag unverified attached AWS/GCP identity permissions, using policy version `0.3.0`.
 
 - Clarify the generator introduction: enter infrastructure requirements and review the generated Terraform.

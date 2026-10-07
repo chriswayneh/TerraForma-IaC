@@ -101,6 +101,8 @@ The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md)
 
 Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
 
+Development on `main` adds `terraforma doctor` to check local dependency availability. Use `terraforma doctor --require web` before launching the UI or `terraforma doctor --require validation --json-output` for a machine-readable report. Exit `1` means the selected capability has missing dependencies. This command checks package metadata and PATH without executing tools, reading credentials, or contacting cloud accounts; it does not verify tool versions, trust, authentication, or deployment readiness.
+
 The wizard creates `main.tf`, `variables.tf`, and `outputs.tf` in a new project directory. Use `--dir` to choose the destination. It refuses to add generated files to an existing Terraform configuration. Cancellation writes nothing.
 
 To enable optional AI explanations, set `OPENAI_API_KEY` in your environment before launching. The UI requires an explicit opt-in to send redacted failed command logs to OpenAI. The CLI defaults to local-only diagnosis; pass `--ai` explicitly to send redacted failure logs. The default model is `gpt-4o` through OpenAI Chat Completions. Validation works without a key. Known-secret redaction cannot identify every possible secret. Neither interface separately uploads source files, but tool diagnostics may include snippets.

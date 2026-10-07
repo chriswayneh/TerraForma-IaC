@@ -23,6 +23,7 @@ from terraforma.project import (
     load_specification,
     validate_answer,
 )
+from terraforma.readiness import local_readiness
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -37,6 +38,44 @@ def ask(prompt):
     if answer is None:
         raise click.Abort()
     return answer
+
+
+@main.command("doctor")
+@click.option("--json-output", is_flag=True, help="Print local availability as JSON.")
+@click.option(
+    "--require",
+    "required_capability",
+    type=click.Choice(["generation", "web", "validation", "plan_review"]),
+    default="generation",
+    show_default=True,
+    help="Exit with status 1 when this local capability has missing dependencies.",
+)
+def doctor_command(json_output: bool, required_capability: str):
+    """Check local dependencies without running tools or reading credentials."""
+    report = local_readiness()
+    if json_output:
+        click.echo(json.dumps(report, indent=2))
+    else:
+        click.echo("Local dependency availability:")
+        click.echo("Python 3.11+: " + ("available" if report["python_supported"] else "missing"))
+        for name, available in {**report["packages"], **report["tools"]}.items():
+            click.echo(f"- {name}: {'available' if available else 'missing'}")
+        click.echo("\nCapabilities:")
+        for name, available in report["capabilities"].items():
+            click.echo(
+                f"- {name.replace('_', ' ')}: {'available' if available else 'missing dependencies'}"
+            )
+        if not all(report["tools"].values()):
+            click.echo(
+                "Install the missing Terraform/TFLint tools and add them to PATH for validation."
+            )
+        if not all(report["packages"][name] for name in ("fastapi", "uvicorn")):
+            click.echo(
+                'From the repository root, install web dependencies: python -m pip install -e ".[web]"'
+            )
+        click.echo("\n" + report["limitations"])
+    if not report["capabilities"][required_capability]:
+        raise click.exceptions.Exit(1)
 
 
 def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
