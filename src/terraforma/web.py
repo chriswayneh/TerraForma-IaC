@@ -22,7 +22,12 @@ from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
-from terraforma.project import ProjectSpecification, compile_project, input_contract
+from terraforma.project import (
+    ProjectSpecification,
+    compile_project,
+    input_contract,
+    parse_specification,
+)
 from terraforma.request_limits import RequestSizeLimitMiddleware
 from terraforma.sandbox import ValidationSandbox
 
@@ -131,6 +136,17 @@ def create_app() -> FastAPI:
     @app.get("/api/catalog")
     async def catalog():
         return {"recipes": recipe_catalog()}
+
+    @app.post("/api/projects/import")
+    async def project_import(request: Request):
+        try:
+            specification = parse_specification(await request.body())
+            return configured_project(specification)
+        except (ValueError, TypeError, RecursionError):
+            raise HTTPException(
+                status_code=422,
+                detail="Project file is invalid, incomplete, or uses an unsupported version. Input values are omitted from this error.",
+            ) from None
 
     @app.post("/api/projects/compile")
     async def project_compile(specification: ProjectSpecification):

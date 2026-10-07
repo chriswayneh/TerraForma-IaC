@@ -32,6 +32,8 @@ terraforma generate --spec terraforma.project.json --dir first-site
 
 The terminal command writes the three Terraform files and refuses to overwrite an existing Terraform configuration. Browser downloads also include the non-secret specification for reuse. Optional remembered browser choices still save only the original questionnaire selections; additional input answers are not retained in browser storage.
 
+To reopen a project, extract `terraforma.project.json` from its ZIP and select **Load project** in the browser. The file is validated locally before its answers and preview are restored. Imports never start validation or deployment, and do not enable AI or save additional answers in browser storage. Unsupported schema/template versions, duplicate JSON keys, missing answers, and files larger than 64 KiB are rejected. The development [AWS web-server example](../examples/aws-web.project.json) can be loaded the same way.
+
 ## Secrets and validation
 
 Sensitive variables remain required Terraform variables without generated defaults. The contract identifies their `TF_VAR_...` environment variable. A database recipe can record `"secret_references": {"database_password": "TF_VAR_database_password"}`; it must not include the password value in `inputs`. The tool does not read that environment variable during generation.

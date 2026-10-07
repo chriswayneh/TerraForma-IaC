@@ -171,8 +171,14 @@ def compile_project(specification: ProjectSpecification) -> dict:
 def load_specification(path: Path) -> ProjectSpecification:
     with path.open("rb") as stream:
         raw = stream.read(64 * 1024 + 1)
+    return parse_specification(raw)
+
+
+def parse_specification(raw: bytes) -> ProjectSpecification:
     if len(raw) > 64 * 1024:
         raise ValueError("Project specification exceeds the 64 KiB limit.")
     return ProjectSpecification.model_validate(
-        json.loads(raw, object_pairs_hook=unique_object, parse_constant=reject_constant)
+        json.loads(
+            raw.decode("utf-8-sig"), object_pairs_hook=unique_object, parse_constant=reject_constant
+        )
     )

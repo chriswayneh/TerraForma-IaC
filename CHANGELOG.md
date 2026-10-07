@@ -8,6 +8,7 @@
 - Expose VM sizes and boot-disk size/type in the existing compute recipes; apply shared typed constraints in the questionnaire and Terraform.
 - Use the same input contract in the terminal wizard; keep sensitive values external and write nothing on cancellation.
 - Add a recipe catalog and disclose fixed images, networking choices, unsupported features, and outstanding account checks.
+- Reopen exported project specifications in the browser with bounded, strict local parsing; retain operational answers and regenerate the preview.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

@@ -17,6 +17,60 @@ def recipe(provider="aws", workload="static_site"):
     return WizardConfig(provider=provider, project_name="project-test", architecture_type=workload)
 
 
+def test_browser_import_round_trip_preserves_answers_and_export():
+    specification = ProjectSpecification(
+        recipe=recipe("aws", "single_web_server"),
+        inputs={
+            "region": "us-west-2",
+            "instance_type": "t3.small",
+            "boot_disk_size_gb": 100,
+            "boot_disk_type": "gp2",
+        },
+    )
+    with TestClient(create_app(), base_url="http://127.0.0.1") as client:
+        headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
+        original = client.post("/api/download", headers=headers, json=specification.model_dump())
+        with zipfile.ZipFile(io.BytesIO(original.content)) as archive:
+            manifest = archive.read("terraforma.project.json")
+            variables = archive.read("variables.tf").decode()
+        imported = client.post("/api/projects/import", headers=headers, content=manifest)
+        assert imported.status_code == 200
+        assert imported.json()["specification"] == specification.model_dump()
+        assert imported.json()["files"]["variables.tf"] == variables
+        assert imported.json()["capabilities"]["account_checks"] == "unverified"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        b'{"schema_version":1,"schema_version":1}',
+        b'{"schema_version":NaN}',
+        b'{"schema_version":1,"inputs":{"index_html":"private-marker"}}',
+        b"\xff\xfe\x00",
+        json.dumps({"recipe": recipe().model_dump(), "template_version": "0.2.0"}).encode(),
+        json.dumps(
+            {"recipe": recipe().model_dump(), "inputs": {"database_password": "private-marker"}}
+        ).encode(),
+    ],
+)
+def test_import_rejects_invalid_files_without_disclosing_content(payload):
+    with TestClient(create_app(), base_url="http://127.0.0.1") as client:
+        headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
+        result = client.post("/api/projects/import", headers=headers, content=payload)
+        assert result.status_code == 422
+        assert "private-marker" not in result.text
+
+
+def test_import_is_bounded_and_requires_local_session():
+    with TestClient(create_app(), base_url="http://127.0.0.1") as client:
+        assert client.post("/api/projects/import", content=b"{}").status_code == 403
+        headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
+        assert (
+            client.post("/api/projects/import", headers=headers, content=b" " * 65537).status_code
+            == 413
+        )
+
+
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
 @pytest.mark.parametrize(
     "workload", ["single_web_server", "load_balanced_tier", "secure_database", "static_site"]

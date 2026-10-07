@@ -233,6 +233,7 @@ function setBusy(value) {
   byId("validate-button").disabled = value || !project;
   byId("download-button").disabled = value || !project;
   byId("ai-option").disabled = value || !aiAvailable;
+  byId("load-project-button").disabled = value;
   form.setAttribute("aria-busy", String(value));
 }
 
@@ -285,7 +286,7 @@ function updateGuidance() {
   byId("configuration-note").textContent = notes[config.architecture_type];
 }
 
-async function api(path, body) {
+async function api(path, body, raw = false) {
   if (!token)
     throw new Error(
       "The local connection is not ready. Refresh this page and try again.",
@@ -296,7 +297,7 @@ async function api(path, body) {
       "Content-Type": "application/json",
       "X-TerraForma-Token": token,
     },
-    body: JSON.stringify(body),
+    body: raw ? body : JSON.stringify(body),
   });
   if (!response.ok) {
     const text = await response.text();
@@ -379,6 +380,44 @@ function renderProject(result) {
     }),
   );
 }
+
+byId("load-project-button").addEventListener("click", () => {
+  if (!busy) byId("project-file").click();
+});
+
+byId("project-file").addEventListener("change", async () => {
+  const file = byId("project-file").files[0];
+  if (!file || busy) return;
+  setBusy(true);
+  try {
+    if (file.size > 64 * 1024) throw new Error("Project files must be at most 64 KiB.");
+    const result = await (await api("/api/projects/import", await file.text(), true)).json();
+    const specification = result.specification;
+    const config = specification.recipe;
+    form.querySelector(`input[name="provider"][value="${config.provider}"]`).checked = true;
+    form.querySelector(`input[name="architecture_type"][value="${config.architecture_type}"]`).checked = true;
+    byId("project-name").value = config.project_name;
+    byId("public-access").checked = config.is_public;
+    byId("encryption").checked = config.enable_encryption;
+    byId("remember-choice").checked = false;
+    byId("ai-option").checked = false;
+    contractKey = "";
+    await loadRecipeInputs();
+    Object.entries(specification.inputs).forEach(([name, value]) => {
+      byId(`recipe-${name}`).value = value;
+    });
+    showStep(2);
+    updateGuidance();
+    byId("validation-panel").hidden = true;
+    renderProject(result);
+    notify("Project loaded. Review its inputs, generate changes, or export it again. Credentials and secrets remain external.");
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    byId("project-file").value = "";
+    setBusy(false);
+  }
+});
 
 function diagnostic(title, message, isCode = false) {
   const section = document.createElement("div");
