@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed repeated non-secret field descriptions from the terminal questionnaire. Input guidance appears once per applicable question; external-secret guidance remains visible.
+
 - Local project-specification and plan-JSON readers now check for regular files before opening and recheck the opened descriptor. Pipes, devices and directories are rejected; existing byte limits and generic CLI error handling remain in place.
 
 - Added GCP standalone Linux/Windows host-maintenance and automatic-restart questions, defaulting to live migration and enabled restart on standard VMs. Inputs persist through generation/import; guest patching, application recovery and live host behavior remain unverified.

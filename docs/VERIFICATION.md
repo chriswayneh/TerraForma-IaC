@@ -1,5 +1,9 @@
 # Verification record
 
+## Terminal question guidance checkpoint
+
+- The CLI/project/Azure Windows regression run passes 89 cases. Removing a duplicate description print preserves the existing per-question guidance and external-secret handling. Ruff checks and formatting pass across 79 Python files after normalizing edited source files.
+
 ## Regular file input checkpoint
 
 - The default suite passes 1,331 tests with 223 optional/native/platform cases skipped. Ruff checks and formatting pass across 79 Python files.

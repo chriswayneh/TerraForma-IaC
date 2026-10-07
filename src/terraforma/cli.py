@@ -203,7 +203,6 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             except (ValueError, TypeError):
                 return "Enter a valid value for this field; review its description and supported range."
 
-        click.echo(definition["description"])
         if definition["kind"] == "integer":
             click.echo(f"Whole number: {definition['minimum']}–{definition['maximum']}.")
         if definition["kind"] == "boolean":
