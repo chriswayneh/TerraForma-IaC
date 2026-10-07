@@ -1,6 +1,6 @@
 # Windows virtual machines
 
-Development on `main` includes an initial **AWS and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. Azure Windows remains planned. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
+Development on `main` includes initial **AWS and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. Azure Windows remains planned; its [credential and state design](AZURE_WINDOWS_DESIGN.md) records the next adapter's requirements. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
 
 ## AWS
 

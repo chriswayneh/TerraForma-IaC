@@ -88,7 +88,7 @@ Status: initial Linux patterns and [AWS/GCP Windows Server 2022 recipes](WINDOWS
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.
 - Boot/data disk size, type, encryption, managed-key references, and deletion behavior.
 - New or existing networks/subnets, private/public addresses, explicit inbound rules, and egress choices.
-- SSH public keys, identity-based access, or references to external secret mechanisms for Windows administration.
+- SSH public keys, identity-based access, or references to external secret mechanisms for Windows administration. The [Azure Windows credential design](AZURE_WINDOWS_DESIGN.md) records the native provider's password retention and the state controls needed before managed deployment.
 - Tags/labels, initialization scripts from trusted local files, availability choices, and explanations of cost drivers.
 - Provider-aware questions and validation; advanced options stay behind progressive disclosure.
 - Existing web-server recipes become compositions of the same VM/network primitives.
