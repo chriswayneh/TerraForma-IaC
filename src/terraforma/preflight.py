@@ -8,14 +8,198 @@ from uuid import UUID
 from terraforma.artifacts import specification_digest
 from terraforma.json_input import strict_json
 from terraforma.process import run_bounded
-from terraforma.project import ProjectSpecification, compile_project
+from terraforma.project import ProjectSpecification, compile_project, input_contract
+
+
+def machine_report(provider: str, data, size: str, location: str) -> dict:
+    report = {"status": "not_found", "architecture_compatible": None}
+    restricted = False
+    if provider == "aws":
+        entries = data.get("InstanceTypes") if isinstance(data, dict) else None
+        if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
+            raise ValueError("Expected instance type metadata.")
+        matches = [item for item in entries if item.get("InstanceType") == size]
+    elif provider == "azure":
+        if not isinstance(data, list) or any(not isinstance(item, dict) for item in data):
+            raise ValueError("Expected SKU metadata.")
+        matches = [
+            item
+            for item in data
+            if isinstance(item.get("name"), str)
+            and item["name"].lower() == size.lower()
+            and item.get("resourceType") == "virtualMachines"
+        ]
+    else:
+        if not isinstance(data, dict):
+            raise ValueError("Expected machine type metadata.")
+        zone = data.get("zone")
+        if not isinstance(zone, str) or zone.rstrip("/").split("/")[-1] != location:
+            raise ValueError("Machine zone does not match.")
+        matches = [data] if data.get("name") == size else []
+    if not matches:
+        return report
+    if len(matches) != 1:
+        raise ValueError("Ambiguous machine metadata.")
+    machine = matches[0]
+    if provider == "aws":
+        processor = machine.get("ProcessorInfo")
+        if processor is not None and not isinstance(processor, dict):
+            raise ValueError("Unsupported processor metadata.")
+        architectures = (
+            processor.get("SupportedArchitectures") if isinstance(processor, dict) else None
+        )
+        if architectures is None:
+            architectures = []
+        if not isinstance(architectures, list) or any(
+            value not in {"x86_64", "arm64", "i386", "x86_64_mac", "arm64_mac"}
+            for value in architectures
+        ):
+            raise ValueError("Unsupported architecture metadata.")
+        compatible = "x86_64" in architectures if architectures else None
+    elif provider == "azure":
+        locations = machine.get("locations")
+        if not isinstance(locations, list) or any(
+            not isinstance(value, str) for value in locations
+        ):
+            raise ValueError("Unsupported location metadata.")
+        if location.lower() not in [value.lower() for value in locations]:
+            return report
+        capabilities = machine.get("capabilities", [])
+        restrictions = machine.get("restrictions", [])
+        if not isinstance(capabilities, list) or any(
+            not isinstance(item, dict) for item in capabilities
+        ):
+            raise ValueError("Unsupported capability metadata.")
+        if not isinstance(restrictions, list) or any(
+            not isinstance(item, dict) or item.get("type") not in {"Location", "Zone"}
+            for item in restrictions
+        ):
+            raise ValueError("Unsupported restriction metadata.")
+        architecture = [
+            item.get("value")
+            for item in capabilities
+            if str(item.get("name", "")).lower() == "cpuarchitecturetype"
+        ]
+        if len(architecture) > 1:
+            raise ValueError("Ambiguous architecture metadata.")
+        value = architecture[0] if architecture else None
+        if value not in {None, "x64", "Arm64", "arm64"}:
+            raise ValueError("Unsupported architecture metadata.")
+        compatible = value == "x64" if value is not None else None
+        restricted = bool(restrictions)
+    else:
+        architecture = machine.get("architecture")
+        if architecture not in {None, "X86_64", "ARM64", "x86_64", "arm64"}:
+            raise ValueError("Unsupported architecture metadata.")
+        compatible = architecture in {"X86_64", "x86_64"} if architecture is not None else None
+        deprecated = machine.get("deprecated", {})
+        if not isinstance(deprecated, dict) or deprecated.get("state") not in {
+            None,
+            "ACTIVE",
+            "DEPRECATED",
+            "OBSOLETE",
+            "DELETED",
+        }:
+            raise ValueError("Unsupported deprecation metadata.")
+        restricted = deprecated.get("state") not in {None, "ACTIVE"}
+    report.update(architecture_compatible=compatible)
+    report["status"] = (
+        "architecture_incompatible"
+        if compatible is False
+        else "restricted"
+        if restricted
+        else "architecture_unknown"
+        if compatible is None
+        else "metadata_confirmed"
+    )
+    return report
+
+
+def inspect_machine(specification, executable, environment, timeout):
+    provider = specification.recipe.provider
+    values = {item["name"]: item["default"] for item in input_contract(specification.recipe)}
+    values.update(specification.inputs)
+    if provider == "aws":
+        size, location = values["instance_type"], values["region"]
+        arguments = [
+            executable,
+            "ec2",
+            "describe-instance-types",
+            "--instance-types",
+            size,
+            "--region",
+            location,
+            "--output",
+            "json",
+            "--no-cli-pager",
+            "--no-paginate",
+        ]
+    elif provider == "azure":
+        size, location = values["vm_size"], values["location"]
+        arguments = [
+            executable,
+            "vm",
+            "list-skus",
+            "--location",
+            location,
+            "--size",
+            size,
+            "--resource-type",
+            "virtualMachines",
+            "--subscription",
+            str(UUID(values["subscription_id"])),
+            "--all",
+            "--output",
+            "json",
+            "--only-show-errors",
+        ]
+    else:
+        size, location = values["machine_type"], values["zone"]
+        arguments = [
+            executable,
+            "compute",
+            "machine-types",
+            "describe",
+            size,
+            "--zone",
+            location,
+            "--project",
+            values["gcp_project_id"],
+            "--format=json",
+            "--quiet",
+        ]
+    try:
+        with tempfile.TemporaryDirectory(prefix="terraforma_machine_") as directory:
+            result = run_bounded(
+                arguments, cwd=directory, env=environment, timeout=timeout, stream_limit=128 * 1024
+            )
+    except OSError:
+        return {"status": "failed", "architecture_compatible": None}
+    if result.failure or result.returncode != 0:
+        return {"status": "failed", "architecture_compatible": None}
+    try:
+        return machine_report(provider, strict_json(result.stdout), size, location)
+    except (ValueError, TypeError, RecursionError):
+        return {"status": "invalid_response", "architecture_compatible": None}
 
 
 def target_preflight(
-    specification: ProjectSpecification, *, verify_target: bool = False, timeout: float = 30
+    specification: ProjectSpecification,
+    *,
+    verify_target: bool = False,
+    verify_machine: bool = False,
+    timeout: float = 30,
 ) -> dict:
-    if type(verify_target) is not bool or not math.isfinite(timeout) or not 0 < timeout <= 120:
+    if (
+        type(verify_target) is not bool
+        or type(verify_machine) is not bool
+        or type(timeout) not in {int, float}
+        or not math.isfinite(timeout)
+        or not 0 < timeout <= 120
+    ):
         raise ValueError("Use a boolean opt-in and a finite timeout from 0 to 120 seconds.")
+    if verify_machine and not verify_target:
+        raise ValueError("VM metadata checks require target-check consent.")
     project = compile_project(specification)
     provider = project["target"]["provider"]
     expected = project["target"]["account_reference"]
@@ -34,6 +218,7 @@ def target_preflight(
         "target_state_acceptable": None,
         "deployment_readiness_verified": False,
         "approval_granted": False,
+        "machine_check": {"status": "not_checked", "architecture_compatible": None},
         "message": "Account checks are off. Use --verify-target to run a bounded cloud CLI read with its existing credentials.",
         "limitations": "Trusted configured cloud CLI output only. No verification of Terraform credential equivalence, principal permissions, endpoint trust, region/image/SKU availability, quotas, network reachability or deployment readiness. CLI authentication may refresh its local credential cache. This report does not authorize provisioning.",
     }
@@ -152,4 +337,11 @@ def target_preflight(
             status="target_confirmed",
             message="The cloud CLI reports the requested target. Resource permissions and deployment readiness remain unverified.",
         )
+        if verify_machine:
+            report["machine_check"] = (
+                inspect_machine(specification, executable, environment, timeout)
+                if specification.recipe.architecture_type
+                in {"virtual_machine", "single_web_server", "load_balanced_tier"}
+                else {"status": "not_applicable", "architecture_compatible": None}
+            )
     return report

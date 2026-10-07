@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Offer a separate VM-size metadata opt-in after target confirmation: reported x86 compatibility across AWS/Azure/GCP, Azure restrictions and GCP deprecation, with bounded reads and no deployment approval.
+
 - Bound AI diagnostic response collection to 64 KiB with closed streams, absolute per-attempt timeouts, finite retry delays and redirect refusal.
 
 - Apply shared bounded UTF-8 JSON parsing to API requests, project imports, receipts, cloud CLI metadata and AI responses; reject duplicate keys, non-finite numeric overflow and nesting beyond 64 levels.

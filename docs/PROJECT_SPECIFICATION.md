@@ -76,6 +76,30 @@ Opt-in checks run in a temporary working directory with closed stdin, a default 
 
 Exit `0` means the check was skipped or the CLI reported a matching target; other check outcomes return exit `1`. `target_confirmed` establishes only the documented CLI-reported target check. Terraform can use different credentials or cloud endpoints, and executable/endpoint trust, resource permissions, regions, images, SKUs, quotas and connectivity remain unverified. The report includes the normalized specification digest, never grants approval, and does not alter saved questionnaires, initialize Terraform, or run plan/apply/destroy. Treat it as a separate, limited preflight rather than a provisioning gate.
 
+### Optional VM size metadata
+
+For compute recipes, select **Also read the selected VM size metadata** in the target-check card. Both checkboxes start unchecked and reset after an attempt. This requests one additional cloud read only after the target matches. Editing a questionnaire answer clears the earlier results. No VM metadata read runs for database or static-site recipes.
+
+```text
+terraforma preflight --spec terraforma.project.json --verify-target --verify-machine --json-output
+```
+
+`--verify-machine` requires `--verify-target`. Each read has its own configured timeout/output bounds, so the default two-read workflow can take about a minute. Without the additional flag, existing target checks perform only their original read.
+
+| Provider | Additional read | Metadata inspected |
+| --- | --- | --- |
+| AWS | [EC2 instance type description](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-types.html) in the requested region | Exact instance type and reported support for `x86_64` |
+| Azure | [VM SKU list](https://learn.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az-vm-list-skus) with explicit subscription/location/size and restricted entries included | Exact VM SKU/location, reported `x64` CPU architecture and any location/zone restrictions |
+| GCP | [Machine type description](https://docs.cloud.google.com/compute/docs/reference/rest/v1/machineTypes) with explicit project/zone | Exact machine name/zone, reported x86 architecture and deprecation state |
+
+The nested `machine_check` reports `metadata_confirmed`, `architecture_incompatible`, `architecture_unknown`, `restricted`, `not_found`, `failed`, `invalid_response`, `not_checked` or `not_applicable`. Missing architecture is a review gap, never an inferred success. Azure restrictions are treated conservatively, including zone restrictions even though current recipes do not select a specific Azure zone. GCP deprecated sizes require review. All metadata is read through the existing trusted CLI; raw responses and restriction details are omitted.
+
+When requested, CLI exit `0` additionally requires `metadata_confirmed` or `not_applicable`; other VM metadata outcomes return exit `1`. A matching target can still have an incompatible or unresolved VM size. Reports never approve deployment. These reads do not establish allocation capacity, quotas, actual image/driver/disk compatibility, Terraform credential equivalence, IAM permissions or connectivity. Azure documents that [a listed SKU can still fail allocation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/troubleshooting/error-sku-not-available).
+
+![VM architecture guidance using mocked cloud metadata](images/vm-metadata-review.png)
+
+The screenshot demonstrates an incompatible architecture using mocked CLI responses. Live cloud metadata reads and provisioning remain unverified in this development checkpoint.
+
 ## Secrets and validation
 
 Answers use the type declared by the recipe contract. Boolean questions require actual JSON `true` or `false`; strings such as `"false"` and numeric values are rejected. AWS VM and web-tier recipes expose `detailed_monitoring`, disabled by default, and retain that choice through both questionnaires and project import/export. See [monitoring behavior and costs](LINUX_VM.md#provider-access).

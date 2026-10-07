@@ -46,6 +46,7 @@ class PreflightRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     specification: ProjectSpecification
     verify_target: StrictBool = False
+    verify_machine: StrictBool = False
 
 
 def generate_project(config: WizardConfig) -> dict:
@@ -259,6 +260,7 @@ def create_app() -> FastAPI:
                     target_preflight,
                     payload.specification,
                     verify_target=payload.verify_target,
+                    verify_machine=payload.verify_machine,
                     timeout=30,
                 )
             except ProjectInputError:

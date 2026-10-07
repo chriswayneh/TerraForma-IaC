@@ -261,6 +261,7 @@ function setBusy(value) {
   byId("load-project-button").disabled = value;
   byId("review-plan-button").disabled = value;
   byId("target-preflight-consent").disabled = value || !project?.specification;
+  byId("target-machine-check").disabled = value || byId("target-machine-option").hidden;
   byId("target-preflight-button").disabled = value || !project?.specification || !byId("target-preflight-consent").checked;
   form.setAttribute("aria-busy", String(value));
   updateInputVisibility();
@@ -366,6 +367,8 @@ function renderProject(result) {
   project = result;
   byId("target-preflight-panel").hidden = !result.specification;
   byId("target-preflight-consent").checked = false;
+  byId("target-machine-check").checked = false;
+  byId("target-machine-option").hidden = !["virtual_machine", "single_web_server", "load_balanced_tier"].includes(result.specification?.recipe.architecture_type);
   byId("target-preflight-button").disabled = true;
   byId("target-preflight-results").replaceChildren();
   byId("preview-empty").hidden = true;
@@ -602,6 +605,7 @@ form.addEventListener("input", (event) => {
     byId("validation-panel").hidden = true;
     byId("target-preflight-panel").hidden = true;
     byId("target-preflight-consent").checked = false;
+    byId("target-machine-check").checked = false;
     byId("target-preflight-button").disabled = true;
     byId("target-preflight-results").replaceChildren();
     notify(
@@ -677,7 +681,7 @@ byId("target-preflight-consent").addEventListener("change", () => setBusy(busy))
 
 byId("target-preflight-button").addEventListener("click", async () => {
   if (busy || !project?.specification || !byId("target-preflight-consent").checked) return;
-  const payload = {specification: project.specification, verify_target: true};
+  const payload = {specification: project.specification, verify_target: true, verify_machine: byId("target-machine-check").checked};
   setBusy(true);
   const content = byId("target-preflight-results");
   content.textContent = "Checking the selected target through your cloud CLI. No infrastructure is being deployed.";
@@ -696,6 +700,18 @@ byId("target-preflight-button").addEventListener("click", async () => {
       diagnostic(titles[report.status] || "Cloud target check", report.message, report.status === "target_confirmed"),
       diagnostic("Before planning", "Your cloud CLI can use different credentials from Terraform. Review resource permissions, availability, quotas and connectivity before planning. This check does not approve deployment.", true),
     );
+    if (report.machine_check?.status && !["not_checked", "not_applicable"].includes(report.machine_check.status)) {
+      const machineMessages = {
+        metadata_confirmed: "The selected size reports x86 CPU compatibility. Capacity, quotas, image and disk compatibility still need review.",
+        architecture_incompatible: "This size reports a CPU architecture that does not support the current x86 image templates. Choose a compatible size before planning.",
+        architecture_unknown: "The metadata does not establish CPU architecture. Verify it against the selected x86 image before planning.",
+        restricted: "The selected size reports restrictions or deprecation. Review those in your cloud tools before planning.",
+        not_found: "The selected size was not found in the returned metadata for this region or zone.",
+        failed: "The VM-size read failed or exceeded its limits. Check CLI authentication, permissions and the selected size separately.",
+        invalid_response: "The VM-size response could not be checked. Review it separately in your cloud tools.",
+      };
+      content.append(diagnostic("VM size metadata", machineMessages[report.machine_check.status] || "VM metadata needs separate review."));
+    }
     const reference = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent = "Configuration reference";
@@ -709,6 +725,7 @@ byId("target-preflight-button").addEventListener("click", async () => {
     notify(error.message, true);
   } finally {
     byId("target-preflight-consent").checked = false;
+    byId("target-machine-check").checked = false;
     setBusy(false);
   }
 });

@@ -92,18 +92,32 @@ def doctor_command(json_output: bool, required_capability: str):
     help="Contact the cloud using the installed CLI's existing credentials for a read-only target check.",
 )
 @click.option(
+    "--verify-machine",
+    is_flag=True,
+    help="Also inspect VM size/architecture metadata after confirming the target; requires --verify-target.",
+)
+@click.option(
     "--timeout", type=click.FloatRange(min=0, max=120, min_open=True), default=30, show_default=True
 )
 @click.option(
     "--json-output", is_flag=True, help="Print the bounded target report without raw CLI values."
 )
 def preflight_command(
-    specification_path: Path, verify_target: bool, timeout: float, json_output: bool
+    specification_path: Path,
+    verify_target: bool,
+    verify_machine: bool,
+    timeout: float,
+    json_output: bool,
 ):
     """Inspect a saved project; opt in explicitly to cloud target checks."""
+    if verify_machine and not verify_target:
+        raise click.UsageError("--verify-machine requires --verify-target.")
     try:
         report = target_preflight(
-            load_specification(specification_path), verify_target=verify_target, timeout=timeout
+            load_specification(specification_path),
+            verify_target=verify_target,
+            verify_machine=verify_machine,
+            timeout=timeout,
         )
     except (OSError, ValueError, TypeError, RecursionError):
         raise click.ClickException(
@@ -114,8 +128,15 @@ def preflight_command(
     else:
         click.echo(f"{report['provider']}: {report['status']}")
         click.echo(report["message"])
+        if verify_machine:
+            click.echo(f"VM size metadata: {report['machine_check']['status']}")
         click.echo(report["limitations"])
     if report["status"] not in {"not_checked", "target_confirmed"}:
+        raise click.exceptions.Exit(1)
+    if verify_machine and report["machine_check"]["status"] not in {
+        "metadata_confirmed",
+        "not_applicable",
+    }:
         raise click.exceptions.Exit(1)
 
 
