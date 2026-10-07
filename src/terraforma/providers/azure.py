@@ -1,0 +1,549 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from terraforma.configuration import AZURE_RESERVED_USERNAMES
+from terraforma.hcl import block, ref, value_hcl
+
+if TYPE_CHECKING:
+    from terraforma.generator import TerraformGenerator
+
+
+def build_azure(builder: TerraformGenerator) -> None:
+    builder.variable("location", "Azure region.", "eastus")
+    builder.variable("subscription_id", "Azure subscription ID.")
+    builder.main.append(
+        block(
+            "provider",
+            "azurerm",
+            subscription_id=ref("var.subscription_id"),
+            children=[block("features")],
+        )
+    )
+    builder.resource(
+        "azurerm_resource_group",
+        name=ref("var.project_name"),
+        location=ref("var.location"),
+        tags={"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
+    )
+    common = {
+        "resource_group_name": ref("azurerm_resource_group.this.name"),
+        "location": ref("azurerm_resource_group.this.location"),
+    }
+    if builder.config.architecture_type == "static_site":
+        build_static(builder, common)
+        return
+    builder.resource(
+        "azurerm_virtual_network",
+        name=ref('"${var.project_name}-vnet"'),
+        address_space=[ref("var.network_cidr")]
+        if builder.config.architecture_type == "virtual_machine"
+        else ["10.0.0.0/16"],
+        **common,
+    )
+    subnet = {
+        "name": "workload",
+        "resource_group_name": common["resource_group_name"],
+        "virtual_network_name": ref("azurerm_virtual_network.this.name"),
+        "address_prefixes": [ref("cidrsubnet(var.network_cidr, 8, 1)")]
+        if builder.config.architecture_type == "virtual_machine"
+        else ["10.0.1.0/24"],
+    }
+    if builder.config.architecture_type == "secure_database":
+        build_database(builder, common, subnet)
+        return
+    builder.resource("azurerm_subnet", **subnet)
+    standalone = builder.config.architecture_type == "virtual_machine"
+    builder.variable(
+        "admin_username",
+        "Linux administrator username: 3–32 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Azure reserved names are rejected; password authentication stays disabled.",
+        "terraforma",
+        pattern="^[a-z][a-z0-9_\\-]{1,30}[a-z0-9]$",
+        forbidden_values=AZURE_RESERVED_USERNAMES,
+    )
+    builder.variable(
+        "ssh_public_key",
+        "Administrator SSH public key for the selected user. Keep the matching private key outside this project."
+        if standalone
+        else "Administrator SSH public key. SSH is not exposed by the generated firewall.",
+    )
+    if not standalone:
+        builder.variable(
+            "allowed_cidr",
+            "Clients allowed to access HTTP.",
+            "0.0.0.0/0" if builder.config.is_public else "10.0.0.0/16",
+        )
+    builder.resource(
+        "azurerm_network_security_group",
+        name=ref('"${var.project_name}-nsg"'),
+        children=[
+            block(
+                "security_rule",
+                name="SSH" if standalone else "HTTP",
+                priority=100,
+                direction="Inbound",
+                access="Allow",
+                protocol="Tcp",
+                source_port_range="*",
+                destination_port_range="22" if standalone else "80",
+                source_address_prefix=ref("var.allowed_cidr"),
+                destination_address_prefix="*",
+            )
+        ]
+        + (
+            [
+                block(
+                    "security_rule",
+                    name="DenyOtherInbound",
+                    priority=4096,
+                    direction="Inbound",
+                    access="Deny",
+                    protocol="*",
+                    source_port_range="*",
+                    destination_port_range="*",
+                    source_address_prefix="*",
+                    destination_address_prefix="*",
+                )
+            ]
+            if standalone
+            else []
+        ),
+        **common,
+    )
+    builder.resource(
+        "azurerm_subnet_network_security_group_association",
+        subnet_id=ref("azurerm_subnet.this.id"),
+        network_security_group_id=ref("azurerm_network_security_group.this.id"),
+    )
+    builder.resource(
+        "azurerm_public_ip",
+        "egress",
+        name=ref('"${var.project_name}-egress"'),
+        allocation_method="Static",
+        sku="Standard",
+        **common,
+    )
+    builder.resource(
+        "azurerm_nat_gateway", name=ref('"${var.project_name}-nat"'), sku_name="Standard", **common
+    )
+    builder.resource(
+        "azurerm_nat_gateway_public_ip_association",
+        nat_gateway_id=ref("azurerm_nat_gateway.this.id"),
+        public_ip_address_id=ref("azurerm_public_ip.egress.id"),
+    )
+    builder.resource(
+        "azurerm_subnet_nat_gateway_association",
+        subnet_id=ref("azurerm_subnet.this.id"),
+        nat_gateway_id=ref("azurerm_nat_gateway.this.id"),
+    )
+    balanced = builder.config.architecture_type == "load_balanced_tier"
+    if builder.config.is_public:
+        builder.resource(
+            "azurerm_public_ip",
+            "web",
+            name=ref('"${var.project_name}-web"'),
+            allocation_method="Static",
+            sku="Standard",
+            **common,
+        )
+    builder.variable(
+        "vm_size",
+        "Azure VM size; availability and encryption-at-host support require account preflight.",
+        "Standard_B1s",
+    )
+    builder.variable(
+        "boot_disk_size_gb",
+        "OS disk size in GiB; cannot be smaller than the selected image.",
+        30,
+        type_name="number",
+        minimum=30,
+        maximum=2048,
+    )
+    builder.variable(
+        "boot_disk_type",
+        "Azure managed OS disk class.",
+        "Standard_LRS",
+        choices=("Standard_LRS", "StandardSSD_LRS", "Premium_LRS"),
+    )
+    disk = block(
+        "os_disk",
+        caching="ReadWrite",
+        storage_account_type=ref("var.boot_disk_type"),
+        disk_size_gb=ref("var.boot_disk_size_gb"),
+    )
+    if standalone:
+        builder.variable(
+            "enable_accelerated_networking",
+            "Enable accelerated networking on the VM's network interface for supported Azure VM sizes and Linux images. This can reduce latency and CPU overhead; it does not change firewall access. Leave it off unless the selected size supports it. Changing an existing VM's setting can require stopping and deallocating the VM; this generator does not perform that operation. The optional VM-size metadata check can report support, but does not prove guest-driver compatibility or capacity.",
+            False,
+            type_name="bool",
+        )
+        builder.variable(
+            "enable_secure_boot",
+            "Enable Azure Trusted Launch Secure Boot for the selected Gen2 Ubuntu image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring.",
+            True,
+            type_name="bool",
+        )
+        builder.variable(
+            "enable_boot_diagnostics",
+            "Capture boot console output and screenshots in Azure-managed diagnostic storage for startup troubleshooting. Managed diagnostic blobs are currently not billed by Azure; verify current pricing. Retention is not configurable and logs are overwritten above 1 GB. Console output can contain sensitive data; restrict cloud access and avoid writing secrets to the console. This does not configure application logs, alerts or guest attestation, and no custom storage account or public log URL is created by this recipe.",
+            False,
+            type_name="bool",
+        )
+    builder.variable(
+        "image_version",
+        "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
+        "latest",
+        pattern="^(latest|[0-9]{1,10}\\.[0-9]{1,10}\\.[0-9]{1,10})$",
+    )
+    image = block(
+        "source_image_reference",
+        publisher="Canonical",
+        offer=ref(
+            'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
+        ),
+        sku=ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
+        version=ref("var.image_version"),
+    )
+    key = block(
+        "admin_ssh_key", username=ref("var.admin_username"), public_key=ref("var.ssh_public_key")
+    )
+    startup = "#cloud-config\npackage_update: true\npackages:\n  - nginx\nruncmd:\n  - [systemctl, enable, --now, nginx]\n"
+    compute = {
+        "name": ref("var.project_name"),
+        "admin_username": ref("var.admin_username"),
+        "disable_password_authentication": True,
+        "custom_data": ref(f"base64encode({value_hcl(startup)})"),
+        "encryption_at_host_enabled": builder.config.enable_encryption,
+        "depends_on": [
+            ref("azurerm_subnet_nat_gateway_association.this"),
+            ref("azurerm_nat_gateway_public_ip_association.this"),
+            ref("azurerm_subnet_network_security_group_association.this"),
+        ],
+        **common,
+    }
+    if standalone:
+        compute.pop("custom_data")
+    if balanced:
+        frontend = {"name": "frontend"}
+        if builder.config.is_public:
+            frontend["public_ip_address_id"] = ref("azurerm_public_ip.web.id")
+        else:
+            frontend.update(
+                subnet_id=ref("azurerm_subnet.this.id"), private_ip_address_allocation="Dynamic"
+            )
+        builder.resource(
+            "azurerm_lb",
+            name=ref('"${var.project_name}-lb"'),
+            sku="Standard",
+            children=[block("frontend_ip_configuration", **frontend)],
+            **common,
+        )
+        builder.resource(
+            "azurerm_lb_backend_address_pool", name="web", loadbalancer_id=ref("azurerm_lb.this.id")
+        )
+        builder.resource(
+            "azurerm_lb_probe",
+            name="http",
+            loadbalancer_id=ref("azurerm_lb.this.id"),
+            protocol="Http",
+            port=80,
+            request_path="/",
+        )
+        builder.resource(
+            "azurerm_lb_rule",
+            name="http",
+            loadbalancer_id=ref("azurerm_lb.this.id"),
+            protocol="Tcp",
+            frontend_port=80,
+            backend_port=80,
+            frontend_ip_configuration_name="frontend",
+            backend_address_pool_ids=[ref("azurerm_lb_backend_address_pool.this.id")],
+            probe_id=ref("azurerm_lb_probe.this.id"),
+        )
+        ip = block(
+            "ip_configuration",
+            name="internal",
+            primary=True,
+            subnet_id=ref("azurerm_subnet.this.id"),
+            load_balancer_backend_address_pool_ids=[ref("azurerm_lb_backend_address_pool.this.id")],
+        )
+        builder.resource(
+            "azurerm_linux_virtual_machine_scale_set",
+            sku=ref("var.vm_size"),
+            instances=ref("var.instance_count"),
+            children=[
+                disk,
+                image,
+                key,
+                block("network_interface", name="internal", primary=True, children=[ip]),
+            ],
+            **compute,
+        )
+        endpoint = (
+            "azurerm_public_ip.web.ip_address"
+            if builder.config.is_public
+            else "azurerm_lb.this.private_ip_address"
+        )
+    else:
+        ip = {
+            "name": "internal",
+            "subnet_id": ref("azurerm_subnet.this.id"),
+            "private_ip_address_allocation": "Dynamic",
+        }
+        if standalone:
+            ip["private_ip_address_allocation"] = ref(
+                'var.private_ip_address == "" ? "Dynamic" : "Static"'
+            )
+            ip["private_ip_address"] = ref(
+                'var.private_ip_address == "" ? null : var.private_ip_address'
+            )
+        if builder.config.is_public:
+            ip["public_ip_address_id"] = ref("azurerm_public_ip.web.id")
+        builder.resource(
+            "azurerm_network_interface",
+            name=ref('"${var.project_name}-nic"'),
+            **{"accelerated_networking_enabled": ref("var.enable_accelerated_networking")}
+            if standalone
+            else {},
+            children=[block("ip_configuration", **ip)],
+            **common,
+        )
+        builder.resource(
+            "azurerm_linux_virtual_machine",
+            size=ref("var.vm_size"),
+            network_interface_ids=[ref("azurerm_network_interface.this.id")],
+            **{"secure_boot_enabled": ref("var.enable_secure_boot"), "vtpm_enabled": True}
+            if standalone
+            else {},
+            children=[disk, image, key]
+            + (
+                [block("lifecycle", children=[builder._private_ip_precondition()])]
+                if standalone
+                else []
+            )
+            + (
+                [
+                    block(
+                        "dynamic",
+                        "boot_diagnostics",
+                        for_each=ref("var.enable_boot_diagnostics ? [1] : []"),
+                        children=[block("content", storage_account_uri=None)],
+                    )
+                ]
+                if standalone
+                else []
+            )
+            + (
+                [
+                    block(
+                        "dynamic",
+                        "identity",
+                        for_each=ref("var.enable_workload_identity ? [1] : []"),
+                        children=[block("content", type="SystemAssigned")],
+                    )
+                ]
+                if standalone
+                else []
+            ),
+            **compute,
+        )
+        endpoint = (
+            "azurerm_public_ip.web.ip_address"
+            if builder.config.is_public
+            else "azurerm_network_interface.this.private_ip_address"
+        )
+    if standalone:
+        builder.output(
+            "managed_identity_principal_id",
+            "var.enable_workload_identity ? azurerm_linux_virtual_machine.this.identity[0].principal_id : null",
+            "Optional system-assigned identity principal. No role assignments are created; the identity is removed with the VM.",
+        )
+        builder.resource(
+            "azurerm_managed_disk",
+            "data",
+            count=ref("var.enable_data_disk ? 1 : 0"),
+            name=ref('"${var.project_name}-data"'),
+            create_option="Empty",
+            disk_size_gb=ref("var.data_disk_size_gb"),
+            storage_account_type=ref("var.data_disk_type"),
+            **common,
+        )
+        builder.resource(
+            "azurerm_virtual_machine_data_disk_attachment",
+            "data",
+            count=ref("var.enable_data_disk ? 1 : 0"),
+            managed_disk_id=ref("azurerm_managed_disk.data[0].id"),
+            virtual_machine_id=ref("azurerm_linux_virtual_machine.this.id"),
+            lun=0,
+            caching="None",
+        )
+        builder.output(
+            "data_disk_id",
+            "var.enable_data_disk ? azurerm_managed_disk.data[0].id : null",
+            "Optional empty data disk ID, attached at LUN 0. Formatting, mounting, backups and recovery are not configured.",
+        )
+    if standalone:
+        builder.output(
+            "vm_id",
+            "azurerm_linux_virtual_machine.this.id",
+            "Azure VM resource ID for cloud operations; available after provisioning.",
+        )
+        builder.output(
+            "vm_name",
+            "azurerm_linux_virtual_machine.this.name",
+            "Azure VM name within its resource group.",
+        )
+        builder.output(
+            "vm_location",
+            "azurerm_linux_virtual_machine.this.location",
+            "Azure VM location; this recipe does not select an availability zone.",
+        )
+        builder.output(
+            "vm_resource_group",
+            "azurerm_resource_group.this.name",
+            "Azure resource group name used with the VM name for cloud operations.",
+        )
+        builder.output(
+            "vm_address",
+            endpoint,
+            "VM IPv4 address; SSH requires the allowed client network and matching private key.",
+        )
+        builder.output(
+            "ssh_username",
+            "var.admin_username",
+            "Administrator username; password authentication is disabled.",
+        )
+    else:
+        builder.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")
+
+
+def build_database(builder: TerraformGenerator, common: dict, subnet: dict) -> None:
+    builder.variable(
+        "database_password",
+        "PostgreSQL administrator password; supply through TF_VAR_database_password.",
+        sensitive=True,
+    )
+    attributes = {
+        "name": ref("var.project_name"),
+        "version": "16",
+        "administrator_login": "terraforma",
+        "administrator_password": ref("var.database_password"),
+        "storage_mb": 32768,
+        "sku_name": "GP_Standard_D2s_v3",
+        "backup_retention_days": 7,
+        "public_network_access_enabled": builder.config.is_public,
+        **common,
+    }
+    if not builder.config.is_public:
+        builder.resource(
+            "azurerm_subnet",
+            children=[
+                block(
+                    "delegation",
+                    name="postgres",
+                    children=[
+                        block(
+                            "service_delegation",
+                            name="Microsoft.DBforPostgreSQL/flexibleServers",
+                            actions=["Microsoft.Network/virtualNetworks/subnets/join/action"],
+                        )
+                    ],
+                )
+            ],
+            **subnet,
+        )
+        builder.resource(
+            "azurerm_private_dns_zone",
+            name=ref('"${var.project_name}.postgres.database.azure.com"'),
+            resource_group_name=common["resource_group_name"],
+        )
+        builder.resource(
+            "azurerm_private_dns_zone_virtual_network_link",
+            name="postgres",
+            resource_group_name=common["resource_group_name"],
+            private_dns_zone_name=ref("azurerm_private_dns_zone.this.name"),
+            virtual_network_id=ref("azurerm_virtual_network.this.id"),
+        )
+        attributes.update(
+            delegated_subnet_id=ref("azurerm_subnet.this.id"),
+            private_dns_zone_id=ref("azurerm_private_dns_zone.this.id"),
+            depends_on=[ref("azurerm_private_dns_zone_virtual_network_link.this")],
+        )
+    builder.resource(
+        "azurerm_postgresql_flexible_server",
+        children=[
+            block("high_availability", mode="SameZone"),
+            block("lifecycle", prevent_destroy=True),
+        ],
+        **attributes,
+    )
+    if builder.config.is_public:
+        builder.variable(
+            "database_client_ip",
+            "Single public IPv4 client permitted by the database firewall.",
+            network_policy="database_address",
+        )
+        builder.resource(
+            "azurerm_postgresql_flexible_server_firewall_rule",
+            name="client",
+            server_id=ref("azurerm_postgresql_flexible_server.this.id"),
+            start_ip_address=ref("var.database_client_ip"),
+            end_ip_address=ref("var.database_client_ip"),
+        )
+    builder.output(
+        "database_endpoint",
+        "azurerm_postgresql_flexible_server.this.fqdn",
+        "PostgreSQL hostname; connect with TLS.",
+    )
+
+
+def build_static(builder: TerraformGenerator, common: dict) -> None:
+    builder.variable(
+        "index_html", "Initial website HTML.", "<html><body><h1>TerraForma-IaC</h1></body></html>"
+    )
+    builder.resource("random_id", "suffix", byte_length=4)
+    builder.resource(
+        "azurerm_storage_account",
+        name=ref('"${substr(replace(var.project_name, "-", ""), 0, 16)}${random_id.suffix.hex}"'),
+        account_tier="Standard",
+        account_replication_type="LRS",
+        min_tls_version="TLS1_2",
+        allow_nested_items_to_be_public=builder.config.is_public,
+        **common,
+    )
+    if builder.config.is_public:
+        builder.resource(
+            "azurerm_storage_account_static_website",
+            storage_account_id=ref("azurerm_storage_account.this.id"),
+            index_document="index.html",
+        )
+        container = '"$web"'
+    else:
+        builder.resource(
+            "azurerm_storage_container",
+            name="site",
+            storage_account_id=ref("azurerm_storage_account.this.id"),
+            container_access_type="private",
+        )
+        container = "azurerm_storage_container.this.name"
+    builder.resource(
+        "azurerm_storage_blob",
+        name="index.html",
+        storage_account_name=ref("azurerm_storage_account.this.name"),
+        storage_container_name=ref(container),
+        type="Block",
+        source_content=ref("var.index_html"),
+        content_type="text/html",
+        **{"depends_on": [ref("azurerm_storage_account_static_website.this")]}
+        if builder.config.is_public
+        else {},
+    )
+    endpoint = (
+        "azurerm_storage_account.this.primary_web_endpoint"
+        if builder.config.is_public
+        else '"${azurerm_storage_account.this.primary_blob_endpoint}site/index.html"'
+    )
+    builder.output(
+        "endpoint", endpoint, "Website endpoint; private objects require authenticated access."
+    )

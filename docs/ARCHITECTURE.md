@@ -11,7 +11,9 @@ flowchart LR
     Browser --> API[Loopback FastAPI server]
     API --> Generator[Validated config + deterministic templates]
     CLI --> Generator
-    Generator --> Preview[Terraform preview / ZIP / files]
+    Generator --> Providers[AWS / Azure / GCP builders]
+    Providers --> Renderer[Literal-safe HCL renderer]
+    Renderer --> Preview[Terraform preview / ZIP / files]
     API --> Sandbox[Temporary validation workspace]
     CLI --> Sandbox
     Sandbox --> Tools[Terraform init + validate / TFLint]
@@ -27,7 +29,10 @@ flowchart LR
 
 ## Boundaries
 
-- `generator.py` validates questionnaire inputs and renders reviewed HCL blocks. User strings are escaped as literal HCL; internal expressions are represented separately.
+- `configuration.py` defines the strict recipe selection model and supported image/username constants. `generator.py` retains its public imports for existing callers.
+- `generator.py` declares common input contracts, coordinates provider builders and protects output paths. Its existing facade remains available to the CLI, API and integrations.
+- `providers/aws.py`, `providers/azure.py` and `providers/gcp.py` emit provider-specific compute, database and static-site blocks using the shared builder context. They do not execute cloud operations.
+- `hcl.py` renders HCL blocks and escapes user strings as literals; internal expressions remain separate typed values. All provider builders use this same renderer.
 - `project.py` validates versioned specifications and derives shared input contracts. Browser and terminal questionnaires use these contracts; manifest imports use bounded strict JSON parsing.
 - `catalog.py` describes recipe scope, fixed choices, unsupported features, and outstanding account checks.
 - `preflight.py` performs optional bounded cloud CLI reads after explicit consent. VM metadata requires a matching target and separate consent; reported architecture and SKU restrictions do not establish capacity, quotas, image compatibility or deployment approval.
