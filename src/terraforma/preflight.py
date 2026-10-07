@@ -48,6 +48,32 @@ def azure_boolean_capability(capabilities: list, name: str) -> bool | None:
     return values[0].lower() == "true" if values else None
 
 
+def azure_zone_compatibility(machine: dict, location: str, zone: str) -> bool | None:
+    information = machine.get("locationInfo")
+    if information is None:
+        return None
+    if not isinstance(information, list) or any(
+        not isinstance(item, dict) or not isinstance(item.get("location"), str)
+        for item in information
+    ):
+        raise ValueError("Unsupported zone location metadata.")
+    matches = [item for item in information if item["location"].lower() == location.lower()]
+    if not matches:
+        return None
+    if len(matches) != 1:
+        raise ValueError("Ambiguous zone location metadata.")
+    zones = matches[0].get("zones")
+    if zones is None:
+        return None
+    if (
+        not isinstance(zones, list)
+        or any(not isinstance(value, str) or value not in {"1", "2", "3"} for value in zones)
+        or len(zones) != len(set(zones))
+    ):
+        raise ValueError("Unsupported zone list metadata.")
+    return zone in zones
+
+
 def machine_report(
     provider: str,
     data,
@@ -57,12 +83,14 @@ def machine_report(
     require_trusted_launch: bool = False,
     require_accelerated_networking: bool = False,
     require_host_encryption: bool = False,
+    availability_zone: str | None = None,
 ) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
     restricted = False
     boot_compatible = None
     networking_compatible = None
     encryption_compatible = None
+    zone_compatible = None
     if provider == "aws":
         entries = data.get("InstanceTypes") if isinstance(data, dict) else None
         if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
@@ -136,6 +164,9 @@ def machine_report(
             raise ValueError("Unsupported architecture metadata.")
         compatible = value == "x64" if value is not None else None
         restricted = bool(restrictions)
+        if availability_zone is not None:
+            zone_compatible = azure_zone_compatibility(machine, location, availability_zone)
+            report["availability_zone_compatible"] = zone_compatible
         if require_trusted_launch:
             boot_compatible = azure_boot_compatibility(capabilities)
             report["boot_features_compatible"] = boot_compatible
@@ -178,12 +209,16 @@ def machine_report(
         if require_host_encryption and encryption_compatible is False
         else "network_features_incompatible"
         if require_accelerated_networking and networking_compatible is False
+        else "zone_incompatible"
+        if availability_zone is not None and zone_compatible is False
         else "boot_features_unknown"
         if require_trusted_launch and boot_compatible is None
         else "encryption_features_unknown"
         if require_host_encryption and encryption_compatible is None
         else "network_features_unknown"
         if require_accelerated_networking and networking_compatible is None
+        else "zone_unknown"
+        if availability_zone is not None and zone_compatible is None
         else "metadata_confirmed"
     )
     return report
@@ -267,6 +302,11 @@ def inspect_machine(specification, executable, environment, timeout):
             ),
             require_host_encryption=(
                 provider == "azure" and specification.recipe.enable_encryption
+            ),
+            availability_zone=(
+                values["availability_zone"]
+                if provider == "azure" and values.get("availability_zone", "regional") != "regional"
+                else None
             ),
         )
     except (ValueError, TypeError, RecursionError):

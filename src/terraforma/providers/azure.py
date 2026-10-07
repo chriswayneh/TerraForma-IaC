@@ -62,7 +62,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         builder.variable(
             "availability_zone",
-            "Azure placement: regional (default) requests no specific availability zone; 1, 2 or 3 places the VM, optional data disk, Standard NAT gateway and generated public IPs in that zone. Verify region, VM-size, disk and network support separately; the current size check does not establish zone availability or capacity. One zone is not a highly available deployment. Changing placement replaces resources and can delete OS/data disks or change public addresses; review backups and the Terraform plan first.",
+            "Azure placement: regional (default) requests no specific availability zone; 1, 2 or 3 places the VM, optional data disk, Standard NAT gateway and generated public IPs in that zone. The opt-in size check reports listed VM zones; it does not establish disk/network zone support or capacity. One zone is not a highly available deployment. Changing placement replaces resources and can delete OS/data disks or change public addresses; review backups and the Terraform plan first.",
             "regional",
             choices=("regional", "1", "2", "3"),
         )

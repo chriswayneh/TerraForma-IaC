@@ -1,5 +1,11 @@
 # Verification record
 
+## Azure zone metadata checkpoint
+
+- The default suite passes 1,378 tests with 227 optional/native/platform cases skipped. Ruff checks/formatting pass across 81 Python files; JavaScript syntax passes.
+- Twenty-nine mocked zone-read cases cover Linux/Windows supported, absent, unknown, malformed and duplicate SKU location/zone metadata, regional defaults, preserved restrictions, CLI failure exits and private-value omission. Zone checking uses the same two explicitly opted-in target/size reads; no extra cloud call is added.
+- A listed zone establishes only the CLI-reported VM SKU metadata result. Capacity, quotas, disk/NAT/public-IP zone support, provider credential equivalence and successful allocation remain unverified. No real cloud read, deployment or approval was performed.
+
 ## Azure standalone placement checkpoint
 
 - The default suite passes 1,349 tests with 227 optional/native/platform cases skipped. Ruff checks/formatting and JavaScript syntax checks pass.

@@ -1,7 +1,5 @@
 # Project specifications
 
-Local CLI imports require a regular file, with a descriptor check after opening and a 64 KiB size limit. Pipes, devices and directories are unsupported. Normal filesystem links to regular files may be followed; imports are neither authenticated nor immutable. See [local file handling](PLAN_REVIEW.md#results-and-automation) for concurrency limitations.
-
 Available on `main` during v0.3 development. The v0.2.0 release does not include this workflow.
 
 A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.
@@ -112,7 +110,13 @@ When requested, CLI exit `0` additionally requires `metadata_confirmed` or `not_
 
 The screenshot demonstrates an incompatible architecture using mocked CLI responses. Live cloud metadata reads and provisioning remain unverified in this development checkpoint.
 
+### Azure availability zone metadata
+
+For Azure standalone VMs with a selected availability zone, the optional size metadata read checks `locationInfo` for the requested region and zone. It reports `availability_zone_compatible` and returns `zone_incompatible` or `zone_unknown` when appropriate; malformed/ambiguous metadata fails closed. Regional placement does not require a zone list. Existing SKU restrictions remain conservative even when the selected zone is listed. This reuses the existing read and does not confirm capacity, disk/network zone support or deployment. See [Azure SKU metadata](https://learn.microsoft.com/en-us/rest/api/compute/resource-skus/list).
+
 ## Secrets and validation
+
+Local CLI imports require a regular file, with a descriptor check after opening and a 64 KiB size limit. Pipes, devices and directories are unsupported. Normal filesystem links to regular files may be followed; imports are neither authenticated nor immutable. See [local file handling](PLAN_REVIEW.md#results-and-automation) for concurrency limitations.
 
 Answers use the type declared by the recipe contract. Boolean questions require actual JSON `true` or `false`; strings such as `"false"` and numeric values are rejected. AWS VM and web-tier recipes expose `detailed_monitoring`, disabled by default, and retain that choice through both questionnaires and project import/export. See [monitoring behavior and costs](LINUX_VM.md#provider-access).
 

@@ -50,7 +50,7 @@ def test_old_project_keeps_no_specific_zone_default_and_replacement_guidance(win
     assert field["default"] == "regional"
     assert field["choices"] == ["regional", "1", "2", "3"]
     assert "replaces resources" in field["description"]
-    assert "does not establish zone availability" in field["description"]
+    assert "does not establish disk/network zone support or capacity" in field["description"]
     assert compile_project(specification(windows))["files"]["main.tf"]
 
 
