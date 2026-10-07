@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added a cloud authentication guide linked from the target-check card and documentation. It covers existing AWS SSO profiles, Azure CLI login and separate Google CLI/ADC credentials without collecting secrets or running login commands in TerraForma.
+
 - Clarified the storage encryption choice in the web UI and before the terminal question: disabling it requests unencrypted AWS boot/database storage, while standalone data disks retain encryption. Provider-specific defaults and account policy still apply.
 
 - AWS standalone VM size preflight now checks reported EBS encryption support when the generated root or data disk requires encryption. Missing or unsupported capabilities remain unresolved and prevent a subsequent zone offering read; no extra cloud request is added.

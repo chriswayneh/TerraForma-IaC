@@ -5,6 +5,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | I want to… | Read |
 | --- | --- |
 | Install and create my first configuration | [Getting started](GETTING_STARTED.md) |
+| Connect existing cloud CLI and Terraform authentication | [Cloud authentication](CLOUD_AUTHENTICATION.md) |
 | See the interface before installing | [Screenshots](../README.md#screenshots) |
 | Understand what the release includes | [v0.2.0 release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
 | See current progress and planned versions | [Roadmap](ROADMAP.md) |

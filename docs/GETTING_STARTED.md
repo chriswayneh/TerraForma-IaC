@@ -57,7 +57,7 @@ Choose **Validate locally** to initialize the provider and run structural checks
 
 Choose **Download .zip**. Extract it into a project directory. The archive includes all three Terraform files and a README that describes required inputs and the generated resources.
 
-Before planning, configure authentication using your cloud provider's normal credential chain. Supply the required variables listed by the UI and `variables.tf`. Do not put passwords or API keys in the web form or commit them to Git.
+Before planning, configure authentication using your cloud provider's normal credential chain. Use the [cloud authentication guide](CLOUD_AUTHENTICATION.md) to connect your selected tools and understand Terraform's separate credential requirements. Supply the required variables listed by the UI and `variables.tf`. Do not put passwords or API keys in the web form or commit them to Git.
 
 Review a Terraform plan before applying anything. Cloud resources can incur costs after deployment; NAT gateways, load balancers, managed database standbys, storage, and VMs may charge while idle. Terraform can store sensitive values in state even if a variable is marked sensitive. Use appropriate state storage and access controls.
 

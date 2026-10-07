@@ -1,5 +1,10 @@
 # Verification record
 
+## Cloud authentication guidance checkpoint
+
+- Three PowerShell examples parse without errors; no login or cloud command was executed. Guidance references the official cloud/provider authentication documentation and preserves the distinction between CLI target confirmation and Terraform credentials.
+- The existing local UI/asset smoke case passes. A temporary browser tab imported a synthetic project and displayed the authentication guide link beside the unchecked cloud-read controls; its destination matches the published documentation path. The user's tab and sidebar spacing were preserved.
+
 ## Storage encryption guidance checkpoint
 
 - The existing 11 CLI regressions pass after moving the provider-specific explanation before the encryption question. Ruff checks/formatting and JavaScript syntax pass.
