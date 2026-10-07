@@ -11,10 +11,11 @@ Development checkpoint: `0.2.0.dev0`, October 6, 2026. This is not a release cer
 - The CLI returns exit 0 for a valid configuration and exit 1 for an invalid configuration.
 - The browser completed guided generation, native validation, and ZIP download. The later onboarding flow displays required inputs and a resource guide.
 - Desktop, 390-pixel, and 320-pixel layouts were inspected. Dark/light theme switching was exercised; the narrow layout had no horizontal document overflow.
+- Optional saved choices were checked through selection, reload, restoration, and removal in the browser.
 
 ## GitHub Actions
 
-The [initial GitHub Actions run](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37556086219) passed all four unit-test jobs (Windows/Linux, Python 3.11/3.14) and the native provider-validation job. Follow-up changes add a clean installed-wheel smoke test. Check the [latest workflow runs](https://github.com/chriswayneh/TerraForma-IaC/actions) for current commit results.
+The [onboarding GitHub Actions run](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37556530184) passed all four unit-test jobs (Windows/Linux, Python 3.11/3.14), the native provider-validation job, and a clean installed-wheel smoke test. Check the [latest workflow runs](https://github.com/chriswayneh/TerraForma-IaC/actions) for current commit results.
 
 ## Reproduce
 

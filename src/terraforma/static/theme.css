@@ -23,6 +23,19 @@
   font-size: 11px;
   color: var(--green);
 }
+.remember-choice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 16px 24px 0;
+  font-size: 10px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.remember-choice input {
+  accent-color: var(--green);
+  margin: 0;
+}
 .resource-guide {
   margin-top: 32px;
   border-top: 1px solid var(--line);

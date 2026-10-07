@@ -49,6 +49,60 @@ function configuration() {
   };
 }
 
+function saveChoices() {
+  try {
+    if (byId("remember-choice").checked) {
+      localStorage.setItem(
+        "terraforma-choices",
+        JSON.stringify({ version: 1, config: configuration(), step }),
+      );
+    } else {
+      localStorage.removeItem("terraforma-choices");
+    }
+  } catch {}
+}
+
+function restoreChoices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("terraforma-choices"));
+    const config = saved?.config;
+    if (
+      saved?.version !== 1 ||
+      !config ||
+      !["aws", "azure", "gcp"].includes(config.provider) ||
+      ![
+        "single_web_server",
+        "load_balanced_tier",
+        "secure_database",
+        "static_site",
+      ].includes(config.architecture_type) ||
+      typeof config.project_name !== "string" ||
+      !/^[a-z][a-z0-9-]{1,18}[a-z0-9]$/.test(config.project_name) ||
+      typeof config.is_public !== "boolean" ||
+      typeof config.enable_encryption !== "boolean"
+    )
+      return;
+    form.querySelector(
+      `input[name="provider"][value="${config.provider}"]`,
+    ).checked = true;
+    form.querySelector(
+      `input[name="architecture_type"][value="${config.architecture_type}"]`,
+    ).checked = true;
+    byId("project-name").value = config.project_name;
+    byId("public-access").checked = config.is_public;
+    byId("encryption").checked = config.enable_encryption;
+    byId("remember-choice").checked = true;
+    showStep(
+      Number.isInteger(saved.step) && saved.step >= 0 && saved.step <= 2
+        ? saved.step
+        : 0,
+    );
+    notify(
+      "Your saved choices were restored from this browser. Generate again to preview the files.",
+    );
+  } catch {}
+}
+
 function notify(message, error = false) {
   byId("notice").textContent = message;
   byId("notice").classList.toggle("error", error);
@@ -86,6 +140,7 @@ function showStep(index) {
   const legend = steps[index].querySelector("legend");
   legend.tabIndex = -1;
   legend.focus();
+  saveChoices();
 }
 
 function updateGuidance() {
@@ -250,7 +305,9 @@ byId("next-button").formNoValidate = true;
 byId("back-button").addEventListener("click", () => {
   if (!busy && step > 0) showStep(step - 1);
 });
-form.addEventListener("input", () => {
+form.addEventListener("input", (event) => {
+  saveChoices();
+  if (event.target.id === "remember-choice") return;
   updateGuidance();
   if (project) {
     project = null;
@@ -412,6 +469,7 @@ byId("tools-done").addEventListener("click", () =>
 );
 
 async function initialize() {
+  restoreChoices();
   updateGuidance();
   try {
     const response = await fetch("/api/session");

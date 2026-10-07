@@ -18,7 +18,7 @@ Exit criteria: all template combinations pass structural validation and lint; fa
 
 ## Phase 2 · Local visual workspace · v0.2.0
 
-Status: in progress.
+Status: implemented and verified as a development checkpoint; release preparation remains.
 
 - FastAPI server bound to loopback, with buildless HTML, CSS, and JavaScript.
 - Three-step cloud/workload/configuration questionnaire.
@@ -29,11 +29,11 @@ Status: in progress.
 
 Exit criteria: a user can generate, inspect, validate, and download a project through the UI; the installed wheel contains the UI assets; the documented launch command works. No cloud credentials are entered in the browser, and the app does not apply infrastructure.
 
-Verification to date: the browser workflow completed generation, native validation, and ZIP download locally. Desktop and 320/390-pixel layouts and theme switching were checked. The initial GitHub CI run passed on Windows/Linux with Python 3.11/3.14, including the native provider matrix. Follow-up onboarding changes are under verification; no release has been tagged.
+Verification to date: the browser workflow completed generation, native validation, and ZIP download locally. Desktop and 320/390-pixel layouts, theme switching, and saved choices were checked. GitHub CI passed on Windows/Linux with Python 3.11/3.14, including the native provider matrix and installed-wheel smoke test. No release has been tagged.
 
 ## Phase 3 · Beginner onboarding · v0.3
 
-Status: started; tool guidance, resource explanations, a simplified access diagram, and a getting-started guide are implemented. The remaining onboarding work is planned.
+Status: started; tool guidance, resource explanations, a simplified access diagram, optional saved choices, and a getting-started guide are implemented. The remaining onboarding work is planned.
 
 - First-run tool checks with platform-specific installation instructions.
 - Guided setup for required inputs and provider authentication.

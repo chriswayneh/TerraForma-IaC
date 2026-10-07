@@ -24,6 +24,8 @@ For a small first example, select **Amazon Web Services → A static website**, 
 
 The diagram and resource guide explain the major parts. This example stores an HTML object privately; it does not create a publicly reachable website. Generation itself creates no cloud resources and incurs no cloud usage charges.
 
+Enable **Remember choices on this browser** to retain the questionnaire selections and current step locally. No credentials, API key, AI opt-in, generated code, or validation logs are saved with these choices. Uncheck it to remove the saved choices; the current form stays available. Storage access is optional, and the app remains usable when browser storage is disabled.
+
 ## 3. Set up optional local validation
 
 Install Terraform using [HashiCorp's official installation instructions](https://developer.hashicorp.com/terraform/install). Install TFLint using [the official TFLint installation guide](https://github.com/terraform-linters/tflint#installation). Choose the binary for your operating system and CPU architecture.
