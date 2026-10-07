@@ -228,7 +228,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         )
         builder.variable(
             "enable_secure_boot",
-            "Enable Azure Trusted Launch Secure Boot for the selected Gen2 image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring."
+            "Enable Azure Trusted Launch Secure Boot for the selected Gen2 image. vTPM stays enabled. Changing this setting replaces the VM and can delete its OS disk; review the plan and backups first. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring."
             + (
                 " Protect BitLocker recovery keys before changing boot settings; guest encryption and recovery are not configured by this recipe."
                 if windows

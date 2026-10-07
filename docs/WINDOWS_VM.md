@@ -22,7 +22,7 @@ Development on `main` includes initial **AWS, Azure and Google Cloud Windows Ser
 
 The generated Terraform validates a 12–123 character password with at least three character categories when Terraform receives it; TerraForma never reads that value. Azure and guest policy can impose additional restrictions. Microsoft documents [Windows VM password requirements](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/faq) and the [supported Windows marketplace images](https://learn.microsoft.com/en-us/azure/virtual-machines/automatic-vm-guest-patching). Availability, eligibility and successful provisioning still need account-specific verification.
 
-The computer name is an explicit input, independent of the longer project/resource name. Changing it can replace the VM. Before changing Secure Boot settings, protect BitLocker recovery keys and review guest compatibility. This recipe does not enable or escrow BitLocker, join a domain, configure backups or verify recovery. NAT provides outbound access and can incur charges; its public address does not make a private VM reachable through RDP.
+The computer name is an explicit input, independent of the longer project/resource name. Changing it replaces the VM. AzureRM also replaces the VM when Secure Boot changes; the OS disk can be deleted. Review the plan, backups and BitLocker recovery keys before changing it. This recipe does not enable or escrow BitLocker, join a domain, configure backups or verify recovery. NAT provides outbound access and can incur charges; its public address does not make a private VM reachable through RDP.
 
 ## AWS
 

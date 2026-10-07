@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Azure Secure Boot guidance now explicitly identifies AzureRM's VM replacement and potential OS-disk deletion behavior when that setting changes.
+
 - External-secret questions now display their complete contract guidance before generation, including Azure Windows password retention in Terraform state and plans.
 
 - Added Azure Linux/Windows VM host cache inputs for boot and optional data disks. OS caching defaults to ReadWrite and data caching to None. Unsupported modes and non-default data caching without an enabled disk fail closed; workload durability, capabilities and safe cache changes remain unverified.
