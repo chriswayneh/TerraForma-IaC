@@ -1,18 +1,66 @@
 # TerraForma-IaC roadmap
 
-Revised October 6, 2026. This roadmap supersedes the initial template-generator roadmap.
+## Current phase
 
-TerraForma-IaC is becoming a local infrastructure workspace for configuring, provisioning, and operating supported infrastructure across AWS, Azure, and Google Cloud. The interface explains the decisions and asks for the inputs needed by the selected resources. Simple mode offers safe defaults; advanced mode exposes supported provider-specific settings.
+| Milestone | Details |
+| --- | --- |
+| **Now** | **Phase 1: Security and project foundation** |
+| **Status** | **In progress** |
+| **Latest release** | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) — guided generation and local review |
+| **Current target** | **v0.3.0** |
+| **Next user milestone** | Configure supported Linux and Windows VMs without editing Terraform in v0.4.0 |
 
-The platform will support a growing, explicitly documented resource catalog. It will not claim to provision every resource or accept arbitrary AI-generated commands as trusted automation. Unsupported requests should be identified clearly and become catalog work, rather than silently producing an incomplete configuration.
+TerraForma-IaC already generates Terraform recipes through a local web UI and CLI. It explains the resources, exports the files, validates trusted configurations, and provides an initial local plan reviewer. [Start with the current release](GETTING_STARTED.md).
 
-## First release · v0.2.0
+The next stages turn that workflow into a guided provisioning platform. Users describe what they need to provision; the interface asks the operational questions and produces the configuration. Simple mode explains defaults, while advanced mode exposes supported provider-specific choices.
 
-Implemented: local sky-blue web UI, terminal wizard, twelve provider/workload templates, file previews and downloads, resource explanations, optional saved non-secret choices, Terraform/TFLint validation, optional AI diagnostics, initial local plan review, bounded API requests, and Windows/Linux CI.
+### What remains in Phase 1
 
-Limits: this is a generator and structural validator. It does not collect all VM settings, execute plans, apply infrastructure, manage state, or orchestrate Terragrunt. Templates have structural validation evidence; live cloud deployment and live OpenAI requests remain unverified. The first release covers the existing guided workflow, not the planned full provisioning platform.
+- A versioned project specification shared by the UI, CLI, and generator.
+- One input contract per supported resource, keeping questions and Terraform variables aligned.
+- Account/environment identity, capability metadata, and explicit unsupported choices.
+- Artifact, credential, state, and execution controls needed before adding apply.
 
-## Phase 1 · Security and project foundation · v0.3
+The current release does not collect every VM setting or execute plan/apply/destroy operations. Cloud deployment and live OpenAI requests remain unverified.
+
+## Planned releases
+
+Versions are targets, not date promises. A release ships only after its documented security, compatibility, and acceptance checks pass.
+
+| Status | Version | Phase | Outcome |
+| --- | --- | --- | --- |
+| **Released** | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) | Guided workspace | Generate, understand, export, validate, and locally review Terraform recipes |
+| **In progress** | v0.3.0 | [1 · Security and project foundation](#phase-1) | Shared project specification, complete input contracts, and execution safeguards |
+| Planned | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
+| Planned | v0.5.0 | [3 · Networks, storage, and identity](#phase-3) | Compose connected resources with explicit access and identity decisions |
+| Planned | v0.6.0 | [4 · State and plan workflow](#phase-4) | Protected state, account preflight, saved plans, and change review |
+| Planned | v0.7.0 | [5 · Approved provisioning and lifecycle](#phase-5) | Approve and apply reviewed plans; manage updates and controlled teardown |
+| Planned | v0.8.0 | [6 · Multi-environment automation](#phase-6) | Environment reuse, optional Terragrunt, and protected CI workflows |
+| Planned | v0.9.0 | [7 · Broader workload catalog](#phase-7) | Individually verified database, TLS, container, and serverless patterns |
+| Planned | v1.0.0 | [8 · Stable platform](#phase-8) | Stable contracts, migrations, cross-platform support, and end-to-end evidence |
+
+## Explore the project
+
+| I want to… | Read |
+| --- | --- |
+| Try the released workflow | [Getting started](GETTING_STARTED.md) |
+| See the interface | [Screenshots](../README.md#screenshots) |
+| Understand the system | [Architecture](ARCHITECTURE.md) |
+| Check what was verified | [Verification record](VERIFICATION.md) and [release checks](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37558709785) |
+| Understand the first release | [Release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
+| Review the VM questionnaire design | [VM inputs](VM_INPUTS.md) |
+| Understand local policy checks | [Plan review](PLAN_REVIEW.md) |
+| Report a security concern | [Security policy](../SECURITY.md) |
+
+## Phase details
+
+The catalog will expand through documented, tested resource patterns. Unsupported requests remain visible rather than silently producing incomplete configurations.
+
+<a id="phase-1"></a>
+
+## Phase 1: Security and project foundation
+
+Target: **v0.3.0**.
 
 Status: started. Initial local plan review, bounded API requests, and CLI AI opt-in are implemented; the project specification and execution foundation remain planned.
 
@@ -28,7 +76,11 @@ Status: started. Initial local plan review, bounded API requests, and CLI AI opt
 
 Exit criteria: invalid specifications fail closed; review reports expose no raw plan values; policy decisions have meaningful tests; current behavior and remaining security gaps are documented. No apply endpoint is introduced in this phase.
 
-## Phase 2 · Complete VM configuration · v0.4
+<a id="phase-2"></a>
+
+## Phase 2: Complete VM configuration
+
+Target: **v0.4.0**.
 
 Status: planned after the foundation.
 
@@ -45,7 +97,11 @@ Exit criteria: users can supply every required input for each documented VM patt
 
 Input-completeness gate: a user who understands provisioning can finish a supported VM configuration without editing HCL. Every supported operational choice is collected or explicitly defaulted, every generated variable has a supplied value/default/external-secret reference, and no hidden hardcoded image, size, network, or administrator choice is presented as configurable. Region/size/image availability is checked against the selected account before planning when credentials are available; offline generation labels those checks as outstanding.
 
-## Phase 3 · Networks, storage, and identity · v0.5
+<a id="phase-3"></a>
+
+## Phase 3: Networks, storage, and identity
+
+Target: **v0.5.0**.
 
 Status: planned.
 
@@ -57,7 +113,11 @@ Status: planned.
 
 Exit criteria: multi-resource projects generate consistent references, networking decisions are explicit, and network/access policy tests catch documented unsafe cases.
 
-## Phase 4 · State and plan workflow · v0.6
+<a id="phase-4"></a>
+
+## Phase 4: State and plan workflow
+
+Target: **v0.6.0**.
 
 Status: planned; prerequisite for product-managed provisioning.
 
@@ -71,7 +131,11 @@ Status: planned; prerequisite for product-managed provisioning.
 
 Exit criteria: concurrent operations respect locks, drift and stale artifacts are handled, and review corresponds to the exact artifact intended for apply. Saved plans may contain secrets and must never be committed or sent to AI by default.
 
-## Phase 5 · Approved provisioning and lifecycle · v0.7
+<a id="phase-5"></a>
+
+## Phase 5: Approved provisioning and lifecycle
+
+Target: **v0.7.0**.
 
 Status: planned; requires verified state and plan controls.
 
@@ -84,7 +148,11 @@ Status: planned; requires verified state and plan controls.
 
 Exit criteria: tests prove rejected/stale approvals cannot execute, failure does not become success, wrong-target operations are blocked, and dedicated cloud tests verify creation, updates, and cleanup. Cancellation is not described as rollback.
 
-## Phase 6 · Multi-environment automation and Terragrunt · v0.8
+<a id="phase-6"></a>
+
+## Phase 6: Multi-environment automation and Terragrunt
+
+Target: **v0.8.0**.
 
 Status: planned; Terragrunt remains optional.
 
@@ -98,7 +166,11 @@ Status: planned; Terragrunt remains optional.
 
 Exit criteria: a sample multi-environment stack demonstrates ordering, independent state, approvals, retries/recovery, and target isolation. Plain Terraform projects remain fully supported.
 
-## Phase 7 · Broader workload catalog · v0.9
+<a id="phase-7"></a>
+
+## Phase 7: Broader workload catalog
+
+Target: **v0.9.0**.
 
 Status: planned; add individually verified capabilities rather than one universal template.
 
@@ -112,7 +184,11 @@ Status: planned; add individually verified capabilities rather than one universa
 
 Exit criteria: each catalog entry declares required inputs, policy coverage, cost drivers, tests, deployment evidence, and teardown/recovery instructions. Experimental entries are labeled visibly.
 
-## Phase 8 · Stable platform · v1.0
+<a id="phase-8"></a>
+
+## Phase 8: Stable platform
+
+Target: **v1.0.0**.
 
 Status: planned.
 
@@ -133,10 +209,6 @@ Exit criteria: a clean installation reproduces supported generation, review, pla
 4. Filesystem isolation is not a process sandbox. Native plugins execute code; untrusted modules require stronger isolation before they can become a supported product workflow.
 5. Defaults reduce risk but are not deployment certification. Unknown policy coverage and unverified account capabilities remain visible and block automated approval.
 6. Each phase must pass its exit criteria before being described as released. Release numbers are targets, not published artifacts or dates.
-
-## Session checkpoint protocol
-
-Use the available account-usage meter to stop new work at 20% remaining. It does not expose an exact per-chat token balance. Check between work batches and reserve time for cleanup. At the threshold: finish only the smallest safe checkpoint, run appropriate verification, commit and push completed work, record unfinished items, stop owned preview/validation processes, and leave cloud resources untouched unless an approved lifecycle operation is already in progress. Never kill an apply and describe it as rolled back.
 
 ## Reference decisions
 

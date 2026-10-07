@@ -13,13 +13,28 @@ A lightweight local workspace for creating Terraform through a guided questionna
 
 **First release:** [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0). A guided generator and local reviewer; full VM provisioning and automation are planned on the roadmap.
 
-[Quick Start](#install-and-use) · [Getting Started](docs/GETTING_STARTED.md) · [Workloads](#generated-infrastructure) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick Start](#install-and-use) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Documentation](docs/README.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
 ---
 
+## Screenshots
+
+The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.
+
 ![TerraForma-IaC local workspace](docs/images/workspace.png)
+
+## Project status
+
+| Milestone | Status |
+| --- | --- |
+| Latest release | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) — guided generation and local review |
+| Current phase | [Phase 1: Security and project foundation](docs/ROADMAP.md#phase-1) |
+| Current target | v0.3.0 — project specification and input contracts |
+| Next user milestone | v0.4.0 — complete supported Linux/Windows VM configuration |
+
+[Release notes](docs/RELEASE_0.2.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
 
 ## What you get
 
@@ -61,6 +76,25 @@ Activate your virtual environment first, or use its full executable path. The we
 The wizard creates `main.tf`, `variables.tf`, and `outputs.tf` in a new project directory. Use `--dir` to choose the destination. It refuses to add generated files to an existing Terraform configuration. Cancellation writes nothing.
 
 To enable optional AI explanations, set `OPENAI_API_KEY` in your environment before launching. The UI requires an explicit opt-in to send redacted failed command logs to OpenAI. The CLI defaults to local-only diagnosis; pass `--ai` explicitly to send redacted failure logs. The default model is `gpt-4o` through OpenAI Chat Completions. Validation works without a key. Known-secret redaction cannot identify every possible secret. Neither interface separately uploads source files, but tool diagnostics may include snippets.
+
+## Architecture
+
+The browser and CLI share one generation and validation core. A separate CLI reviewer inspects existing plan exports locally.
+
+```mermaid
+flowchart LR
+    User[User] --> Wizard[Local web wizard or CLI]
+    Wizard --> Generator[Validated choices and reviewed templates]
+    Generator --> Files[Preview, ZIP, or Terraform files]
+    Files --> Validation[Temporary validation workspace]
+    Validation --> Tools[Terraform and TFLint]
+    Tools --> Results[Readable results]
+    Results -. explicit opt-in .-> AI[AI explanations]
+    Plan[Existing Terraform plan JSON] --> Review[Local policy reviewer]
+    Review --> Report[Findings and review gaps]
+```
+
+Generation and local review do not apply infrastructure. [Architecture and boundaries](docs/ARCHITECTURE.md) · [Security policy](SECURITY.md)
 
 ## Generated infrastructure
 

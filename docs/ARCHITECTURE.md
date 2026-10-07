@@ -1,5 +1,7 @@
 # Architecture
 
+[Getting started](GETTING_STARTED.md) · [Screenshots](../README.md#screenshots) · [Roadmap](ROADMAP.md) · [Verification](VERIFICATION.md)
+
 TerraForma-IaC is a Python package with two interfaces over one generation and validation core. The local web UI uses plain browser assets served by FastAPI; it requires no Node.js installation or frontend build.
 
 ```mermaid
@@ -18,6 +20,9 @@ flowchart LR
     Results --> CLI
     Results -. optional redacted logs .-> AI[OpenAI diagnostics]
     AI --> Results
+    User --> Plan[Existing Terraform plan JSON]
+    Plan --> Review[Read-only policy reviewer]
+    Review --> Report[Findings and coverage gaps]
 ```
 
 ## Boundaries
@@ -25,9 +30,11 @@ flowchart LR
 - `generator.py` validates questionnaire inputs and renders reviewed HCL blocks. User strings are escaped as literal HCL; internal expressions are represented separately.
 - `sandbox.py` owns temporary workspaces, tool discovery, command execution, results, and cleanup. It never applies or destroys infrastructure.
 - `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
-- `cli.py` exposes generation, validation, and local serving commands.
+- `cli.py` exposes generation, validation, local plan review, and local serving commands.
+- `plan_review.py` inspects bounded plan JSON exports and produces reports without raw resource values. Its initial rules have limited coverage and never grant apply approval.
+- `request_limits.py` bounds mutation request bodies to 64 KiB before route parsing.
 - `web.py` exposes generation, validation, and ZIP download routes. It accepts questionnaire state, not arbitrary HCL or arbitrary host paths. Slow native checks run off the event loop, with one validation at a time.
-- `static/` contains the buildless browser application. It keeps the current questionnaire in browser memory and displays server-returned text using text nodes.
+- `static/` contains the buildless browser application. It keeps the current questionnaire in browser memory, optionally saves non-secret choices locally, and displays server-returned text using text nodes.
 
 ## Local API protection
 
