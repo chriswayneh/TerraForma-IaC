@@ -69,7 +69,7 @@ def test_azure_compute_recipes_expose_version_and_replacement_guidance(workload)
     "provider,workload",
     [
         ("aws", "virtual_machine"),
-        ("gcp", "virtual_machine"),
+        ("gcp", "static_site"),
         ("azure", "static_site"),
         ("azure", "secure_database"),
     ],

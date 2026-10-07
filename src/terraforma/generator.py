@@ -299,8 +299,8 @@ class TerraformGenerator:
                 "os_image",
                 "Linux image from the supported publisher catalog, using x86_64/AMD64. "
                 + (
-                    "The Azure image version can be pinned separately; latest resolves at planning time. "
-                    if self.config.provider == "azure"
+                    "The image version can be pinned separately; latest resolves at planning time. "
+                    if self.config.provider in {"azure", "gcp"}
                     else "Image versions resolve at planning time. "
                 )
                 + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
@@ -1479,14 +1479,37 @@ class TerraformGenerator:
             "pd-balanced",
             choices=("pd-balanced", "pd-standard", "pd-ssd"),
         )
+        self.variable(
+            "image_version",
+            "Use latest to resolve the selected GCP image family at planning time, or enter an exact published Debian 12 Bookworm / Ubuntu 24.04 Noble AMD64 image name. The publisher project stays fixed. Verify availability, deprecation and compatibility before planning. Changing the image can replace a VM and destroy boot-disk data; pinning does not apply security patches automatically.",
+            "latest",
+            pattern=r"^(latest|debian-12-bookworm-v[0-9]{8}|ubuntu-2404-noble(-amd64)?-v[0-9]{8})$",
+        )
+        image_source = ref(
+            'var.image_version == "latest" ? '
+            '(var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64") : '
+            '(var.os_image == "debian-12" ? "debian-cloud/${var.image_version}" : "ubuntu-os-cloud/${var.image_version}")'
+        )
+        image_lifecycle = block(
+            "lifecycle",
+            children=[
+                block(
+                    "precondition",
+                    condition=ref(
+                        'var.image_version == "latest" || '
+                        '(var.os_image == "debian-12" ? startswith(var.image_version, "debian-12-bookworm-v") : startswith(var.image_version, "ubuntu-2404-noble"))'
+                    ),
+                    error_message="Choose an exact image name matching the selected Linux operating system.",
+                )
+            ]
+            + (self._identity_precondition().children if standalone else []),
+        )
         disk = block(
             "boot_disk",
             children=[
                 block(
                     "initialize_params",
-                    image=ref(
-                        'var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"'
-                    ),
+                    image=image_source,
                     size=ref("var.boot_disk_size_gb"),
                     type=ref("var.boot_disk_type"),
                 )
@@ -1526,15 +1549,14 @@ class TerraformGenerator:
                 children=[
                     block(
                         "disk",
-                        source_image=ref(
-                            'var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"'
-                        ),
+                        source_image=image_source,
                         auto_delete=True,
                         boot=True,
                         disk_size_gb=ref("var.boot_disk_size_gb"),
                         disk_type=ref("var.boot_disk_type"),
                     ),
                     network,
+                    image_lifecycle,
                 ],
             )
             self.resource(
@@ -1635,10 +1657,9 @@ class TerraformGenerator:
                     if standalone
                     else {"metadata_startup_script": startup}
                 ),
-                children=[disk, network]
+                children=[disk, network, image_lifecycle]
                 + (
                     [
-                        self._identity_precondition(),
                         block(
                             "shielded_instance_config",
                             enable_secure_boot=ref("var.enable_secure_boot"),

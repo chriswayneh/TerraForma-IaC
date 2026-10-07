@@ -191,6 +191,93 @@ def test_native_azure_pinned_image_versions(native_directories, image, workload)
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "image,version",
+    [
+        ("debian-12", "debian-12-bookworm-v20240213"),
+        ("ubuntu-24.04", "ubuntu-2404-noble-amd64-v20261001"),
+    ],
+)
+@pytest.mark.parametrize("workload", ["virtual_machine", "single_web_server", "load_balanced_tier"])
+def test_native_gcp_pinned_image_versions(native_directories, image, version, workload):
+    from terraforma.project import compile_project
+    from tests.test_shielded_vm import specification
+
+    spec = specification(image=image)
+    spec.recipe.architecture_type = workload
+    spec.inputs.pop("enable_secure_boot")
+    spec.inputs["image_version"] = version
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize(
+    "version,valid",
+    [
+        ("latest", True),
+        ("debian-12-bookworm-v20240213", True),
+        ("ubuntu-2404-noble-amd64-v20261001", False),
+    ],
+)
+def test_native_gcp_image_precondition_prevents_manual_os_mismatch(tmp_path, version, valid):
+    if os.environ.get("TERRAFORMA_NATIVE_TESTS") != "1":
+        pytest.skip("Set TERRAFORMA_NATIVE_TESTS=1 to run native validation.")
+    executable = shutil.which("terraform")
+    if not executable:
+        pytest.fail("Native tests require Terraform on PATH.")
+    from terraforma.generator import block
+
+    generator = TerraformGenerator(
+        WizardConfig(provider="gcp", project_name="pin-test", architecture_type="virtual_machine")
+    )
+    generator.generate()
+    resource = next(
+        item
+        for item in generator.main
+        if item.kind == "resource" and item.labels[0] == "google_compute_instance"
+    )
+    lifecycle = next(item for item in resource.children if item.kind == "lifecycle")
+    variables = [
+        item.render()
+        for item in generator.variables
+        if item.labels[0] in {"os_image", "image_version"}
+    ]
+    builtin = block(
+        "resource",
+        "terraform_data",
+        "image_check",
+        children=[block("lifecycle", children=[lifecycle.children[0]])],
+    )
+    (tmp_path / "main.tf").write_text("\n\n".join([*variables, builtin.render()]), encoding="utf-8")
+    initialized = subprocess.run(
+        [executable, "init", "-backend=false", "-input=false", "-no-color"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert initialized.returncode == 0, initialized.stdout + initialized.stderr
+    result = subprocess.run(
+        [
+            executable,
+            "plan",
+            "-refresh=false",
+            "-input=false",
+            "-no-color",
+            "-var",
+            "image_version=" + version,
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == (0 if valid else 1), result.stdout + result.stderr
+    if not valid:
+        assert "matching the selected Linux operating system" in result.stderr
+
+
 @pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])

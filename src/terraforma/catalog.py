@@ -35,6 +35,8 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 + (
                     "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
                     if config.provider == "azure"
+                    else "Image version is configurable: latest (default) or an exact supported published image name. Availability and deprecation remain unverified."
+                    if config.provider == "gcp"
                     else "Latest image at planning time (not pinned)."
                 ),
                 "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."

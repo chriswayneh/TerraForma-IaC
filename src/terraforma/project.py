@@ -63,7 +63,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
                     "os_image": "Linux operating system",
-                    "image_version": "Azure image version (latest or exact version)",
+                    "image_version": "Azure image version (latest or exact version)"
+                    if config.provider == "azure"
+                    else "GCP image version (latest or exact image name)",
                     "admin_username": "Administrator username",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
@@ -285,6 +287,18 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if (
+        specification.recipe.provider == "gcp"
+        and effective.get("image_version", "latest") != "latest"
+    ):
+        prefix = (
+            "debian-12-bookworm-v" if effective["os_image"] == "debian-12" else "ubuntu-2404-noble"
+        )
+        if not effective["image_version"].startswith(prefix):
+            raise ProjectInputError(
+                "image_version",
+                "Choose an exact image name matching the selected Linux operating system.",
+            )
     for definition in contract:
         if (
             definition.get("required_when")
