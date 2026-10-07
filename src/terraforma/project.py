@@ -136,6 +136,13 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "environment_variable": f"TF_VAR_{name}" if sensitive else None,
                 **generator.input_constraints[name],
                 "choice_labels": {
+                    "os_image": {
+                        "windows-server-2022": "Windows Server 2022 Full Base (desktop)",
+                        "windows-server-2022-core": "Windows Server 2022 Core Base",
+                    }
+                    if config.provider == "aws"
+                    and config.architecture_type == "windows_virtual_machine"
+                    else {},
                     "admin_access_method": {
                         "administrator_network": "Direct administrator network",
                         "iap_tunnel": "Google IAP tunnel",

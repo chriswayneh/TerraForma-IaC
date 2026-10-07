@@ -1,5 +1,12 @@
 # Verification record
 
+## AWS Windows Core checkpoint
+
+- The default suite passes 1,796 tests with 262 optional/native/platform cases skipped. Ruff checks and formatting pass across 93 Python files; whitespace checks pass.
+- Fifteen new regressions cover private/public Core selection, latest/pinned AMIs, separate boot lifecycle, Amazon owner/name/x86_64/HVM filters, unsupported variants, other provider exclusion and API import. Full Base remains the default.
+- Four separately enabled private/public latest/pin cases pass real Terraform validation and TFLint against the cached AWS provider. Synthetic pinned AMI identifiers are structural examples; no cloud availability or boot was verified.
+- A temporary browser tab imported an older AWS Windows project, confirmed Full Base as the default, selected the readable Core option and generated its summary and replacement/compatibility warning. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, credential recovery, connection or apply was run.
+
 ## Readable questionnaire choices checkpoint
 
 - Eighty-three existing CLI, GCP access/scheduling and AWS credit regressions pass. Ruff checks/formatting and JavaScript syntax pass. These labels change presentation while preserving input values and defaults.

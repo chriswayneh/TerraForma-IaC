@@ -218,6 +218,16 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             + ("enabled" if protection else "disabled")
             + ". To intentionally delete or replace a protected VM, first disable protection and apply that configuration change in your Terraform workflow. Protection is not a backup or protection for every connected resource."
         )
+    if (
+        payload.recipe.provider == "aws"
+        and payload.recipe.architecture_type == "windows_virtual_machine"
+        and payload.inputs.get("os_image") == "windows-server-2022-core"
+    ):
+        project["notes"].append(
+            "Windows Server Core omits the standard desktop. Verify application and "
+            "administration-tool compatibility. Switching between Core and Full Base "
+            "requires VM replacement; review backups and boot-disk/key lifecycle first."
+        )
     return project
 
 

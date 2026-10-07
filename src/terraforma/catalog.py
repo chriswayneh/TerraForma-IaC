@@ -34,7 +34,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         }[config.provider]
         if windows:
             image = (
-                "Windows Server 2022 English Full Base from Amazon"
+                "Windows Server 2022 English Full Base or Core Base from Amazon"
                 if config.provider == "aws"
                 else "Windows Server 2022 Gen2 from MicrosoftWindowsServer"
                 if config.provider == "azure"

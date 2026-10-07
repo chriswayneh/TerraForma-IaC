@@ -776,6 +776,17 @@ def test_native_standalone_boot_retention(native_directories, provider, windows,
     assert_native_files(native_directories[provider], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "public,version", list(itertools.product([False, True], ["latest", "ami-0123456789abcdef0"]))
+)
+def test_native_aws_windows_core(native_directories, public, version):
+    from terraforma.project import compile_project
+    from tests.test_windows_vm import specification
+
+    spec = specification(public=public, os_image="windows-server-2022-core", image_version=version)
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

@@ -202,7 +202,7 @@ def build_aws(builder: TerraformGenerator) -> None:
                     "filter",
                     name="name",
                     values=ref(
-                        '[{"windows-server-2022" = "Windows_Server-2022-English-Full-Base-*"}[var.os_image]]'
+                        '[{"windows-server-2022" = "Windows_Server-2022-English-Full-Base-*", "windows-server-2022-core" = "Windows_Server-2022-English-Core-Base-*"}[var.os_image]]'
                     )
                     if windows
                     else ref(

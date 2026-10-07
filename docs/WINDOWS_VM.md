@@ -34,7 +34,7 @@ The computer name is an explicit input, independent of the longer project/resour
 
 | Choice | Supported behavior |
 | --- | --- |
-| Image | Amazon-published Windows Server 2022 English Full Base, x86_64/HVM |
+| Image | Amazon-published Windows Server 2022 English Full Base (default) or Core Base, x86_64/HVM |
 | Image version | Latest matching image at planning time, or a matching AMI ID in the selected region |
 | VM size | Configurable; defaults to `t3.small`. Memory, availability, licensing and price require review |
 | Placement | Optional standard AWS zone name; blank uses automatic placement. Two standard zones are required; changes can replace subnets, the VM and disks |
@@ -58,7 +58,9 @@ TerraForma does not retrieve or decrypt password data, generate a private key, o
 
 Private VMs require an existing routed access path such as a VPN or bastion; this recipe creates neither. A public address alone does not satisfy the restricted administrator rule. Application installation, domain joining, custom images, Windows patching, certificate configuration, backup and automatic disk initialization remain outside this recipe.
 
-The image query retains the Amazon owner, Windows Server 2022 name, x86_64 and HVM filters even when an AMI ID is pinned. Image pins do not install security updates and image changes can replace the VM. The selected base image does not add a configurable Secure Boot or TPM guarantee. Verify account policy, image availability, guest compatibility and costs before planning.
+The image query retains the Amazon owner, selected Windows Server 2022 Full/Core Base name, x86_64 and HVM filters even when an AMI ID is pinned. Image pins do not install security updates and image changes can replace the VM. The selected base image does not add a configurable Secure Boot or TPM guarantee. Verify account policy, image availability, guest compatibility and costs before planning.
+
+Choose **Windows Server 2022 Core Base** for the initial AWS Core recipe. Core omits the standard desktop and needs compatible applications and administration tools. [Microsoft explains the installation differences](https://learn.microsoft.com/en-us/windows-server/get-started/getting-started-with-server-with-desktop-experience), including the lack of in-place conversion between Core and Desktop Experience. Switching the image replaces the VM; review backups, disk retention and encryption-key lifecycle first. The query uses the English Core Base naming pattern documented in [AWS Windows AMI history](https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/ec2-windows-ami-version-history.html). This option does not add TPM/STIG/container images or verify that a matching image is currently available in your region. Other providers retain their existing Windows choices.
 
 AWS publishes [Windows AMI version history](https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/ec2-windows-ami-version-history.html), including the 30 GiB root volume used by Core and Full Base images. A larger disk does not replace guest filesystem verification or backups.
 

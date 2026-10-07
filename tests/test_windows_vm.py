@@ -145,7 +145,7 @@ def test_windows_contract_defaults_and_exact_image_pin():
     assert contract["boot_disk_size_gb"]["default"] == 50
     assert contract["boot_disk_size_gb"]["minimum"] == 30
     assert contract["instance_type"]["default"] == "t3.small"
-    assert contract["os_image"]["choices"] == ["windows-server-2022"]
+    assert contract["os_image"]["choices"] == ["windows-server-2022", "windows-server-2022-core"]
     assert "RSA only" in contract["ssh_public_key"]["label"]
     assert "ami-0123456789abcdef0" in result["files"]["variables.tf"]
     assert "image-id" in result["files"]["main.tf"]

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an AWS Windows Server 2022 Core Base image choice alongside the existing Full Base default. Amazon publisher, selected image-name, x86_64 and HVM filters remain in place for latest or pinned AMIs; Core desktop/compatibility and replacement risks are explained.
+
 - Added readable connection-path, CPU-credit and GCP maintenance option labels to the browser and terminal questionnaire. Terraform/specification values and defaults remain unchanged.
 
 - Added explicit AWS/GCP standalone boot-disk deletion or retention choices, preserving deletion by default. The form and generated guidance explain separate data-disk/key lifecycle, AWS KMS recovery requirements and GCP replacement naming conflicts. No live retention or recovery was run.
