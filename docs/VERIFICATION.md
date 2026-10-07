@@ -16,6 +16,8 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
+- Optional fixed private VM addresses pass 56 subnet/format/export/import/scope/browser-hint/terminal cases, six native provider/access configurations and 24 cloud-free Terraform plan cases for usable, reserved, missing and out-of-subnet values. Browser and CLI show usable ranges; browser-hint checks use optional Node.js. No address availability, independent reservation or cloud provisioning was checked.
+
 - Azure encryption-at-host size metadata checks pass 18 supported/unsupported/missing/malformed/opt-out/API/CLI cases across standalone VMs and both web-tier recipes. These use mocked SKU responses and add no cloud request. Subscription feature registration and actual deployment remain unverified.
 
 - Optional Azure accelerated networking passes 16 contract/export/import/capability/API/CLI cases and four native OS/setting combinations. The shared size preflight reports support only when requested; missing, incompatible and malformed metadata remain visible. Guest drivers, capacity, cloud deployment and stop/deallocation operations were not exercised.

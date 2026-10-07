@@ -113,7 +113,7 @@ async function loadRecipeInputs() {
         input.max = definition.maximum;
         input.step = 1;
       }
-      input.required = definition.kind !== "boolean";
+      input.required = !["boolean", "optional_ipv4_address"].includes(definition.kind);
       input.maxLength = 16384;
       if (definition.pattern) input.pattern = definition.pattern;
       if (definition.kind === "boolean") {
@@ -125,17 +125,31 @@ async function loadRecipeInputs() {
       label.htmlFor = input.id;
       help.textContent =
         definition.description +
-        (definition.required_when
+        (definition.kind === "optional_ipv4_address"
+          ? " Optional; leave blank for cloud allocation."
+          : definition.required_when
           ? " Required when this option is enabled."
           : definition.default !== null
           ? " A default is provided; review it for your project."
           : " Required for this recipe.");
+      if (definition.kind === "optional_ipv4_address") help.dataset.baseHelp = help.textContent;
       group.append(label, input, help);
     }
     container.append(group);
   });
   contractKey = key;
   updateInputVisibility();
+  updatePrivateAddressHint();
+}
+
+function updatePrivateAddressHint() {
+  const help = byId("recipe-help-private_ip_address");
+  if (!help) return;
+  const config = configuration();
+  const range = vmPrivateAddressRange(config.provider, config.is_public, byId("recipe-network_cidr")?.value);
+  help.textContent = help.dataset.baseHelp + (range
+    ? ` Usable addresses: ${range.first} through ${range.last} in subnet ${range.subnet}. Availability is not checked.`
+    : " Enter a supported network address range to see usable addresses.");
 }
 
 function updateInputVisibility() {
@@ -588,6 +602,7 @@ byId("back-button").addEventListener("click", () => {
 });
 form.addEventListener("input", (event) => {
   updateInputVisibility();
+  updatePrivateAddressHint();
   if (typeof event.target.setCustomValidity === "function") {
     event.target.setCustomValidity("");
     event.target.removeAttribute("aria-invalid");

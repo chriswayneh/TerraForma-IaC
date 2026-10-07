@@ -14,6 +14,7 @@ from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_s
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import WizardConfig, project_destination, write_configuration
+from terraforma.network_inputs import usable_vm_address, vm_subnet
 from terraforma.plan_review import load_and_review
 from terraforma.preflight import target_preflight
 from terraforma.project import (
@@ -159,11 +160,27 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
                 f"{definition['label']}: supply {definition['environment_variable']} externally before planning."
             )
             continue
+        if definition["name"] == "private_ip_address":
+            subnet = vm_subnet(config.provider, inputs["network_cidr"], config.is_public)
+            first, excluded_last = (2, 2) if config.provider == "gcp" else (4, 1)
+            click.echo(
+                f"Usable private addresses: {subnet[first]} through {subnet[subnet.num_addresses - excluded_last - 1]} in {subnet}. Address availability is not checked."
+            )
 
         def valid(text, definition=definition):
             try:
                 value = int(text) if definition["kind"] == "integer" else text
                 validate_answer(definition, value)
+                if (
+                    definition["name"] == "private_ip_address"
+                    and value
+                    and not usable_vm_address(
+                        config.provider, inputs["network_cidr"], config.is_public, value
+                    )
+                ):
+                    return (
+                        "Choose a usable address in the displayed subnet range, or leave it blank."
+                    )
                 return True
             except ProjectInputError as error:
                 return str(error)

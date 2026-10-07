@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from terraforma.network_inputs import private_ip_condition
+
 LINUX_IMAGE_CHOICES = {
     "aws": ("amazon-linux-2023", "ubuntu-24.04"),
     "azure": ("ubuntu-22.04", "ubuntu-24.04"),
@@ -318,6 +320,13 @@ class TerraformGenerator:
                 prefix_maximum=28 if self.config.provider == "gcp" else 20,
             )
             self._data_disk_inputs()
+            octet = r"(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])"
+            self.variable(
+                "private_ip_address",
+                "Optional fixed private IPv4 address for this VM. Leave blank for cloud allocation. The address must be usable in the generated workload subnet; provider-reserved addresses are rejected. AWS public VMs use the first public subnet, private VMs use the first private subnet; Azure uses its derived workload subnet and GCP uses the entered subnet directly. The address is not reserved independently and availability is not checked. Changing it can interrupt access or replace resources; review the plan.",
+                "",
+                pattern=rf"^($|{octet}\.{octet}\.{octet}\.{octet})$",
+            )
             self._workload_identity_inputs()
             self.variable(
                 "allowed_cidr",
@@ -370,8 +379,16 @@ class TerraformGenerator:
                     "precondition",
                     condition=ref('!var.enable_workload_identity || var.workload_identity != ""'),
                     error_message="Supply the existing workload identity reference when workload identity is enabled.",
-                )
+                ),
+                self._private_ip_precondition(),
             ],
+        )
+
+    def _private_ip_precondition(self) -> Block:
+        return block(
+            "precondition",
+            condition=ref(private_ip_condition(self.config.provider, self.config.is_public)),
+            error_message="Choose a usable private IPv4 address in the generated VM subnet, excluding provider-reserved addresses, or leave it blank for cloud allocation.",
         )
 
     def _data_disk_inputs(self) -> None:
@@ -624,6 +641,11 @@ class TerraformGenerator:
             **({"disable_api_termination": ref("var.protect_vm")} if standalone else {}),
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
+            **(
+                {"private_ip": ref('var.private_ip_address == "" ? null : var.private_ip_address')}
+                if standalone
+                else {}
+            ),
             vpc_security_group_ids=[ref("aws_security_group.web.id")],
             **(
                 {"key_name": ref("aws_key_pair.this.key_name")}
@@ -1182,6 +1204,13 @@ class TerraformGenerator:
                 "subnet_id": ref("azurerm_subnet.this.id"),
                 "private_ip_address_allocation": "Dynamic",
             }
+            if standalone:
+                ip["private_ip_address_allocation"] = ref(
+                    'var.private_ip_address == "" ? "Dynamic" : "Static"'
+                )
+                ip["private_ip_address"] = ref(
+                    'var.private_ip_address == "" ? null : var.private_ip_address'
+                )
             if self.config.is_public:
                 ip["public_ip_address_id"] = ref("azurerm_public_ip.web.id")
             self.resource(
@@ -1205,6 +1234,11 @@ class TerraformGenerator:
                     else {}
                 ),
                 children=[disk, image, key]
+                + (
+                    [block("lifecycle", children=[self._private_ip_precondition()])]
+                    if standalone
+                    else []
+                )
                 + (
                     [
                         block(
@@ -1513,6 +1547,11 @@ class TerraformGenerator:
         network = block(
             "network_interface",
             subnetwork=ref("google_compute_subnetwork.this.id"),
+            **(
+                {"network_ip": ref('var.private_ip_address == "" ? null : var.private_ip_address')}
+                if standalone
+                else {}
+            ),
             children=[block("access_config")] if self.config.is_public and not balanced else [],
         )
         self.variable(

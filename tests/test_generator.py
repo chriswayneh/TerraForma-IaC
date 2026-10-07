@@ -315,6 +315,110 @@ def test_native_accelerated_networking(native_directories, image, enabled):
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("public", [False, True])
+def test_native_fixed_private_ip(native_directories, provider, public):
+    from terraforma.project import compile_project
+    from tests.test_private_ip import specification
+
+    address = {
+        "aws": "10.0.0.4" if public else "10.0.10.4",
+        "azure": "10.0.1.4",
+        "gcp": "10.0.1.2",
+    }[provider]
+    assert_native_files(
+        native_directories[provider],
+        compile_project(specification(provider, public, address=address))["files"],
+    )
+
+
+@pytest.mark.parametrize(
+    "provider,public,network,subnet",
+    [
+        ("aws", True, "10.32.0.0/20", "10.32.0.0/28"),
+        ("aws", False, "10.32.0.0/16", "10.32.10.0/24"),
+        ("azure", False, "10.32.0.0/20", "10.32.0.16/28"),
+        ("gcp", True, "10.32.0.0/16", "10.32.0.0/16"),
+    ],
+)
+@pytest.mark.parametrize(
+    "choice",
+    ["blank", "first_usable", "last_usable", "first_reserved", "last_reserved", "wrong_subnet"],
+)
+def test_native_private_ip_precondition(tmp_path, provider, public, network, subnet, choice):
+    if os.environ.get("TERRAFORMA_NATIVE_TESTS") != "1":
+        pytest.skip("Set TERRAFORMA_NATIVE_TESTS=1 to run native validation.")
+    executable = shutil.which("terraform")
+    if not executable:
+        pytest.fail("Native tests require Terraform on PATH.")
+    import ipaddress
+
+    from terraforma.generator import block
+
+    selected = ipaddress.IPv4Network(subnet)
+    first, excluded_last = (2, 2) if provider == "gcp" else (4, 1)
+    addresses = {
+        "blank": "",
+        "first_usable": str(selected[first]),
+        "last_usable": str(selected[selected.num_addresses - excluded_last - 1]),
+        "first_reserved": str(selected[first - 1]),
+        "last_reserved": str(selected[-excluded_last]),
+        "wrong_subnet": "192.168.250.10",
+    }
+    generator = TerraformGenerator(
+        WizardConfig(
+            provider=provider,
+            project_name="address-test",
+            architecture_type="virtual_machine",
+            is_public=public,
+        )
+    )
+    generator.generate()
+    variables = [
+        item.render()
+        for item in generator.variables
+        if item.labels[0] in {"network_cidr", "private_ip_address"}
+    ]
+    resource = block(
+        "resource",
+        "terraform_data",
+        "address_check",
+        children=[block("lifecycle", children=[generator._private_ip_precondition()])],
+    )
+    (tmp_path / "main.tf").write_text(
+        "\n\n".join([*variables, resource.render()]), encoding="utf-8"
+    )
+    initialized = subprocess.run(
+        [executable, "init", "-backend=false", "-input=false", "-no-color"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert initialized.returncode == 0, initialized.stdout + initialized.stderr
+    result = subprocess.run(
+        [
+            executable,
+            "plan",
+            "-input=false",
+            "-lock=false",
+            "-no-color",
+            f"-var=network_cidr={network}",
+            f"-var=private_ip_address={addresses[choice]}",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    valid = choice in {"blank", "first_usable", "last_usable"}
+    assert result.returncode == (0 if valid else 1), result.stdout + result.stderr
+    if not valid:
+        assert "provider-reserved addresses" in result.stderr
+
+
 @pytest.mark.parametrize("image", ["debian-12", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])

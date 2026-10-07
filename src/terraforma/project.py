@@ -12,6 +12,7 @@ from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.json_input import strict_json
+from terraforma.network_inputs import usable_vm_address
 
 
 class ProjectSpecification(BaseModel):
@@ -49,6 +50,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
             "allowed_cidr": "ipv4_cidr",
             "network_cidr": "ipv4_cidr",
             "database_client_ip": "ipv4_address",
+            "private_ip_address": "optional_ipv4_address",
             "subscription_id": "uuid",
             "index_html": "multiline",
         }.get(name, "text")
@@ -58,6 +60,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "label": {
                     "allowed_cidr": "Allowed client network (CIDR)",
                     "network_cidr": "New network address range (CIDR)",
+                    "private_ip_address": "Private IPv4 address (optional)",
                     "instance_type": "VM size",
                     "vm_size": "VM size",
                     "machine_type": "VM size",
@@ -154,6 +157,8 @@ def validate_ssh_public_key(value: str) -> None:
 
 
 def validate_input(name: str, value: str, kind: str):
+    if kind == "optional_ipv4_address" and value == "":
+        return
     if not value or len(value.encode("utf-8")) > 16384:
         raise ValueError("Input must be nonempty and at most 16 KiB.")
     if re.search(r"-----BEGIN [A-Z ]*PRIVATE KEY-----", value):
@@ -162,7 +167,7 @@ def validate_input(name: str, value: str, kind: str):
         raise ValueError("Single-line inputs cannot contain control characters.")
     if kind == "ipv4_cidr":
         ipaddress.IPv4Network(value, strict=True)
-    elif kind == "ipv4_address":
+    elif kind in {"ipv4_address", "optional_ipv4_address"}:
         ipaddress.IPv4Address(value)
     elif kind == "uuid":
         UUID(value)
@@ -210,6 +215,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = {
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
                 "ipv4_address": "Enter a valid IPv4 client address.",
+                "optional_ipv4_address": "Enter a valid IPv4 address, or leave it blank for cloud allocation.",
                 "uuid": "Enter a valid subscription UUID.",
                 "ssh_public_key": "Enter a structurally valid OpenSSH Ed25519 or RSA public key; private keys are unsupported.",
             }.get(
@@ -302,6 +308,16 @@ def compile_project(specification: ProjectSpecification) -> dict:
                 "image_version",
                 "Choose an exact image name matching the selected Linux operating system.",
             )
+    if effective.get("private_ip_address") and not usable_vm_address(
+        specification.recipe.provider,
+        effective["network_cidr"],
+        specification.recipe.is_public,
+        effective["private_ip_address"],
+    ):
+        raise ProjectInputError(
+            "private_ip_address",
+            "Choose a usable private IPv4 address in the generated VM subnet, excluding provider-reserved addresses.",
+        )
     for definition in contract:
         if (
             definition.get("required_when")
@@ -370,6 +386,8 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
             display = "SSH public key provided"
         elif name == "index_html":
             display = "Website page content provided"
+        elif name == "private_ip_address" and value == "":
+            display = "Allocated by the cloud provider"
         elif type(value) is bool:
             display = "Enabled" if value else "Disabled"
         else:

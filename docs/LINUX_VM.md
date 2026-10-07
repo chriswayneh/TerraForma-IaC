@@ -29,6 +29,7 @@ Azure standalone VMs also offer **Enable Azure accelerated networking**, off by 
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
 | Workload identity | AWS instance profile, Azure system-assigned identity, or GCP user-managed service account | Disabled by default; no IAM/RBAC grants or credential keys are created |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
+| Private address | Optional fixed IPv4 address, or automatic cloud allocation | Must be usable in the generated VM subnet; availability and independent address reservation are not checked |
 | Azure NIC performance | Optional accelerated networking, off by default | Requires supported VM size and guest drivers; changing an existing VM can require stopping and deallocating it |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 

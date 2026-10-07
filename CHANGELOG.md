@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added optional fixed private IPv4 addresses for standalone VMs across AWS/Azure/GCP. Shared input/export handling and generated Terraform preconditions reject addresses outside the chosen subnet or in provider-reserved ranges; blank retains cloud allocation, with availability and independent reservation left unverified.
+
 - Added Azure encryption-at-host support checks to the existing opt-in compute-size read when encryption is requested. Incompatible and unknown capabilities require review; malformed metadata fails closed, with subscription feature registration left for separate verification.
 
 - Added optional accelerated networking for standalone Azure Linux VMs, off by default, with shared questionnaire/export handling and support metadata in the existing opt-in size check. Incompatible, unknown and malformed capability responses remain distinct from deployment approval.
