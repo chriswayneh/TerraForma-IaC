@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 import os
 import re
 
@@ -43,6 +44,7 @@ def redact_sensitive_text(text: str) -> str:
 
 class AIDiagnosticsEngine:
     endpoint = "https://api.openai.com/v1/chat/completions"
+    max_response_bytes = 64 * 1024
 
     def __init__(
         self,
@@ -58,8 +60,16 @@ class AIDiagnosticsEngine:
         ).strip()
         if not self.api_key:
             raise DiagnosticsError("Set OPENAI_API_KEY to enable AI explanations, or use --no-ai.")
-        if not 1 <= max_attempts <= 5 or timeout <= 0:
-            raise ValueError("Use 1–5 attempts and a positive HTTP timeout.")
+        if (
+            type(max_attempts) is not int
+            or not 1 <= max_attempts <= 5
+            or type(timeout) not in {int, float}
+            or not math.isfinite(timeout)
+            or not 0 < timeout <= 120
+        ):
+            raise ValueError(
+                "Use 1–5 integer attempts and a finite HTTP timeout up to 120 seconds."
+            )
         self.model = model
         self.timeout = timeout
         self.max_attempts = max_attempts
@@ -109,35 +119,51 @@ class AIDiagnosticsEngine:
     async def _request(self, client: httpx.AsyncClient, payload: dict) -> DiagnosticSuggestion:
         for attempt in range(self.max_attempts):
             try:
-                response = await client.post(
-                    self.endpoint,
-                    json=payload,
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                    timeout=self.timeout,
-                )
-            except httpx.RequestError:
+                async with asyncio.timeout(self.timeout):
+                    async with client.stream(
+                        "POST",
+                        self.endpoint,
+                        json=payload,
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Accept-Encoding": "identity",
+                        },
+                        timeout=self.timeout,
+                        follow_redirects=False,
+                    ) as response:
+                        status = response.status_code
+                        retry_after = response.headers.get("Retry-After", str(2**attempt))
+                        body = bytearray()
+                        if status == 200:
+                            async for chunk in response.aiter_bytes(chunk_size=8192):
+                                if len(body) + len(chunk) > self.max_response_bytes:
+                                    raise DiagnosticsError(
+                                        "OpenAI diagnostic response exceeds the 64 KiB limit."
+                                    )
+                                body.extend(chunk)
+            except (httpx.RequestError, TimeoutError):
                 if attempt + 1 == self.max_attempts:
                     raise DiagnosticsError(
                         "OpenAI could not be reached before the retry limit."
                     ) from None
                 await asyncio.sleep(2**attempt)
                 continue
-            if (
-                response.status_code in {429, 500, 502, 503, 504}
-                and attempt + 1 < self.max_attempts
-            ):
+            if status in {429, 500, 502, 503, 504} and attempt + 1 < self.max_attempts:
                 try:
-                    delay = min(max(float(response.headers.get("Retry-After", 2**attempt)), 0), 10)
+                    requested_delay = float(retry_after)
+                    if not math.isfinite(requested_delay):
+                        raise ValueError("Retry delay must be finite.")
+                    delay = min(max(requested_delay, 0), 10)
                 except ValueError:
                     delay = 2**attempt
                 await asyncio.sleep(delay)
                 continue
-            if response.status_code != 200:
+            if status != 200:
                 raise DiagnosticsError(
-                    f"OpenAI returned HTTP {response.status_code}. Check API access, billing, and connectivity."
+                    f"OpenAI returned HTTP {status}. Check API access, billing, and connectivity."
                 )
             try:
-                choice = strict_json(response.content)["choices"][0]
+                choice = strict_json(bytes(body))["choices"][0]
                 if not isinstance(choice, dict) or not isinstance(choice.get("message"), dict):
                     raise TypeError("Malformed completion envelope.")
                 if choice.get("finish_reason") != "stop" or choice["message"].get("refusal"):

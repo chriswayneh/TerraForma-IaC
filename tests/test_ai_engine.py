@@ -122,6 +122,118 @@ def test_missing_key(monkeypatch):
         AIDiagnosticsEngine()
 
 
+@pytest.mark.parametrize("timeout", [0, -1, float("nan"), float("inf"), True, "30", 121])
+def test_nonfinite_or_unsupported_timeouts_are_rejected(timeout):
+    with pytest.raises(ValueError, match="finite HTTP timeout"):
+        AIDiagnosticsEngine(api_key="test-key", timeout=timeout)
+
+
+@pytest.mark.parametrize("attempts", [True, 1.5, "3", 0, 6])
+def test_attempt_limit_requires_a_bounded_integer(attempts):
+    with pytest.raises(ValueError, match="integer attempts"):
+        AIDiagnosticsEngine(api_key="test-key", max_attempts=attempts)
+
+
+class ObservedStream(httpx.AsyncByteStream):
+    def __init__(self, chunks, delay=0):
+        self.chunks = chunks
+        self.delay = delay
+        self.reads = 0
+        self.closed = False
+
+    async def __aiter__(self):
+        for chunk in self.chunks:
+            self.reads += 1
+            if self.delay:
+                await asyncio.sleep(self.delay)
+            yield chunk
+
+    async def aclose(self):
+        self.closed = True
+
+
+def test_oversized_stream_stops_reading_closes_and_omits_body():
+    stream = ObservedStream([b"private-marker".ljust(8192, b"x")] * 20)
+    with pytest.raises(DiagnosticsError, match="64 KiB limit") as error:
+        diagnose(lambda request: httpx.Response(200, stream=stream))
+    assert stream.closed and stream.reads == 9
+    assert "private-marker" not in str(error.value)
+
+
+def test_response_at_exact_byte_limit_is_accepted_and_closed():
+    raw = json.dumps(completion('{"friendly_explanation":"hi","recommended_fix":"fix"}')).encode()
+    stream = ObservedStream([raw + b" " * (64 * 1024 - len(raw))])
+    assert diagnose(lambda request: httpx.Response(200, stream=stream))["recommended_fix"] == "fix"
+    assert stream.closed
+
+
+def test_error_response_body_is_not_read_and_is_closed():
+    stream = ObservedStream([b"private-marker"])
+    with pytest.raises(DiagnosticsError, match="HTTP 401"):
+        diagnose(lambda request: httpx.Response(401, stream=stream))
+    assert stream.closed and stream.reads == 0
+
+
+def test_absolute_attempt_timeout_closes_slow_response():
+    stream = ObservedStream([b"{"], delay=0.1)
+
+    async def execute():
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda request: httpx.Response(200, stream=stream))
+        ) as client:
+            await AIDiagnosticsEngine(
+                api_key="test-key", client=client, timeout=0.01, max_attempts=1
+            ).diagnose("log")
+
+    with pytest.raises(DiagnosticsError, match="could not be reached"):
+        asyncio.run(execute())
+    assert stream.closed
+
+
+def test_injected_client_cannot_follow_diagnostic_redirects():
+    calls = []
+
+    def handler(request):
+        calls.append(str(request.url))
+        return httpx.Response(302, headers={"Location": "https://different.example/private-marker"})
+
+    async def execute():
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), follow_redirects=True
+        ) as client:
+            await AIDiagnosticsEngine(api_key="test-key", client=client, max_attempts=1).diagnose(
+                "log"
+            )
+
+    with pytest.raises(DiagnosticsError, match="HTTP 302"):
+        asyncio.run(execute())
+    assert calls == [AIDiagnosticsEngine.endpoint]
+
+
+@pytest.mark.parametrize(
+    "retry_after,expected",
+    [("NaN", 1), ("Infinity", 1), ("private-marker", 1), ("1000", 10), ("-3", 0)],
+)
+def test_retry_delays_are_finite_and_bounded(retry_after, expected, monkeypatch):
+    calls = []
+    delays = []
+
+    async def sleep(delay):
+        delays.append(delay)
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(429, headers={"Retry-After": retry_after})
+        return httpx.Response(
+            200, json=completion('{"friendly_explanation":"hi","recommended_fix":"fix"}')
+        )
+
+    monkeypatch.setattr("terraforma.ai_engine.asyncio.sleep", sleep)
+    assert diagnose(handler, attempts=2)["recommended_fix"] == "fix"
+    assert delays == [expected]
+
+
 def test_redaction_of_environment_values_and_private_key(monkeypatch):
     monkeypatch.setenv("CUSTOM_TOKEN", "test-secret-token")
     text = 'test-secret-token\napi_key = "my-key"\n-----BEGIN RSA PRIVATE KEY-----\nprivate\n-----END RSA PRIVATE KEY-----'

@@ -1,6 +1,6 @@
 # Architecture
 
-[Getting started](GETTING_STARTED.md) Â· [Screenshots](../README.md#screenshots) Â· [Roadmap](ROADMAP.md) Â· [Verification](VERIFICATION.md)
+[Getting started](GETTING_STARTED.md) · [Screenshots](../README.md#screenshots) · [Roadmap](ROADMAP.md) · [Verification](VERIFICATION.md)
 
 TerraForma-IaC is a Python package with two interfaces over one generation and validation core. The local web UI uses plain browser assets served by FastAPI; it requires no Node.js installation or frontend build.
 
@@ -32,7 +32,7 @@ flowchart LR
 - `catalog.py` describes recipe scope, fixed choices, unsupported features, and outstanding account checks.
 - `artifacts.py` creates deterministic unsigned generation receipts and checksum lists. Its local comparison command reads only declared artifact filenames with size limits and reports byte mismatches without file contents or deployment approval.
 - `sandbox.py` owns temporary workspaces, tool discovery, command execution, results, and cleanup. It never applies or destroys infrastructure.
-- `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Suggestions do not edit files.
+- `ai_engine.py` owns redaction, asynchronous HTTP requests, retries, and strict diagnostic parsing. Each attempt has a wall-clock timeout (30 seconds by default, configurable up to 120), collects at most 64 KiB of decoded response data, closes streams on exit and refuses redirects. Retry delays are finite and capped at 10 seconds, with at most five attempts (three by default). Error response bodies are not collected. Suggestions do not edit files. Streaming uses the [HTTPX asynchronous API](https://www.python-httpx.org/async/).
 - `cli.py` exposes generation, validation, local plan review, and local serving commands.
 - `plan_review.py` inspects bounded plan JSON exports and produces reports without raw resource values. Its initial rules have limited coverage and never grant apply approval.
 - `json_input.py` shares strict UTF-8, duplicate-key, finite-number and nesting checks across local imports, tool metadata and AI diagnostics. Local files accept a UTF-8 BOM; API JSON bodies do not.
