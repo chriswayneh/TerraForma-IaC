@@ -1,5 +1,11 @@
 # Verification record
 
+## Regular file input checkpoint
+
+- The default suite passes 1,331 tests with 223 optional/native/platform cases skipped. Ruff checks and formatting pass across 79 Python files.
+- Reader tests verify exact bytes, bounded overflow reads, invalid limits, directory rejection, a nonregular descriptor after opening and private-value-free CLI failures. Three POSIX named-pipe tests are skipped on this Windows host; they cover rejection before open and a regular-file-to-pipe substitution using nonblocking open.
+- Existing specification/plan byte limits remain enforced by their parsers. These checks do not authenticate files, create immutable snapshots, protect against every concurrent filesystem change or read cloud credentials.
+
 ## GCP host lifecycle checkpoint
 
 - The default suite passes 1,321 tests with 220 optional native cases skipped. Seventeen new cases verify standard Linux/Windows scheduling bindings, imported API answers, backwards-compatible defaults, strict enum/boolean rejection and exclusion from web-server/tier input contracts.

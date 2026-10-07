@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from terraforma.file_input import read_regular_bytes
 from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
@@ -587,8 +588,7 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
 
 
 def load_and_review(path: Path) -> dict:
-    with path.open("rb") as source:
-        raw = source.read(MAX_PLAN_BYTES + 1)
+    raw = read_regular_bytes(path, MAX_PLAN_BYTES)
     return review_bytes(raw)
 
 

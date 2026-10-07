@@ -1,5 +1,7 @@
 # Project specifications
 
+Local CLI imports require a regular file, with a descriptor check after opening and a 64 KiB size limit. Pipes, devices and directories are unsupported. Normal filesystem links to regular files may be followed; imports are neither authenticated nor immutable. See [local file handling](PLAN_REVIEW.md#results-and-automation) for concurrency limitations.
+
 Available on `main` during v0.3 development. The v0.2.0 release does not include this workflow.
 
 A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.

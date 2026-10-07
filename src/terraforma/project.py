@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
+from terraforma.file_input import read_regular_bytes
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.json_input import strict_json
 from terraforma.network_inputs import usable_vm_address
@@ -455,8 +456,7 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
 
 
 def load_specification(path: Path) -> ProjectSpecification:
-    with path.open("rb") as stream:
-        raw = stream.read(64 * 1024 + 1)
+    raw = read_regular_bytes(path, 64 * 1024)
     return parse_specification(raw)
 
 

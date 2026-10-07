@@ -43,6 +43,8 @@ Metadata and identity references: [EC2 metadata options](https://docs.aws.amazon
 
 ## Results and automation
 
+The CLI loads regular local files, rejects pipes/devices/directories, and rechecks the opened file descriptor before reading at most the byte limit plus one overflow byte. On POSIX, nonblocking open also prevents waiting on a pipe swapped in after the initial check. Ordinary links to regular files can be followed; this is not an immutable snapshot, source authentication or a complete defense against concurrent filesystem changes. Plan-value privacy and review limits still apply.
+
 ```text
 terraforma review-plan --file review.tfplan.json --json-output
 ```

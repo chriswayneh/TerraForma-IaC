@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Local project-specification and plan-JSON readers now check for regular files before opening and recheck the opened descriptor. Pipes, devices and directories are rejected; existing byte limits and generic CLI error handling remain in place.
+
 - Added GCP standalone Linux/Windows host-maintenance and automatic-restart questions, defaulting to live migration and enabled restart on standard VMs. Inputs persist through generation/import; guest patching, application recovery and live host behavior remain unverified.
 
 - Administrator-network questions now explain the distinction between accepted generation inputs and the stricter local plan policy: a public `/32` can generate files but remains a blocking administrator-access finding during plan review.
