@@ -51,6 +51,27 @@ Replace the example account ID with your intended AWS account. Every AWS recipe 
 
 To reopen a project, extract `terraforma.project.json` from its ZIP and select **Load project** in the browser. The file is validated locally before its answers and preview are restored. Imports never start validation or deployment, and do not enable AI or save additional answers in browser storage. Unsupported schema/template versions, duplicate JSON keys, missing answers, and files larger than 64 KiB are rejected. The development [AWS web-server example](../examples/aws-web.project.json) can be loaded the same way.
 
+## Optional cloud target preflight
+
+On development `main`, `terraforma preflight --spec terraforma.project.json` validates the saved project and reports `not_checked` without discovering or running cloud tools. To request a cloud read using the installed CLI's existing credentials:
+
+```text
+terraforma preflight --spec terraforma.project.json --verify-target
+terraforma preflight --spec terraforma.project.json --verify-target --json-output --timeout 30
+```
+
+| Provider | Read performed | Target confirmation criterion |
+| --- | --- | --- |
+| AWS | [STS caller identity](https://docs.aws.amazon.com/cli/latest/reference/sts/get-caller-identity.html) through `aws` | Reported caller account equals the requested 12-digit account ID |
+| Azure | [Subscription GET](https://learn.microsoft.com/en-us/rest/api/resources/subscriptions/get?view=rest-resources-2022-12-01) through `az rest` | Subscription ID matches and state is `Enabled` |
+| GCP | [Project metadata](https://docs.cloud.google.com/sdk/gcloud/reference/projects/describe) through `gcloud projects describe` | Project ID matches and lifecycle state is `ACTIVE` |
+
+Install and authenticate the official cloud CLI separately. AWS uses the standard partition's global STS endpoint and `us-east-1` signing region; other partitions require future adapters. Azure uses the CLI's configured ARM endpoint. Azure states other than `Enabled` require attention under this initial policy, even when some operations might remain available.
+
+Opt-in checks run in a temporary working directory with closed stdin, a default 30-second timeout (up to 120 seconds), and at most 128 KiB captured per output stream. TerraForma omits raw responses, diagnostics, discovered executable paths and principal details from reports. It removes OpenAI and Terraform variable/argument environment settings from the cloud subprocess; the cloud CLI retains its own credential configuration and may refresh authentication caches or write its usual logs. Absolute credential/config paths are preferable because the subprocess uses a temporary directory.
+
+Exit `0` means the check was skipped or the CLI reported a matching target; other check outcomes return exit `1`. `target_confirmed` establishes only the documented CLI-reported target check. Terraform can use different credentials or cloud endpoints, and executable/endpoint trust, resource permissions, regions, images, SKUs, quotas and connectivity remain unverified. The report includes the normalized specification digest, never grants approval, and does not alter saved questionnaires, initialize Terraform, or run plan/apply/destroy. Treat it as a separate, limited preflight rather than a provisioning gate.
+
 ## Secrets and validation
 
 Answers use the type declared by the recipe contract. Boolean questions require actual JSON `true` or `false`; strings such as `"false"` and numeric values are rejected. AWS VM and web-tier recipes expose `detailed_monitoring`, disabled by default, and retain that choice through both questionnaires and project import/export. See [monitoring behavior and costs](LINUX_VM.md#provider-access).

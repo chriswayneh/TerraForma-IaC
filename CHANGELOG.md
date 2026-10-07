@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add explicit CLI opt-in for bounded AWS account, Azure subscription and GCP project target reads, with mismatch/state checks, specification digests and reports omitting raw responses and credentials.
+
 - Compare canonical questionnaire digests and template versions during receipt verification; report invalid or inconsistent metadata without revealing values.
 
 - Create terminal-generated artifacts with Unix owner-only file permissions and private new destination directories; preserve existing directory permissions and document Windows/download boundaries.

@@ -15,6 +15,7 @@ from terraforma.artifacts import checksum_document, project_artifacts, verify_pr
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import WizardConfig, project_destination, write_configuration
 from terraforma.plan_review import load_and_review
+from terraforma.preflight import target_preflight
 from terraforma.project import (
     ProjectInputError,
     ProjectSpecification,
@@ -75,6 +76,46 @@ def doctor_command(json_output: bool, required_capability: str):
             )
         click.echo("\n" + report["limitations"])
     if not report["capabilities"][required_capability]:
+        raise click.exceptions.Exit(1)
+
+
+@main.command("preflight")
+@click.option(
+    "--spec",
+    "specification_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--verify-target",
+    is_flag=True,
+    help="Contact the cloud using the installed CLI's existing credentials for a read-only target check.",
+)
+@click.option(
+    "--timeout", type=click.FloatRange(min=0, max=120, min_open=True), default=30, show_default=True
+)
+@click.option(
+    "--json-output", is_flag=True, help="Print the bounded target report without raw CLI values."
+)
+def preflight_command(
+    specification_path: Path, verify_target: bool, timeout: float, json_output: bool
+):
+    """Inspect a saved project; opt in explicitly to cloud target checks."""
+    try:
+        report = target_preflight(
+            load_specification(specification_path), verify_target=verify_target, timeout=timeout
+        )
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "A supported, valid project specification and timeout are required; input values are omitted."
+        ) from None
+    if json_output:
+        click.echo(json.dumps(report, indent=2))
+    else:
+        click.echo(f"{report['provider']}: {report['status']}")
+        click.echo(report["message"])
+        click.echo(report["limitations"])
+    if report["status"] not in {"not_checked", "target_confirmed"}:
         raise click.exceptions.Exit(1)
 
 
