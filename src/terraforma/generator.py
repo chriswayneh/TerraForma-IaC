@@ -1555,6 +1555,7 @@ class TerraformGenerator:
                 machine_type=ref("var.machine_type"),
                 tags=["terraforma-web"],
                 metadata_startup_script=startup,
+                metadata={"serial-port-enable": "FALSE"},
                 children=[
                     block(
                         "disk",
@@ -1662,9 +1663,18 @@ class TerraformGenerator:
                 **({"allow_stopping_for_update": False} if standalone else {}),
                 tags=["terraforma-web"],
                 **(
-                    {"metadata": {"enable-oslogin": "TRUE", "block-project-ssh-keys": "TRUE"}}
+                    {
+                        "metadata": {
+                            "enable-oslogin": "TRUE",
+                            "block-project-ssh-keys": "TRUE",
+                            "serial-port-enable": "FALSE",
+                        }
+                    }
                     if standalone
-                    else {"metadata_startup_script": startup}
+                    else {
+                        "metadata_startup_script": startup,
+                        "metadata": {"serial-port-enable": "FALSE"},
+                    }
                 ),
                 children=[disk, network, image_lifecycle]
                 + (

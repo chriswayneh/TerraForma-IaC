@@ -64,6 +64,11 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         else:
             fixed.append("Administrator access is not configured by this recipe.")
+        if config.provider == "gcp":
+            fixed.append(
+                "Interactive serial console access is explicitly disabled on generated VMs/templates, overriding project metadata inheritance. Read-only serial logs and IAM/organization policy require separate review."
+            )
+            unsupported.append("Interactive serial console access")
         unsupported.extend(
             [
                 "Windows VMs",

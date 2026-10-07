@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Explicitly disabled interactive GCP serial console access on compute instances/templates, overriding project metadata inheritance. Read-only serial logs and cloud IAM remain separate considerations.
+
 - Added exact AWS AMI IDs for compute recipes while retaining trusted owner/OS/HVM constraints and adding an explicit x86_64 filter. A pin adds an image-ID filter; unsupported or unavailable pins do not fall back to latest.
 
 - Added exact GCP image names for compute recipes with fixed publisher projects, selected-OS matching and Terraform preconditions. Default family resolution remains available; ARM/custom references and mismatched OS pins are rejected.
