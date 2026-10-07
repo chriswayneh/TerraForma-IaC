@@ -24,6 +24,8 @@ MACHINES = {
                 "InstanceType": "t3.micro",
                 "ProcessorInfo": {"SupportedArchitectures": ["x86_64"]},
                 "EbsInfo": {"EncryptionSupport": "supported"},
+                "SupportedRootDeviceTypes": ["ebs"],
+                "SupportedVirtualizationTypes": ["hvm"],
             }
         ]
     },

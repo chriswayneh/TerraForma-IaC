@@ -74,6 +74,26 @@ def azure_zone_compatibility(machine: dict, location: str, zone: str) -> bool | 
     return zone in zones
 
 
+def aws_boot_compatibility(machine: dict) -> bool | None:
+    compatibility = []
+    for name, required, allowed in (
+        ("SupportedRootDeviceTypes", "ebs", {"ebs", "instance-store"}),
+        ("SupportedVirtualizationTypes", "hvm", {"hvm", "paravirtual"}),
+    ):
+        values = machine.get(name)
+        if values is None:
+            compatibility.append(None)
+            continue
+        if not isinstance(values, list) or any(
+            not isinstance(value, str) or value not in allowed for value in values
+        ):
+            raise TypeError("Unsupported boot metadata.")
+        if len(values) != len(set(values)):
+            raise ValueError("Ambiguous boot metadata.")
+        compatibility.append(required in values if values else None)
+    return False if False in compatibility else None if None in compatibility else True
+
+
 def machine_report(
     provider: str,
     data,
@@ -84,6 +104,7 @@ def machine_report(
     require_accelerated_networking: bool = False,
     require_host_encryption: bool = False,
     require_ebs_encryption: bool = False,
+    require_aws_boot: bool = False,
     availability_zone: str | None = None,
 ) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
@@ -135,6 +156,9 @@ def machine_report(
         ):
             raise ValueError("Unsupported architecture metadata.")
         compatible = "x86_64" in architectures if architectures else None
+        if require_aws_boot:
+            boot_compatible = aws_boot_compatibility(machine)
+            report["ebs_hvm_boot_compatible"] = boot_compatible
         if require_ebs_encryption:
             ebs = machine.get("EbsInfo")
             if ebs is not None and not isinstance(ebs, dict):
@@ -216,6 +240,8 @@ def machine_report(
         if compatible is None
         else "boot_features_incompatible"
         if require_trusted_launch and boot_compatible is False
+        else "aws_boot_incompatible"
+        if require_aws_boot and boot_compatible is False
         else "encryption_features_incompatible"
         if require_host_encryption and encryption_compatible is False
         else "ebs_encryption_incompatible"
@@ -226,6 +252,8 @@ def machine_report(
         if availability_zone is not None and zone_compatible is False
         else "boot_features_unknown"
         if require_trusted_launch and boot_compatible is None
+        else "aws_boot_unknown"
+        if require_aws_boot and boot_compatible is None
         else "encryption_features_unknown"
         if require_host_encryption and encryption_compatible is None
         else "ebs_encryption_unknown"
@@ -385,6 +413,11 @@ def inspect_machine(specification, executable, environment, timeout):
                 and (
                     specification.recipe.enable_encryption or values.get("enable_data_disk") is True
                 )
+            ),
+            require_aws_boot=(
+                provider == "aws"
+                and specification.recipe.architecture_type
+                in {"virtual_machine", "windows_virtual_machine"}
             ),
             availability_zone=(
                 values["availability_zone"]

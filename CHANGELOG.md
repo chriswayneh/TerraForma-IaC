@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- AWS standalone VM preflight now checks EBS-backed HVM boot support in the existing size response. Missing, incompatible and malformed capabilities remain distinct and prevent a subsequent zone offering read, including when root encryption is disabled.
+
 - Added a cloud authentication guide linked from the target-check card and documentation. It covers existing AWS SSO profiles, Azure CLI login and separate Google CLI/ADC credentials without collecting secrets or running login commands in TerraForma.
 
 - Clarified the storage encryption choice in the web UI and before the terminal question: disabling it requests unencrypted AWS boot/database storage, while standalone data disks retain encryption. Provider-specific defaults and account policy still apply.

@@ -1,5 +1,11 @@
 # Verification record
 
+## AWS standalone boot capability checkpoint
+
+- The default suite passes 1,610 tests with 240 optional/native/platform cases skipped. Ruff checks and formatting pass across 87 Python files; JavaScript syntax passes.
+- Forty-one new mocked regressions cover Linux/Windows EBS/HVM support, explicitly incompatible capabilities, missing/empty metadata, malformed/duplicate values, CPU failure priority and no zone offering read when boot requirements are unresolved. Root encryption off does not bypass boot checking.
+- Existing CLI/API regressions preserve the boot capability field alongside disk encryption and zone offering results. This uses the existing size read and adds no cloud request. No live cloud read or apply was run; AMI boot mode, OS compatibility, capacity and deployment remain unverified.
+
 ## Cloud authentication guidance checkpoint
 
 - Three PowerShell examples parse without errors; no login or cloud command was executed. Guidance references the official cloud/provider authentication documentation and preserves the distinction between CLI target confirmation and Terraform credentials.

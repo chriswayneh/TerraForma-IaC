@@ -770,6 +770,8 @@ byId("target-preflight-button").addEventListener("click", async () => {
         encryption_features_unknown: "The Azure metadata does not establish encryption-at-host support. Verify size support and subscription feature registration before planning.",
         ebs_encryption_incompatible: "This AWS instance type reports no EBS encryption support required by the generated disks. Choose a supported type before planning.",
         ebs_encryption_unknown: "The AWS metadata does not establish EBS encryption support. Verify the selected instance type before planning; CPU compatibility alone is insufficient.",
+        aws_boot_incompatible: "This AWS instance type does not report the EBS-backed HVM boot support required by the generated VM. Choose a supported type before planning.",
+        aws_boot_unknown: "The AWS metadata does not establish EBS-backed HVM boot support. Verify the selected instance type before planning; CPU compatibility alone is insufficient.",
         restricted: "The selected size reports restrictions or deprecation. Review those in your cloud tools before planning.",
         not_found: "The selected size was not found in the returned metadata for this region or zone.",
         failed: "The VM-size read failed or exceeded its limits. Check CLI authentication, permissions and the selected size separately.",

@@ -103,6 +103,8 @@ For compute recipes, select **Also read the selected VM size metadata** in the t
 
 For AWS standalone Linux/Windows VMs, the same size response checks `EbsInfo.EncryptionSupport` when root encryption is enabled or an encrypted data disk is requested. AWS reports [supported or unsupported EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsInfo.html). Missing metadata remains unknown; malformed values fail closed. CPU incompatibility retains priority. This check does not verify the KMS key, key permissions, account encryption policy, volume limits or achieved performance. Unresolved disk support prevents the subsequent zone offering read; disabling root encryption does not bypass checking an enabled encrypted data disk. Web-tier disk checks remain outside this initial capability check.
 
+AWS standalone VM preflight also checks [reported root-device and virtualization support](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceTypeInfo.html): the templates require `ebs` and `hvm`. Both capabilities must be established before a zone offering read. Missing or empty arrays remain unknown; unsupported capabilities remain incompatible; malformed or duplicate entries are rejected. This applies even when root encryption is disabled. It does not resolve the chosen AMI's BIOS/UEFI mode, image availability, operating-system support or deployment readiness. Web-tier boot checks remain outside this initial capability check.
+
 ```text
 terraforma preflight --spec terraforma.project.json --verify-target --verify-machine --json-output
 ```
@@ -111,7 +113,7 @@ terraforma preflight --spec terraforma.project.json --verify-target --verify-mac
 
 | Provider | Additional read | Metadata inspected |
 | --- | --- | --- |
-| AWS | [EC2 instance type description](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-types.html) in the requested region; a selected standalone VM zone adds an [instance-type offering read](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-type-offerings.html) | Exact instance type and reported support for `x86_64`; EBS encryption capability when standalone VM disks require it; exact type/zone offering when a zone is selected |
+| AWS | [EC2 instance type description](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-types.html) in the requested region; a selected standalone VM zone adds an [instance-type offering read](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-type-offerings.html) | Exact instance type and reported support for `x86_64`; standalone VM EBS/HVM boot support and required EBS encryption; exact type/zone offering when a zone is selected |
 | Azure | [VM SKU list](https://learn.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az-vm-list-skus) with explicit subscription/location/size and restricted entries included | Exact VM SKU/location, reported `x64` CPU architecture and any location/zone restrictions |
 | GCP | [Machine type description](https://docs.cloud.google.com/compute/docs/reference/rest/v1/machineTypes) with explicit project/zone | Exact machine name/zone, reported x86 architecture and deprecation state |
 

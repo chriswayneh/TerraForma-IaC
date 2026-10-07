@@ -28,6 +28,8 @@ def mock_reads(
                     "InstanceType": "t3.micro",
                     "ProcessorInfo": {"SupportedArchitectures": [architecture]},
                     "EbsInfo": {"EncryptionSupport": "supported"},
+                    "SupportedRootDeviceTypes": ["ebs"],
+                    "SupportedVirtualizationTypes": ["hvm"],
                 }
             ]
         },
@@ -108,6 +110,7 @@ def test_offering_results_are_bounded_redacted_and_not_approval(
         "architecture_compatible": True,
         "availability_zone_offered": offered,
         "ebs_encryption_compatible": True,
+        "ebs_hvm_boot_compatible": True,
     }
     assert report["approval_granted"] is False
     assert report["deployment_readiness_verified"] is False
