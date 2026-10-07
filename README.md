@@ -38,6 +38,8 @@ The local workspace guides cloud, workload, and configuration choices, then prev
 
 ## What you get
 
+**New on main:** the Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export. This is development work toward v0.3.0; it is not included in the v0.2.0 download.
+
 - A three-step browser wizard with guided cloud, workload, and configuration choices.
 - AWS, Azure, and Google Cloud configurations with public/private access choices.
 - Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.

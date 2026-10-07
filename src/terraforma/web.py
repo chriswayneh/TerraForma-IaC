@@ -1,5 +1,6 @@
 import asyncio
 import io
+import json
 import os
 import secrets
 import shutil
@@ -8,7 +9,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 from starlette.concurrency import run_in_threadpool
@@ -19,13 +21,14 @@ from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_s
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
+from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.request_limits import RequestSizeLimitMiddleware
 from terraforma.sandbox import ValidationSandbox
 
 
 class ValidationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    config: WizardConfig
+    config: WizardConfig | ProjectSpecification
     explain_with_ai: bool = False
 
 
@@ -71,6 +74,26 @@ def generate_project(config: WizardConfig) -> dict:
     }
 
 
+def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
+    if isinstance(payload, WizardConfig):
+        return generate_project(payload)
+    try:
+        compiled = compile_project(payload)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=422,
+            detail="Project inputs are incomplete or invalid. Check the input contract; secret values must be supplied externally.",
+        ) from None
+    project = generate_project(payload.recipe)
+    project["files"] = compiled["files"]
+    project["specification"] = compiled["specification"]
+    project["required_inputs"] = [
+        item for item in project["required_inputs"] if item["name"] not in payload.inputs
+    ]
+    project["notes"].append(compiled["verification"])
+    return project
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="TerraForma-IaC local workspace",
@@ -84,6 +107,29 @@ def create_app() -> FastAPI:
     token = secrets.token_urlsafe(32)
     validation_lock = asyncio.Lock()
     static = Path(__file__).parent / "static"
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, error: RequestValidationError):
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": "Request does not match the supported schema. Check the selected recipe and input contract; input values are omitted from this error."
+            },
+        )
+
+    @app.post("/api/input-contract")
+    async def recipe_inputs(config: WizardConfig):
+        return {"schema_version": 1, "inputs": input_contract(config)}
+
+    @app.post("/api/projects/compile")
+    async def project_compile(specification: ProjectSpecification):
+        try:
+            return compile_project(specification)
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=422,
+                detail="Project inputs are incomplete or invalid; inspect the input contract. Secret values must be supplied externally.",
+            ) from None
 
     @app.middleware("http")
     async def local_request_guard(request: Request, call_next):
@@ -128,15 +174,16 @@ def create_app() -> FastAPI:
         }
 
     @app.post("/api/generate")
-    async def generate(config: WizardConfig):
-        return generate_project(config)
+    async def generate(config: WizardConfig | ProjectSpecification):
+        return configured_project(config)
 
     @app.post("/api/download")
-    async def download(config: WizardConfig):
-        project = generate_project(config)
+    async def download(config: WizardConfig | ProjectSpecification):
+        project = configured_project(config)
+        recipe = config.recipe if isinstance(config, ProjectSpecification) else config
         stream = io.BytesIO()
         instructions = [
-            f"# {config.project_name}",
+            f"# {recipe.project_name}",
             "",
             "Generated with TerraForma-IaC.",
             "",
@@ -167,10 +214,14 @@ def create_app() -> FastAPI:
             for name, text in project["files"].items():
                 archive.writestr(name, text)
             archive.writestr("README.md", "\n".join(instructions) + "\n")
+            if "specification" in project:
+                archive.writestr(
+                    "terraforma.project.json", json.dumps(project["specification"], indent=2) + "\n"
+                )
         return Response(
             stream.getvalue(),
             media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{config.project_name}.zip"'},
+            headers={"Content-Disposition": f'attachment; filename="{recipe.project_name}.zip"'},
         )
 
     @app.post("/api/validate")
@@ -180,7 +231,7 @@ def create_app() -> FastAPI:
                 status_code=409, detail="Another validation is running. Try again when it finishes."
             )
         async with validation_lock:
-            project = generate_project(payload.config)
+            project = configured_project(payload.config)
             try:
                 result = await run_in_threadpool(
                     ValidationSandbox(generated_files=project["files"]).validate

@@ -11,6 +11,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Understand how the components work together | [Architecture](ARCHITECTURE.md) |
 | Check validation and platform evidence | [Verification record](VERIFICATION.md) |
 | Review a Terraform plan locally | [Plan review](PLAN_REVIEW.md) |
+| Reuse a recipe's input answers on main | [Project specifications](PROJECT_SPECIFICATION.md) |
 | Understand the future VM questions | [VM input design](VM_INPUTS.md) |
 | Review security boundaries or report a vulnerability | [Security policy](../SECURITY.md) |
 | Contribute a change | [Contribution guide](../CONTRIBUTING.md) |

@@ -13,6 +13,89 @@ let busy = false;
 let project = null;
 let selectedFile = "main.tf";
 let aiAvailable = false;
+let contractKey = "";
+let contract = [];
+
+function projectSpecification() {
+  const inputs = {};
+  const secret_references = {};
+  contract.forEach((definition) => {
+    if (definition.sensitive) {
+      secret_references[definition.name] = definition.environment_variable;
+    } else if (definition.editable) {
+      inputs[definition.name] = byId(`recipe-${definition.name}`).value;
+    }
+  });
+  return {
+    schema_version: 1,
+    template_version: "0.2.0",
+    recipe: configuration(),
+    inputs,
+    secret_references,
+  };
+}
+
+async function loadRecipeInputs() {
+  const config = configuration();
+  const key = [
+    config.provider,
+    config.architecture_type,
+    config.is_public,
+  ].join(":");
+  if (key === contractKey) return;
+  const retained = {};
+  if (
+    contractKey.split(":").slice(0, 2).join(":") ===
+    key.split(":").slice(0, 2).join(":")
+  ) {
+    contract.forEach((definition) => {
+      const input = byId(`recipe-${definition.name}`);
+      if (input && input.value !== (definition.default ?? ""))
+        retained[definition.name] = input.value;
+    });
+  }
+  const result = await (await api("/api/input-contract", config)).json();
+  contract = result.inputs;
+  const container = byId("recipe-inputs");
+  container.replaceChildren();
+  contract.forEach((definition) => {
+    if (!definition.editable) return;
+    const group = document.createElement("div");
+    group.className = "recipe-input-group";
+    const label = document.createElement("label");
+    label.className = "input-label";
+    label.textContent = definition.label;
+    const help = document.createElement("p");
+    help.className = "input-help";
+    help.id = `recipe-help-${definition.name}`;
+    if (definition.sensitive) {
+      help.textContent = `Supply ${definition.environment_variable} through your environment before planning. Its value is not collected or saved here.`;
+      group.append(label, help);
+    } else {
+      const input = document.createElement(
+        definition.kind === "multiline" ? "textarea" : "input",
+      );
+      input.id = `recipe-${definition.name}`;
+      input.className = "text-input";
+      if (definition.kind === "multiline") input.rows = 4;
+      else input.type = "text";
+      input.required = true;
+      input.maxLength = 16384;
+      input.value = retained[definition.name] ?? definition.default ?? "";
+      input.autocomplete = "off";
+      input.setAttribute("aria-describedby", help.id);
+      label.htmlFor = input.id;
+      help.textContent =
+        definition.description +
+        (definition.default !== null
+          ? " A default is provided; review it for your project."
+          : " Required for this recipe.");
+      group.append(label, input, help);
+    }
+    container.append(group);
+  });
+  contractKey = key;
+}
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -39,11 +122,12 @@ byId("theme-button").addEventListener("click", () =>
 );
 
 function configuration() {
-  const values = new FormData(form);
   return {
-    provider: values.get("provider"),
-    project_name: values.get("project_name"),
-    architecture_type: values.get("architecture_type"),
+    provider: form.querySelector('input[name="provider"]:checked').value,
+    project_name: byId("project-name").value,
+    architecture_type: form.querySelector(
+      'input[name="architecture_type"]:checked',
+    ).value,
     is_public: byId("public-access").checked,
     enable_encryption: byId("encryption").checked,
   };
@@ -111,7 +195,7 @@ function notify(message, error = false) {
 
 function setBusy(value) {
   busy = value;
-  form.querySelectorAll("input").forEach((input) => {
+  form.querySelectorAll("input, textarea").forEach((input) => {
     input.disabled = value;
   });
   byId("next-button").disabled = value;
@@ -281,6 +365,17 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (busy) return;
   if (step < 2) {
+    if (step === 1) {
+      setBusy(true);
+      try {
+        await loadRecipeInputs();
+      } catch (error) {
+        notify(error.message, true);
+        return;
+      } finally {
+        setBusy(false);
+      }
+    }
     showStep(step + 1);
     updateGuidance();
     return;
@@ -290,7 +385,21 @@ form.addEventListener("submit", async (event) => {
   setBusy(true);
   notify("Generating your Terraform configuration…");
   try {
-    renderProject(await (await api("/api/generate", config)).json());
+    await loadRecipeInputs();
+    setBusy(false);
+    const invalid = Array.from(
+      byId("recipe-inputs").querySelectorAll("input, textarea"),
+    ).find((input) => !input.checkValidity());
+    if (invalid) {
+      notify("Complete the required recipe inputs before generating.", true);
+      setBusy(false);
+      invalid.reportValidity();
+      return;
+    }
+    setBusy(true);
+    renderProject(
+      await (await api("/api/generate", projectSpecification())).json(),
+    );
     notify(
       "Your three files are ready. Review the inputs below, validate locally, or download your project.",
     );
@@ -364,7 +473,10 @@ byId("download-button").addEventListener("click", async () => {
   const config = configuration();
   setBusy(true);
   try {
-    const response = await api("/api/download", config);
+    const response = await api(
+      "/api/download",
+      project.specification || config,
+    );
     const url = URL.createObjectURL(await response.blob());
     const link = document.createElement("a");
     link.href = url;
@@ -386,7 +498,7 @@ byId("download-button").addEventListener("click", async () => {
 byId("validate-button").addEventListener("click", async () => {
   if (busy || !project) return;
   const payload = {
-    config: configuration(),
+    config: project.specification || configuration(),
     explain_with_ai: byId("ai-option").checked,
   };
   setBusy(true);
@@ -479,6 +591,7 @@ async function initialize() {
       );
     const session = await response.json();
     token = session.token;
+    if (step === 2) await loadRecipeInputs();
     aiAvailable = session.ai_available;
     byId("version").textContent = `TerraForma-IaC v${session.version}`;
     Object.entries(session.tools).forEach(([name, ready]) => {

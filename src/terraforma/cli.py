@@ -13,6 +13,7 @@ from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.generator import TerraformGenerator, WizardConfig, write_configuration
 from terraforma.plan_review import load_and_review
+from terraforma.project import compile_project, input_contract, load_specification
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -220,6 +221,50 @@ def review_plan_command(plan_file: Path, json_output: bool):
         click.echo(report["limitations"])
     if report["status"] == "blocked":
         raise click.exceptions.Exit(1)
+
+
+@main.command("project-inputs")
+@click.option("--spec", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+def project_inputs(spec: Path):
+    """List every declared variable for a versioned project recipe."""
+    try:
+        specification = load_specification(spec)
+        contract = input_contract(specification.recipe)
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException("Unable to read a supported project specification.") from None
+    click.echo(json.dumps(contract, indent=2))
+
+
+@main.command("generate")
+@click.option("--spec", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option(
+    "--dir", "target_dir", required=True, type=click.Path(file_okay=False, path_type=Path)
+)
+def generate_specification(spec: Path, target_dir: Path):
+    """Generate Terraform from a project specification with complete non-secret inputs."""
+    try:
+        specification = load_specification(spec)
+        result = compile_project(specification)
+    except ValidationError:
+        raise click.ClickException(
+            "Project specification does not match the supported schema; input values are omitted from this error."
+        ) from None
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "Project inputs are incomplete or invalid. Run project-inputs to inspect the required fields; values are omitted from this error."
+        ) from None
+    try:
+        directory = write_configuration(result["files"], target_dir)
+    except (OSError, ValueError):
+        raise click.ClickException(
+            "Unable to write Terraform files. Choose a new writable project directory."
+        ) from None
+    click.echo(f"Created Terraform files in {directory}")
+    for name in result["required_secret_environment_variables"]:
+        click.echo(
+            f"Supply {name} through your environment before planning; its value was not collected or saved."
+        )
+    click.echo(result["verification"])
 
 
 @main.command()
