@@ -740,6 +740,21 @@ class TerraformGenerator:
             address = "public_ip" if self.config.is_public else "private_ip"
             if standalone:
                 self.output(
+                    "vm_id",
+                    "aws_instance.web[0].id",
+                    "EC2 instance ID for cloud operations; available after provisioning.",
+                )
+                self.output(
+                    "vm_name",
+                    'aws_instance.web[0].tags["Name"]',
+                    "EC2 Name tag; it is not a unique instance identifier. Use vm_id for operations.",
+                )
+                self.output(
+                    "vm_location",
+                    "aws_instance.web[0].availability_zone",
+                    "EC2 availability zone; the region is supplied in the project inputs.",
+                )
+                self.output(
                     "vm_address",
                     f"aws_instance.web[0].{address}",
                     "VM IPv4 address; SSH requires the allowed client network and matching private key.",
@@ -1242,6 +1257,26 @@ class TerraformGenerator:
             )
         if standalone:
             self.output(
+                "vm_id",
+                "azurerm_linux_virtual_machine.this.id",
+                "Azure VM resource ID for cloud operations; available after provisioning.",
+            )
+            self.output(
+                "vm_name",
+                "azurerm_linux_virtual_machine.this.name",
+                "Azure VM name within its resource group.",
+            )
+            self.output(
+                "vm_location",
+                "azurerm_linux_virtual_machine.this.location",
+                "Azure VM location; this recipe does not select an availability zone.",
+            )
+            self.output(
+                "vm_resource_group",
+                "azurerm_resource_group.this.name",
+                "Azure resource group name used with the VM name for cloud operations.",
+            )
+            self.output(
                 "vm_address",
                 endpoint,
                 "VM IPv4 address; SSH requires the allowed client network and matching private key.",
@@ -1732,6 +1767,21 @@ class TerraformGenerator:
                 else "google_compute_instance.this.network_interface[0].network_ip"
             )
         if standalone:
+            self.output(
+                "vm_id",
+                "google_compute_instance.this.id",
+                "GCP VM resource path for cloud operations; available after provisioning.",
+            )
+            self.output(
+                "vm_name",
+                "google_compute_instance.this.name",
+                "GCP instance name within its project and zone.",
+            )
+            self.output(
+                "vm_location",
+                "google_compute_instance.this.zone",
+                "GCP compute zone; project ID is supplied in the project inputs.",
+            )
             self.output(
                 "vm_address",
                 endpoint,

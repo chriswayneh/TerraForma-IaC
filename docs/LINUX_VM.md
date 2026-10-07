@@ -8,6 +8,8 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 
 ## Questions and defaults
 
+After provisioning with your reviewed Terraform workflow, `terraform output vm_id`, `vm_name` and `vm_location` provide references for follow-up cloud operations. AWS `vm_name` is a non-unique Name tag; use the instance ID. Azure also exports `vm_resource_group`; GCP operations need the project ID alongside the instance name and zone. These outputs contain no credentials and do not authorize an operation. Generation shows output definitions only; TerraForma does not provision resources or retrieve live identifiers.
+
 GCP compute templates explicitly set `serial-port-enable = FALSE` to override project-level interactive serial access. The serial console has a separate access path that does not use ordinary VM IP allowlists; see [Google's console guidance](https://docs.cloud.google.com/compute/docs/troubleshooting/troubleshooting-using-serial-console). Read-only serial output, IAM permissions and organization policy remain separate concerns. Interactive serial access is not configurable in these recipes.
 
 Azure standalone VMs include Secure Boot, enabled by default with vTPM retained. Confirm Trusted Launch support for the selected image and size, and review unsigned driver requirements. Guest attestation and Defender monitoring are not configured.

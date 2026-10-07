@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added standalone VM reference outputs across AWS/Azure/GCP: resource ID, name and placement, plus Azure resource group. AWS Name tags are explicitly described as non-unique.
+
 - Extended plan policy to `0.6.0` with GCP interactive serial-console checks on instances/templates. Enabled access and removal of an explicit disable are blocked; missing/inherited settings require review, and malformed metadata fails closed.
 
 - Explicitly disabled interactive GCP serial console access on compute instances/templates, overriding project metadata inheritance. Read-only serial logs and cloud IAM remain separate considerations.
