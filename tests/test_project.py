@@ -21,6 +21,7 @@ def test_browser_import_round_trip_preserves_answers_and_export():
     specification = ProjectSpecification(
         recipe=recipe("aws", "single_web_server"),
         inputs={
+            "aws_account_id": "123456789012",
             "region": "us-west-2",
             "instance_type": "t3.small",
             "boot_disk_size_gb": 100,
@@ -38,6 +39,37 @@ def test_browser_import_round_trip_preserves_answers_and_export():
         assert imported.json()["specification"] == specification.model_dump()
         assert imported.json()["files"]["variables.tf"] == variables
         assert imported.json()["capabilities"]["account_checks"] == "unverified"
+        assert imported.json()["target"] == {
+            "provider": "aws",
+            "account_reference": "123456789012",
+            "identity_verified": False,
+        }
+
+
+@pytest.mark.parametrize(
+    "workload", ["single_web_server", "load_balanced_tier", "secure_database", "static_site"]
+)
+def test_aws_recipes_bind_explicit_account_with_shared_identifier_constraint(workload):
+    config = recipe("aws", workload)
+    generated = compile_project(
+        ProjectSpecification(recipe=config, inputs={"aws_account_id": "123456789012"})
+    )
+    assert "allowed_account_ids = [var.aws_account_id]" in generated["files"]["main.tf"]
+    account = next(item for item in input_contract(config) if item["name"] == "aws_account_id")
+    assert account["required"] and account["default"] is None
+    assert account["pattern"] == "^[0-9]{12}$"
+    assert 'can(regex("^[0-9]{12}$", var.aws_account_id))' in generated["files"]["variables.tf"]
+
+
+@pytest.mark.parametrize("value", ["123", "12345678901x", "1234567890123", 123456789012, True])
+def test_invalid_aws_target_account_is_rejected(value):
+    with pytest.raises((ValueError, TypeError)):
+        compile_project(ProjectSpecification(recipe=recipe(), inputs={"aws_account_id": value}))
+
+
+def test_aws_specification_requires_explicit_target_account():
+    with pytest.raises(ValueError, match="aws_account_id"):
+        compile_project(ProjectSpecification(recipe=recipe()))
 
 
 @pytest.mark.parametrize(
@@ -113,6 +145,11 @@ def test_compilation_answers_required_inputs_and_keeps_secrets_external():
     assert lookup["subscription_id"]["default"] == specification.inputs["subscription_id"]
     assert "default" not in lookup["database_password"]
     assert result["required_secret_environment_variables"] == ["TF_VAR_database_password"]
+    assert result["target"] == {
+        "provider": "azure",
+        "account_reference": specification.inputs["subscription_id"],
+        "identity_verified": False,
+    }
 
 
 @pytest.mark.parametrize(
@@ -146,7 +183,11 @@ def test_missing_inputs_and_cross_region_zone_are_rejected():
 def test_user_strings_remain_literal_hcl():
     result = compile_project(
         ProjectSpecification(
-            recipe=recipe(), inputs={"index_html": '${file("private.txt")}%{if true}'}
+            recipe=recipe(),
+            inputs={
+                "aws_account_id": "123456789012",
+                "index_html": '${file("private.txt")}%{if true}',
+            },
         )
     )
     assert "$${file(" in result["files"]["variables.tf"]
@@ -156,7 +197,15 @@ def test_user_strings_remain_literal_hcl():
 @pytest.mark.parametrize(
     "provider,inputs",
     [
-        ("aws", {"instance_type": "t3.small", "boot_disk_size_gb": 100, "boot_disk_type": "gp2"}),
+        (
+            "aws",
+            {
+                "aws_account_id": "123456789012",
+                "instance_type": "t3.small",
+                "boot_disk_size_gb": 100,
+                "boot_disk_type": "gp2",
+            },
+        ),
         (
             "azure",
             {
@@ -222,7 +271,9 @@ def test_cli_specification_workflow_and_private_error(tmp_path):
     source = tmp_path / "project.json"
     source.write_text(
         json.dumps(
-            ProjectSpecification(recipe=recipe(), inputs={"region": "us-west-2"}).model_dump()
+            ProjectSpecification(
+                recipe=recipe(), inputs={"aws_account_id": "123456789012", "region": "us-west-2"}
+            ).model_dump()
         )
     )
     runner = CliRunner()
@@ -252,9 +303,9 @@ def test_api_contract_compilation_and_private_errors():
         headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
         contract = client.post("/api/input-contract", json=recipe().model_dump(), headers=headers)
         assert contract.status_code == 200
-        assert len(contract.json()["inputs"]) == 3
+        assert len(contract.json()["inputs"]) == 4
         specification = ProjectSpecification(
-            recipe=recipe(), inputs={"region": "us-west-2"}
+            recipe=recipe(), inputs={"aws_account_id": "123456789012", "region": "us-west-2"}
         ).model_dump()
         response = client.post("/api/projects/compile", json=specification, headers=headers)
         assert response.status_code == 200
@@ -268,7 +319,7 @@ def test_api_contract_compilation_and_private_errors():
 
 def test_configured_download_and_validation_preserve_inputs(monkeypatch):
     specification = ProjectSpecification(
-        recipe=recipe(), inputs={"region": "us-west-2"}
+        recipe=recipe(), inputs={"aws_account_id": "123456789012", "region": "us-west-2"}
     ).model_dump()
     captured = {}
 

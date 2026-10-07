@@ -57,6 +57,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
                     "subscription_id": "Azure subscription ID",
+                    "aws_account_id": "Target AWS account ID",
                     "ssh_public_key": "Administrator SSH public key (Ed25519 or RSA)",
                     "database_client_ip": "Database client IPv4 address",
                     "index_html": "Website HTML",
@@ -156,6 +157,8 @@ def validate_answer(definition: dict, value: str | int) -> None:
         if not isinstance(value, str):
             raise TypeError("This input requires a string.")
         validate_input(definition["name"], value, definition["kind"])
+        if definition["pattern"] and not re.fullmatch(definition["pattern"], value):
+            raise ValueError("Input does not match the required identifier format.")
         if definition["choices"] and value not in definition["choices"]:
             raise ValueError("Input is not one of the supported choices.")
 
@@ -203,6 +206,15 @@ def compile_project(specification: ProjectSpecification) -> dict:
         "specification": specification.model_dump(),
         "input_contract": contract,
         "capabilities": recipe_capabilities(specification.recipe),
+        "target": {
+            "provider": specification.recipe.provider,
+            "account_reference": effective.get(
+                {"aws": "aws_account_id", "azure": "subscription_id", "gcp": "gcp_project_id"}[
+                    specification.recipe.provider
+                ]
+            ),
+            "identity_verified": False,
+        },
         "required_secret_environment_variables": required_secrets,
         "verification": "Generated offline. Account permissions, region/image/SKU availability, quotas, and deployment remain unverified.",
     }

@@ -84,6 +84,7 @@ class TerraformGenerator:
         minimum: int | None = None,
         maximum: int | None = None,
         choices: tuple[str, ...] | None = None,
+        pattern: str | None = None,
     ) -> None:
         attributes = {"description": description, "type": ref(type_name)}
         if default is not None:
@@ -109,10 +110,19 @@ class TerraformGenerator:
                     error_message="Use a supported value: " + ", ".join(choices),
                 )
             )
+        if pattern:
+            validations.append(
+                block(
+                    "validation",
+                    condition=ref(f"can(regex({value_hcl(pattern)}, var.{name}))"),
+                    error_message="Use the required identifier format for this field.",
+                )
+            )
         self.input_constraints[name] = {
             "minimum": minimum,
             "maximum": maximum,
             "choices": list(choices) if choices else None,
+            "pattern": pattern,
         }
         self.variables.append(block("variable", name, children=validations, **attributes))
 
@@ -156,7 +166,19 @@ class TerraformGenerator:
 
     def _aws(self) -> None:
         self.variable("region", "AWS region.", "us-east-1")
-        self.main.append(block("provider", "aws", region=ref("var.region")))
+        self.variable(
+            "aws_account_id",
+            "Target AWS account ID: 12 digits. Terraform checks this against its authenticated account before provider operations.",
+            pattern=r"^[0-9]{12}$",
+        )
+        self.main.append(
+            block(
+                "provider",
+                "aws",
+                region=ref("var.region"),
+                allowed_account_ids=[ref("var.aws_account_id")],
+            )
+        )
         if self.config.architecture_type == "static_site":
             self._aws_static()
             return

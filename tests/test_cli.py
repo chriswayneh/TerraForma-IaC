@@ -56,6 +56,7 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
             False,
             True,
             "us-west-2",
+            "123456789012",
             "10.0.0.0/16",
             "t3.small",
             "100",
@@ -75,7 +76,18 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
 
 
 def test_wizard_never_prompts_for_password(tmp_path, monkeypatch):
-    answers = iter(["aws", "example", "secure_database", False, True, "us-east-1", "10.0.0.0/16"])
+    answers = iter(
+        [
+            "aws",
+            "example",
+            "secure_database",
+            False,
+            True,
+            "us-east-1",
+            "123456789012",
+            "10.0.0.0/16",
+        ]
+    )
 
     def prompt(label, **kwargs):
         assert "password" not in label.lower()

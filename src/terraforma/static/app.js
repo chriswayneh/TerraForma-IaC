@@ -111,6 +111,7 @@ async function loadRecipeInputs() {
       }
       input.required = true;
       input.maxLength = 16384;
+      if (definition.pattern) input.pattern = definition.pattern;
       input.value = retained[definition.name] ?? definition.default ?? "";
       input.autocomplete = "off";
       input.setAttribute("aria-describedby", help.id);
@@ -336,6 +337,11 @@ function renderProject(result) {
   byId("preview-badge").textContent = "3 FILES READY";
   renderFile("main.tf");
   byId("project-details").hidden = false;
+  byId("target-description").hidden = !result.target;
+  if (result.target) {
+    const targetName = {aws: "AWS account", azure: "Azure subscription", gcp: "Google Cloud project"}[result.target.provider];
+    byId("target-description").textContent = `Target ${targetName}: ${result.target.account_reference}. Identity has not been verified offline.`;
+  }
   byId("project-notes").replaceChildren(
     ...result.notes.map((text) => {
       const item = document.createElement("li");

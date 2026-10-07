@@ -11,6 +11,7 @@
 - Reopen exported project specifications in the browser with bounded, strict local parsing; retain operational answers and regenerate the preview.
 - Require exact recipe booleans and structurally valid Ed25519/RSA public keys for Azure; reject unsupported, malformed, and undersized key structures.
 - Review existing plan JSON in the browser with bounded input, one review at a time, sanitized reports, and explicit manual-review status.
+- Require an explicit target AWS account and generate a provider account allowlist; carry unverified account/subscription/project references into previews and project guides.
 
 - Add a current-phase summary and version/phase table to the roadmap.
 - Add a documentation index and clearer screenshot, architecture, and verification navigation.

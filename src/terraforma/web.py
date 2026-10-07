@@ -95,6 +95,7 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
     project = generate_project(payload.recipe)
     project["files"] = compiled["files"]
     project["specification"] = compiled["specification"]
+    project["target"] = compiled["target"]
     project["required_inputs"] = [
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
@@ -244,6 +245,15 @@ def create_app() -> FastAPI:
         if not project["required_inputs"]:
             instructions.append(
                 "No additional required Terraform variables. Configure your cloud credentials separately."
+            )
+        if "target" in project:
+            instructions.extend(
+                [
+                    "",
+                    "## Target account",
+                    "",
+                    f"{project['target']['provider']}: {project['target']['account_reference']}. Identity remains unverified offline.",
+                ]
             )
         instructions.extend(["", "## What the configuration creates", ""])
         for component in project["guide"]["components"]:
