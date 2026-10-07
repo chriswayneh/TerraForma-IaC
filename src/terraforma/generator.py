@@ -1026,6 +1026,13 @@ class TerraformGenerator:
             storage_account_type=ref("var.boot_disk_type"),
             disk_size_gb=ref("var.boot_disk_size_gb"),
         )
+        if standalone:
+            self.variable(
+                "enable_secure_boot",
+                "Enable Azure Trusted Launch Secure Boot for the selected Gen2 Ubuntu image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring.",
+                True,
+                type_name="bool",
+            )
         image = block(
             "source_image_reference",
             publisher="Canonical",
@@ -1139,6 +1146,11 @@ class TerraformGenerator:
                 "azurerm_linux_virtual_machine",
                 size=ref("var.vm_size"),
                 network_interface_ids=[ref("azurerm_network_interface.this.id")],
+                **(
+                    {"secure_boot_enabled": ref("var.enable_secure_boot"), "vtpm_enabled": True}
+                    if standalone
+                    else {}
+                ),
                 children=[disk, image, key]
                 + (
                     [

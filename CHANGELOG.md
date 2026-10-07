@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added guided Azure standalone VM Secure Boot, enabled by default with vTPM retained. The questionnaire explains unsigned driver and VM-size compatibility limits; guest attestation and Defender monitoring remain outside this recipe.
+
 - Offer a separate VM-size metadata opt-in after target confirmation: reported x86 compatibility across AWS/Azure/GCP, Azure restrictions and GCP deprecation, with bounded reads and no deployment approval.
 
 - Bound AI diagnostic response collection to 64 KiB with closed streams, absolute per-attempt timeouts, finite retry delays and redirect refusal.

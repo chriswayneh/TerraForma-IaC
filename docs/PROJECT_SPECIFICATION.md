@@ -138,6 +138,8 @@ Azure compute recipes ask for `admin_username`, defaulting to `terraforma`. This
 
 ### Linux image selection
 
+Azure standalone VMs expose `enable_secure_boot`, defaulting to `true`, and retain `vtpm_enabled = true`. Both supported Ubuntu images use Gen2 marketplace offers. Review [Trusted Launch support](https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch) for the selected size and image; unsigned kernel drivers can prevent booting. Guest attestation and Defender monitoring are not configured. Disabling Secure Boot retains vTPM and requires a separate workload/security decision. The [AzureRM Linux VM schema](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine) defines these controls; structural validation does not prove successful deployment.
+
 Compute recipes expose `os_image` as a supported choice, shared by terminal and browser forms. The selected image also determines the AWS package-manager startup script.
 
 | Provider | Choices | Publisher constraint |

@@ -8,6 +8,10 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 
 ## Questions and defaults
 
+Azure standalone VMs include Secure Boot, enabled by default with vTPM retained. Confirm Trusted Launch support for the selected image and size, and review unsigned driver requirements. Guest attestation and Defender monitoring are not configured.
+
+![Azure Secure Boot questionnaire](images/azure-trusted-launch.png)
+
 | Decision | What you provide | What stays fixed |
 | --- | --- | --- |
 | Target | AWS account ID, Azure subscription UUID, or Google Cloud project ID; environment label | Credentials use the cloud provider's normal credential chain; identity remains unverified offline |

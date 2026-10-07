@@ -80,7 +80,7 @@ def test_secure_boot_rejects_nonboolean_questionnaire_answers(value):
     "provider,workload",
     [
         ("aws", "virtual_machine"),
-        ("azure", "virtual_machine"),
+        ("azure", "single_web_server"),
         ("gcp", "single_web_server"),
         ("gcp", "load_balanced_tier"),
     ],

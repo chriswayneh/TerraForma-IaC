@@ -96,6 +96,10 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             fixed.append(
                 "Shielded VM Secure Boot is configurable (default enabled); vTPM and integrity monitoring stay enabled. Unsigned drivers/modules can prevent booting. Shielded setting changes require a stopped VM; automatic stopping is disabled."
             )
+        if standalone and config.provider == "azure":
+            fixed.append(
+                "Trusted Launch Secure Boot is configurable (default enabled); vTPM stays enabled. Check selected VM-size support and unsigned driver compatibility. Guest attestation and Defender monitoring are not configured."
+            )
     elif config.architecture_type == "secure_database":
         fixed.extend(
             [

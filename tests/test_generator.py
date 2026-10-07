@@ -178,6 +178,18 @@ def assert_native_files(directory, files):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
+@pytest.mark.parametrize("enabled", [False, True])
+@pytest.mark.parametrize("public", [False, True])
+def test_native_trusted_launch_choices(native_directories, image, enabled, public):
+    from terraforma.project import compile_project
+    from tests.test_trusted_launch import specification
+
+    assert_native_files(
+        native_directories["azure"], compile_project(specification(enabled, image, public))["files"]
+    )
+
+
 @pytest.mark.parametrize("image", ["debian-12", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])
