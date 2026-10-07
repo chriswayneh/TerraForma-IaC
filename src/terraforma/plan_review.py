@@ -10,7 +10,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.5.0"
+POLICY_VERSION = "0.6.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -122,7 +122,25 @@ POLICY_TYPES = NETWORK_TYPES | {
     "aws_volume_attachment",
     "aws_db_instance",
     "google_compute_instance",
+    "google_compute_instance_template",
 }
+
+
+def metadata_boolean(metadata, field: str) -> bool | None:
+    if metadata is None:
+        return None
+    if not isinstance(metadata, dict):
+        raise TypeError("Metadata must be an object.")
+    value = metadata.get(field)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise TypeError("Metadata control must be a string.")
+    if value.lower() in {"true", "y", "yes", "1"}:
+        return True
+    if value.lower() in {"false", "n", "no", "0"}:
+        return False
+    raise ValueError("Unsupported metadata control.")
 
 
 def planned_boolean(values: dict, field: str) -> bool | None:
@@ -263,6 +281,35 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
             "Only the documented initial checks are implemented; manual review remains required.",
         )
         try:
+            if resource_type in {"google_compute_instance", "google_compute_instance_template"}:
+                enabled = metadata_boolean(after.get("metadata"), "serial-port-enable")
+                before = change.get("before")
+                if before is not None and not isinstance(before, dict):
+                    raise TypeError("Previous resource values must be an object.")
+                previously_enabled = metadata_boolean(
+                    (before or {}).get("metadata"), "serial-port-enable"
+                )
+                if enabled is True:
+                    add(
+                        "interactive_serial_console",
+                        "block",
+                        resource_id,
+                        "Interactive serial console access is enabled. Ordinary VM firewall/IP allowlists do not restrict this access path; review cloud IAM, keys and organization controls separately.",
+                    )
+                elif enabled is None:
+                    add(
+                        "serial_console_unknown",
+                        "review",
+                        resource_id,
+                        "The plan does not establish that interactive serial console access is disabled. Instance metadata can inherit project settings; verify effective access controls.",
+                    )
+                    if previously_enabled is False:
+                        add(
+                            "serial_console_protection_removed",
+                            "block",
+                            resource_id,
+                            "This change removes an explicit serial-console disable setting. Project inheritance can enable access; review the protection change separately.",
+                        )
             if resource_type == "aws_instance":
                 options = after.get("metadata_options")
                 if options is None or options == []:

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extended plan policy to `0.6.0` with GCP interactive serial-console checks on instances/templates. Enabled access and removal of an explicit disable are blocked; missing/inherited settings require review, and malformed metadata fails closed.
+
 - Explicitly disabled interactive GCP serial console access on compute instances/templates, overriding project metadata inheritance. Read-only serial logs and cloud IAM remain separate considerations.
 
 - Added exact AWS AMI IDs for compute recipes while retaining trusted owner/OS/HVM constraints and adding an explicit x86_64 filter. A pin adds an image-ID filter; unsupported or unavailable pins do not fall back to latest.
