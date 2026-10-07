@@ -8,6 +8,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Connect existing cloud CLI and Terraform authentication | [Cloud authentication](CLOUD_AUTHENTICATION.md) |
 | Generate a GCP VM with an administrator tunnel on main | [Google IAP access](GCP_IAP_ACCESS.md) |
 | Review standalone VM boot-disk deletion and retention | [Boot disk lifecycle](BOOT_DISK_LIFECYCLE.md) |
+| Reference an existing GCP disk encryption key on main | [Google Cloud disk keys](GCP_DISK_KEYS.md) |
 | See the interface before installing | [Screenshots](../README.md#screenshots) |
 | Understand what the release includes | [v0.2.0 release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
 | See current progress and planned versions | [Roadmap](ROADMAP.md) |

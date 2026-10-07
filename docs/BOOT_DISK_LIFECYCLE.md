@@ -1,5 +1,7 @@
 # Boot disk lifecycle
 
+GCP standalone disks can optionally reference an [existing Cloud KMS key](GCP_DISK_KEYS.md). Disk retention does not preserve key state or access; key recovery and permissions remain separate responsibilities.
+
 Development standalone AWS and GCP Linux/Windows recipes expose **Delete boot disk when VM is deleted**. This controls the VM's boot-disk deletion setting. Azure and web-tier recipes do not offer this option.
 
 | Choice | Generated behavior | Review before use |

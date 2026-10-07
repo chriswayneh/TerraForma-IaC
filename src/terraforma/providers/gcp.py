@@ -204,7 +204,12 @@ def build_gcp(builder: TerraformGenerator) -> None:
     )
     disk = block(
         "boot_disk",
-        **{"auto_delete": ref("var.delete_boot_disk_with_vm")} if standalone else {},
+        **{
+            "auto_delete": ref("var.delete_boot_disk_with_vm"),
+            "kms_key_self_link": ref("var.use_customer_managed_disk_key ? var.disk_kms_key : null"),
+        }
+        if standalone
+        else {},
         children=[
             block(
                 "initialize_params",
@@ -215,6 +220,27 @@ def build_gcp(builder: TerraformGenerator) -> None:
         ],
     )
     if standalone:
+        builder.variable(
+            "use_customer_managed_disk_key",
+            "Use one existing Google Cloud KMS key for this VM's boot disk and optional data disk. Disabled preserves Google-managed encryption. The key stays outside this project: no key creation, IAM grant, rotation or deletion is configured. Confirm key location compatibility and Compute Engine service-agent encryption/decryption access separately. Changing disk encryption can replace the VM/disks and delete data; review backups and the Terraform plan first.",
+            False,
+            type_name="bool",
+        )
+        builder.variable(
+            "disk_kms_key",
+            "Existing Cloud KMS CryptoKey resource name: projects/KEY_PROJECT/locations/LOCATION/keyRings/RING/cryptoKeys/KEY. Enter the resource reference, never raw key material or a credential. Key state, compatible location, IAM access and organization policy remain unverified. Revoking or destroying the key can prevent boot, disk attachment and recovery; retain key access separately from disk retention. Source-image decryption, custom KMS service accounts and automatic shutdown on key revocation are not configured.",
+            "",
+            pattern=r"^projects/([a-z][a-z0-9\-]{4,28}[a-z0-9]|[0-9]{1,30})/locations/[a-z][a-z0-9\-]{0,62}/keyRings/[A-Za-z0-9_\-]{1,63}/cryptoKeys/[A-Za-z0-9_\-]{1,63}$",
+            visible_when={"use_customer_managed_disk_key": True},
+            required_when={"use_customer_managed_disk_key": True},
+        )
+        image_lifecycle.children.append(
+            block(
+                "precondition",
+                condition=ref('!var.use_customer_managed_disk_key || var.disk_kms_key != ""'),
+                error_message="Supply an existing Cloud KMS CryptoKey reference when customer-managed disk encryption is enabled.",
+            )
+        )
         builder.variable(
             "enable_secure_boot",
             (
@@ -236,6 +262,14 @@ def build_gcp(builder: TerraformGenerator) -> None:
             type=ref("var.data_disk_type"),
             labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
             depends_on=[ref("google_project_service.compute")],
+            children=[
+                block(
+                    "dynamic",
+                    "disk_encryption_key",
+                    for_each=ref("var.use_customer_managed_disk_key ? [1] : []"),
+                    children=[block("content", kms_key_self_link=ref("var.disk_kms_key"))],
+                )
+            ],
         )
         builder.output(
             "data_disk_id",

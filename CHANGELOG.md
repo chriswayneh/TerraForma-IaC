@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an optional existing Cloud KMS CryptoKey reference for GCP standalone boot/data disks, preserving Google-managed encryption by default. No keys or IAM grants are created; reference validation and generated guidance explain location/access, replacement and recovery boundaries.
+
 - Corrected catalog image choices for Windows recipes, removed the stale GCP exact-pin exclusion and synchronized gp3 capability text with current input limits. Catalog metadata now has regressions against questionnaire choices and performance bounds.
 
 - Expanded AWS standalone gp3 tuning to the documented regional 80,000 IOPS/2,000 MiB/s ceilings while preserving included-performance defaults and size/IOPS/throughput ratios. Outposts remains unsupported; instance bandwidth, availability and achieved performance require separate verification.

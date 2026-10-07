@@ -1,5 +1,12 @@
 # Verification record
 
+## Existing GCP disk key checkpoint
+
+- The default suite passes 1,931 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 99 Python files; JavaScript syntax and whitespace checks pass.
+- Twenty-six new regressions cover Linux/Windows, enabled/default key modes, optional disks, malformed/raw/unused references, missing required keys, supported location shapes, unrelated recipes and API import. The Terraform lifecycle also requires a key when enabled. Google-managed encryption remains the default.
+- Eight separately enabled Linux/Windows mode/data-disk cases pass real Terraform validation and TFLint against the cached Google provider. Key availability, location compatibility, IAM access, disk creation and encrypted boot remain unverified.
+- A temporary browser tab imported an older GCP Linux project, enabled the existing-key option and generated its reference and recovery warning. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, key creation, IAM grant or apply was run.
+
 ## Catalog consistency checkpoint
 
 - Eighty-three catalog, GCP image-pin and gp3 regressions pass. Seven new checks compare Linux/Windows image choices across providers and the reported AWS performance ceilings against the input contract. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.

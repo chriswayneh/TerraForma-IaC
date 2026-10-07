@@ -4,6 +4,8 @@ AWS and GCP standalone VMs offer [boot-disk deletion or retention](BOOT_DISK_LIF
 
 GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](GCP_IAP_ACCESS.md). IAP generation targets RDP port 3389; tunnel IAM and Windows guest credentials are configured separately. Live connectivity remains unverified.
 
+GCP boot and optional data disks can reference one [existing Cloud KMS key](GCP_DISK_KEYS.md). Google-managed encryption remains the default; key location, service-agent access and recovery are reviewed separately. No key or IAM grant is created.
+
 Development on `main` includes initial **AWS, Azure and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
 
 ## Azure

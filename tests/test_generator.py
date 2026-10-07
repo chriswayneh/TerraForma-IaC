@@ -859,6 +859,19 @@ def test_native_gcp_windows_core(native_directories, public, version):
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "windows,data_disk,enabled", list(itertools.product([False, True], repeat=3))
+)
+def test_native_gcp_disk_key(native_directories, windows, data_disk, enabled):
+    from terraforma.project import compile_project
+    from tests.test_gcp_disk_key import KEY, specification
+
+    spec = specification(windows, enable_data_disk=data_disk, use_customer_managed_disk_key=enabled)
+    if enabled:
+        spec.inputs["disk_kms_key"] = KEY
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("windows,zone", list(itertools.product([False, True], ["regional", "2"])))
 def test_native_azure_standalone_placement(native_directories, windows, zone):
     from terraforma.project import compile_project

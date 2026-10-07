@@ -228,6 +228,13 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             "the VM and delete boot data. Verify the new offer's image version, application "
             "dependencies and backups before planning; old pins are not translated."
         )
+    if payload.recipe.provider == "gcp" and payload.inputs.get("use_customer_managed_disk_key"):
+        project["notes"].append(
+            "Disk encryption references an existing Cloud KMS key. Confirm its compatible location, "
+            "enabled state and Compute Engine service-agent access separately. No key or IAM grant "
+            "is managed here. Disk retention does not preserve key availability; revocation can "
+            "prevent boot, attachment and recovery. Changing encryption can replace disks and delete data."
+        )
     if (
         payload.recipe.architecture_type == "windows_virtual_machine"
         and payload.inputs.get("os_image") == "windows-server-2022-core"

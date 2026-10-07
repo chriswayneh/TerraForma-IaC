@@ -21,7 +21,7 @@ const inputSections = [
   ["Cloud target", ["environment", "aws_account_id", "subscription_id", "gcp_project_id", "region", "location", "zone", "availability_zone"]],
   ["Image and capacity", ["os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_count", "computer_name", "license_type"]],
   ["Network and access", ["network_cidr", "private_ip_address", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
-  ["Storage", ["enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
+  ["Storage", ["use_customer_managed_disk_key", "disk_kms_key", "enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
   ["Operations and identity", ["enable_workload_identity", "workload_identity", "detailed_monitoring", "cpu_credit_mode", "metadata_hop_limit", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
   ["Workload inputs", []],
 ];
@@ -342,7 +342,9 @@ function updateGuidance() {
     (config.provider === "azure" &&
       config.architecture_type === "secure_database");
   byId("encryption-help").textContent = storageAlwaysEncrypted
-    ? "This service always encrypts data with provider-managed keys."
+    ? config.provider === "gcp" && ["virtual_machine", "windows_virtual_machine"].includes(config.architecture_type)
+      ? "Disks use Google-managed encryption by default. An existing Cloud KMS key can be selected in Configure."
+      : "This service always encrypts data with provider-managed keys."
     : config.provider === "azure"
       ? "Also enable encryption at host. Requires subscription and VM-size support."
       : config.architecture_type === "secure_database"
@@ -754,7 +756,7 @@ byId("target-preflight-button").addEventListener("click", async () => {
     );
     if (report.machine_check?.status && !["not_checked", "not_applicable"].includes(report.machine_check.status)) {
       const machineMessages = {
-        metadata_confirmed: "The selected size passes this recipe's requested CPU, boot, encryption, networking and VM zone metadata checks. Subscription feature registration, capacity, quotas, guest drivers, image, disk and network-service zone compatibility still need review.",
+        metadata_confirmed: "The selected size has no reported incompatibility among the features checked by this recipe. Coverage varies by provider. Key access, subscription feature registration, capacity, quotas, guest drivers, image, disk and network-service zone compatibility still need review.",
         zone_incompatible: "The Azure size metadata does not list the selected availability zone in this region. Choose a listed zone or verify another size before planning.",
         zone_unknown: "The Azure size metadata does not establish support for the selected availability zone. Verify it before planning; CPU compatibility alone is insufficient.",
         zone_not_offered: "AWS does not report the selected instance type as offered in this availability zone. Review another zone or instance type before planning.",

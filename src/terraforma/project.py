@@ -112,6 +112,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "data_disk_iops": "Data disk IOPS (gp3)",
                     "data_disk_throughput": "Data disk throughput (MiB/s, gp3)",
                     "gcp_project_id": "Google Cloud project ID",
+                    "use_customer_managed_disk_key": "Use an existing disk encryption key",
+                    "disk_kms_key": "Existing Cloud KMS key resource name",
                     "subscription_id": "Azure subscription ID",
                     "aws_account_id": "Target AWS account ID",
                     "environment": "Environment label",
@@ -260,6 +262,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter an RFC1918 private subnet or a single IPv4 /32 administrator address."
         elif definition.get("network_policy") == "database_address":
             message = "Enter one client IPv4 address outside 0/8, loopback, and 224/3; Azure-wide service access is unsupported."
+        elif definition["name"] == "disk_kms_key":
+            message = "Enter a Cloud KMS CryptoKey resource name in the documented format; raw keys and credentials are unsupported."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -364,6 +368,11 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if effective.get("disk_kms_key") and not effective.get("use_customer_managed_disk_key"):
+        raise ProjectInputError(
+            "disk_kms_key",
+            "Enable customer-managed disk encryption before supplying a key reference.",
+        )
     if (
         specification.recipe.provider == "aws"
         and effective.get("cpu_credit_mode", "provider_default") != "provider_default"
@@ -451,7 +460,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
             and not effective.get(definition["name"])
         ):
             raise ProjectInputError(
-                definition["name"], "This input is required when workload identity is enabled."
+                definition["name"], "This input is required for the selected options."
             )
     if (
         specification.recipe.provider == "gcp"

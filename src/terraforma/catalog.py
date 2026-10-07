@@ -164,6 +164,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             unsupported.append("Azure VM deletion locks")
         if standalone and config.provider == "gcp":
             fixed.append(
+                "Boot and optional data disks use Google-managed encryption by default, with an optional existing Cloud KMS CryptoKey reference. No key or IAM grant is created; location, permissions, key lifecycle and recovery require separate verification."
+            )
+            fixed.append(
                 "Standard VM host maintenance is configurable: MIGRATE (default) or TERMINATE. Automatic restart after host failures/maintenance is configurable (default enabled); it does not restart user-stopped VMs or repair applications. Actual host behavior and machine compatibility require cloud verification."
             )
             unsupported.extend(["Spot/preemptible VMs", "Custom host maintenance schedules"])

@@ -72,6 +72,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - EC2 metadata token response hop limits above one now require manual workload-isolation review. Missing, unknown and malformed controls remain visible review gaps; this does not establish live credential access or IAM permissions.
 - Initial managed disk access review covers Azure remote import/export and public network settings. Effective permissions, private endpoints, encryption and backup/recovery still require separate review.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
+- GCP standalone boot/data disks can reference one existing Cloud KMS CryptoKey without managing key lifecycle or IAM grants. Location compatibility, service-agent access, key state and recovery remain unverified.
 - Preserve existing provider locks during validation with read-only initialization. Missing locks, remote module content trust and independently reviewed dependency upgrades remain explicit boundaries.
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.
