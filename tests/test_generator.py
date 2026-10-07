@@ -801,6 +801,25 @@ def test_native_aws_metadata_hops(native_directories, windows, mode):
     )
 
 
+@pytest.mark.parametrize("windows,public", list(itertools.product([False, True], repeat=2)))
+def test_native_aws_expanded_gp3(native_directories, windows, public):
+    from terraforma.project import compile_project
+    from tests.test_aws_placement import specification
+
+    spec = specification(
+        windows,
+        public=public,
+        boot_disk_size_gb=160,
+        boot_disk_iops=80000,
+        boot_disk_throughput=2000,
+        enable_data_disk=True,
+        data_disk_size_gb=160,
+        data_disk_iops=80000,
+        data_disk_throughput=2000,
+    )
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize(
     "public,version", list(itertools.product([False, True], ["latest", "20348.1.1"]))
 )

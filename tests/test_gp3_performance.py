@@ -23,7 +23,13 @@ from tests.test_private_ip import specification
         (32, 2999, 125, False),
         (32, 16001, 125, False),
         (32, 3000, 124, False),
-        (32, 16000, 1001, False),
+        (160, 80000, 2000, True),
+        (160, 80001, 2000, False),
+        (159, 80000, 2000, False),
+        (32, 8000, 2000, True),
+        (32, 7999, 2000, False),
+        (160, 80000, 2001, False),
+        (32, 16000, 1001, True),
     ],
 )
 def test_gp3_limits_and_performance_ratios(prefix, size, iops, throughput, valid):
@@ -88,7 +94,9 @@ def test_gp3_defaults_and_visibility_conditions():
         "enable_data_disk": True,
         "data_disk_type": "gp3",
     }
-    assert "template limit" in questions["boot_disk_iops"]["description"]
+    assert "Outposts is unsupported" in questions["boot_disk_iops"]["description"]
+    assert questions["boot_disk_iops"]["maximum"] == 80000
+    assert questions["boot_disk_throughput"]["maximum"] == 2000
 
 
 @pytest.mark.parametrize(
@@ -129,3 +137,26 @@ def test_gp3_export_and_import_preserve_requested_values():
             assert imported.status_code == 200
             assert imported.json()["specification"]["inputs"]["data_disk_iops"] == 12000
             assert imported.json()["files"]["variables.tf"] == archive.read("variables.tf").decode()
+
+
+@pytest.mark.parametrize("windows", [False, True])
+def test_expanded_performance_api_round_trip(windows):
+    from tests.test_aws_placement import specification as vm_specification
+
+    spec = vm_specification(
+        windows,
+        boot_disk_size_gb=160,
+        boot_disk_iops=80000,
+        boot_disk_throughput=2000,
+        enable_data_disk=True,
+        data_disk_size_gb=160,
+        data_disk_iops=80000,
+        data_disk_throughput=2000,
+    )
+    with TestClient(create_app(), base_url="http://127.0.0.1") as client:
+        headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
+        generated = client.post("/api/generate", headers=headers, json=spec.model_dump())
+        imported = client.post("/api/projects/import", headers=headers, json=spec.model_dump())
+    assert generated.status_code == imported.status_code == 200
+    assert imported.json()["files"] == generated.json()["files"]
+    assert imported.json()["specification"]["inputs"] == spec.inputs

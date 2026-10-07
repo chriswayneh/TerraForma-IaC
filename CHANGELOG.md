@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Expanded AWS standalone gp3 tuning to the documented regional 80,000 IOPS/2,000 MiB/s ceilings while preserving included-performance defaults and size/IOPS/throughput ratios. Outposts remains unsupported; instance bandwidth, availability and achieved performance require separate verification.
+
 - Terminal generation now flushes and synchronizes generated file contents before reporting success. Sync errors and interrupts trigger existing cleanup, with redacted recovery messages; atomic multi-file publication and directory durability remain outside this change.
 
 - Plan review policy 0.10.0 flags EC2 metadata token responses that can cross additional network hops, with explicit unknown/malformed-control handling. Existing IMDSv1 blocks remain in place; reports remain redacted and never grant provisioning approval.

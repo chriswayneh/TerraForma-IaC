@@ -413,20 +413,20 @@ class TerraformGenerator:
     def _gp3_inputs(self, prefix: str, conditions: dict[str, bool | str]) -> None:
         self.variable(
             f"{prefix}_iops",
-            "Provisioned gp3 disk input/output operations per second. 3,000 IOPS is included with storage; additional IOPS adds charges. This recipe supports 3,000–16,000 IOPS and at most 500 IOPS per GiB. This is a template limit, not AWS's full service limit. Instance EBS limits, workload behavior and account availability can reduce achieved performance; no performance or cost guarantee is made.",
+            "Provisioned gp3 disk input/output operations per second. 3,000 IOPS is included with storage; additional IOPS adds charges. This regional recipe supports 3,000–80,000 IOPS and at most 500 IOPS per GiB; 80,000 requires at least 160 GiB. Outposts is unsupported and has lower limits. Instance EBS limits, workload behavior and account availability can reduce achieved performance; no performance or cost guarantee is made.",
             3000,
             type_name="number",
             minimum=3000,
-            maximum=16000,
+            maximum=80000,
             visible_when=conditions,
         )
         self.variable(
             f"{prefix}_throughput",
-            "Provisioned gp3 disk throughput in MiB/s. 125 MiB/s is included with storage; additional throughput adds charges. This recipe supports 125–1,000 MiB/s and at most one quarter of provisioned IOPS. This is a template limit, not AWS's full service limit. Confirm instance EBS bandwidth and review pricing before increasing it.",
+            "Provisioned gp3 disk throughput in MiB/s. 125 MiB/s is included with storage; additional throughput adds charges. This regional recipe supports 125–2,000 MiB/s and at most one quarter of provisioned IOPS; 2,000 requires at least 8,000 IOPS. Outposts is unsupported and has lower limits. Confirm instance EBS bandwidth and review pricing before increasing it.",
             125,
             type_name="number",
             minimum=125,
-            maximum=1000,
+            maximum=2000,
             visible_when=conditions,
         )
 

@@ -1,5 +1,12 @@
 # Verification record
 
+## Expanded regional gp3 checkpoint
+
+- The default suite passes 1,898 tests with 284 optional/native/platform cases skipped. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.
+- Existing boundary tests now cover regional 80,000 IOPS/2,000 MiB/s ceilings, minimum size/IOPS ratios and overflow rejection for boot/data disks. Two additional API regressions preserve maximum-performance Linux/Windows projects through import. Included-performance defaults are unchanged.
+- Four separately enabled Linux/Windows private/public cases pass real Terraform validation and TFLint against the cached AWS provider. No volume creation or achieved throughput was verified; Outposts is unsupported.
+- A temporary browser tab imported maximum boot-performance answers and verified the numeric ceiling and generated summary. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request or apply was run.
+
 ## Generated file synchronization checkpoint
 
 - The default suite passes 1,884 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.
