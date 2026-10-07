@@ -39,7 +39,7 @@ from terraforma.sandbox import ValidationSandbox
 class ValidationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     config: WizardConfig | ProjectSpecification
-    explain_with_ai: bool = False
+    explain_with_ai: StrictBool = False
 
 
 class PreflightRequest(BaseModel):

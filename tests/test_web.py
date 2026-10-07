@@ -46,6 +46,21 @@ def test_session_reports_presence_without_secrets(client, monkeypatch):
     assert "private-test-key" not in response.text
 
 
+@pytest.mark.parametrize("consent", ["true", "false", 1, 0, None, {}])
+def test_ai_consent_requires_a_boolean_before_validation(client, monkeypatch, consent):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Invalid AI consent must not run validation or AI diagnostics.")
+
+    monkeypatch.setattr("terraforma.web.ValidationSandbox", forbidden)
+    monkeypatch.setattr("terraforma.web.AIDiagnosticsEngine", forbidden)
+    response = client.post(
+        "/api/validate",
+        json={"config": CONFIG, "explain_with_ai": consent},
+        headers=headers(client),
+    )
+    assert response.status_code == 422
+
+
 def test_mutation_requires_session_token(client):
     assert client.post("/api/generate", json=CONFIG).status_code == 403
     assert (
