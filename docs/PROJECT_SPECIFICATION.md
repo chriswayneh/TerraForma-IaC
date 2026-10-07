@@ -136,7 +136,7 @@ Generation is offline. Provider permissions, account identity, live image/SKU av
 
 ## Environment labels
 
-Every recipe exposes a defaulted `environment` input, using 3–20 lowercase letters, digits, or hyphens. The contract and Terraform enforce the same format. AWS uses provider default tags for supported resources; Azure tags the resource group only, whose tags do not automatically propagate to its resources; GCP labels the generated VM/template, Cloud SQL settings, or storage bucket. Network/supporting resources without label support are not covered.
+Every recipe exposes a defaulted `environment` input, using 3–20 lowercase letters, digits, or hyphens. The contract and Terraform enforce the same format. AWS uses provider default tags for supported resources. Azure explicitly tags its resource group, generated compute/network/storage resources and private DNS resources where supported; resource-group tags are not inherited. GCP labels the generated VM/template, Cloud SQL settings, or storage bucket. Network/supporting resources without tag/label support are not covered. Tags do not isolate state, change resource names or grant access.
 
 The label appears in compiled target metadata and the project guide. It does not isolate credentials or state and does not change resource names. Use distinct project names for distinct environments until the multi-environment/state workflow is implemented.
 

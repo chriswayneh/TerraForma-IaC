@@ -29,6 +29,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     common = {
         "resource_group_name": ref("azurerm_resource_group.this.name"),
         "location": ref("azurerm_resource_group.this.location"),
+        "tags": {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
     }
     if builder.config.architecture_type == "static_site":
         build_static(builder, common)
@@ -457,6 +458,7 @@ def build_database(builder: TerraformGenerator, common: dict, subnet: dict) -> N
             "azurerm_private_dns_zone",
             name=ref('"${var.project_name}.postgres.database.azure.com"'),
             resource_group_name=common["resource_group_name"],
+            tags=common["tags"],
         )
         builder.resource(
             "azurerm_private_dns_zone_virtual_network_link",
@@ -464,6 +466,7 @@ def build_database(builder: TerraformGenerator, common: dict, subnet: dict) -> N
             resource_group_name=common["resource_group_name"],
             private_dns_zone_name=ref("azurerm_private_dns_zone.this.name"),
             virtual_network_id=ref("azurerm_virtual_network.this.id"),
+            tags=common["tags"],
         )
         attributes.update(
             delegated_subnet_id=ref("azurerm_subnet.this.id"),

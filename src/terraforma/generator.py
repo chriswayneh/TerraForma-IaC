@@ -187,7 +187,7 @@ class TerraformGenerator:
             "environment",
             {
                 "aws": "Environment tag applied through AWS provider default tags to supported resources.",
-                "azure": "Environment tag on the new resource group; tags are not inherited by its resources.",
+                "azure": "Environment tag applied explicitly to the new resource group and supported generated resources. Azure does not inherit resource-group tags.",
                 "gcp": "Environment label on generated compute, database, or storage resources that support labels.",
             }[self.config.provider]
             + " Use a distinct project name per environment; this label does not isolate state or change resource names.",

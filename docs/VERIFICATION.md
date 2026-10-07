@@ -16,6 +16,8 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
+- Explicit Azure environment tags pass 20 workload/access/encryption coverage cases, 20 native Azure configurations and installed-wheel checks across all five workloads. Native provider schema checks confirm tag support on private DNS, compute, storage and gateway resources. Cloud inventory and billing attribution were not queried.
+
 - The provider-module refactor retains exact generated file bytes and input constraints for all 60 provider/workload/access/encryption combinations, checked before and after extraction and again from the installed wheel. Existing generator imports remain available. The local suite passes 1,154 tests with 201 optional native cases skipped; earlier native checks remain recorded separately.
 
 - AWS gp3 tuning passes 37 contract/ratio/type/scope/export/import cases, four native disk-class/enable combinations and 14 cloud-free Terraform plan cases for IOPS and throughput relationships. Terminal validation is also exercised while collecting answers. Included baselines and template limits are explicit; cloud performance, instance EBS limits and billing were not measured.
