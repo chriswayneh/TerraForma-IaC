@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Terminal generation now flushes and synchronizes generated file contents before reporting success. Sync errors and interrupts trigger existing cleanup, with redacted recovery messages; atomic multi-file publication and directory durability remain outside this change.
+
 - Plan review policy 0.10.0 flags EC2 metadata token responses that can cross additional network hops, with explicit unknown/malformed-control handling. Existing IMDSv1 blocks remain in place; reports remain redacted and never grant provisioning approval.
 
 - Added an AWS standalone metadata token-response hop setting with readable host/container options and an unmanaged default. IMDSv2 stays required; the form explains expanded reachability and that returning to default does not reset an existing setting.

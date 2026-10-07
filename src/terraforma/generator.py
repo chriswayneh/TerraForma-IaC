@@ -520,6 +520,8 @@ def write_configuration(files: dict[str, str], directory: str | Path) -> Path:
             ) as stream:
                 created.append(path)
                 stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
     except BaseException as failure:
         remaining = []
         for path in created:

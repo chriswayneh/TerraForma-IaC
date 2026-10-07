@@ -77,6 +77,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.
 - Specify artifact permissions, log redaction, state ownership, dependency trust, and recovery behavior before adding apply.
 - Terminal artifact generation has documented creation permissions and best-effort failure/interruption cleanup, including explicit leftover-file errors. Protected state and atomic/durable execution artifacts remain outstanding. See [artifact handling](ARTIFACTS.md).
+- Terminal output now flushes and synchronizes each generated file before reporting success. Synchronization failures follow existing cleanup/recovery rules; directory synchronization and atomic project publication remain outstanding.
 
 Exit criteria: invalid specifications fail closed; review reports expose no raw plan values; policy decisions have meaningful tests; current behavior and remaining security gaps are documented. No apply endpoint is introduced in this phase.
 

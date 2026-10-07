@@ -1,5 +1,11 @@
 # Verification record
 
+## Generated file synchronization checkpoint
+
+- The default suite passes 1,884 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 98 Python files; whitespace checks pass.
+- Eight new regressions inject sync errors/interrupts on early, middle and final files, preserve existing notes, verify incomplete-cleanup reporting and confirm the CLI omits private errors and success messages after failure. Existing receipt, permission and CLI tests pass.
+- File synchronization uses the operating system's supported primitive. Directory entries, parent directories, atomic publication, hardware durability and browser-download permissions remain separate boundaries. No state or cloud resources were touched.
+
 ## Metadata hop policy checkpoint
 
 - The default suite passes 1,876 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 97 Python files; whitespace checks pass.
