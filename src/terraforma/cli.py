@@ -154,6 +154,7 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             inputs.get(name) != expected for name, expected in definition["visible_when"].items()
         ):
             continue
+        click.echo("\n" + definition["description"])
         if definition["sensitive"]:
             references[definition["name"]] = definition["environment_variable"]
             click.echo(

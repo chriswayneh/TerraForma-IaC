@@ -2,6 +2,8 @@
 
 ## Azure Windows VM development checkpoint
 
+The subsequent terminal guidance change passes 142 CLI/project/Windows regression cases and targeted Ruff checks. Field descriptions come from the existing shared input contract; hidden conditional inputs and external secret references retain their existing behavior.
+
 - The default suite passes 1,279 tests with 213 optional native cases skipped. Ruff checks and formatting pass across 75 Python files; browser JavaScript syntax checks pass.
 - Four separately enabled Terraform/provider and TFLint cases pass for Azure Windows public/private networking and both Secure Boot settings, with an optional data disk. These are structural checks without cloud authentication or deployment.
 - Generation, terminal, API and ZIP round-trip cases verify that only `TF_VAR_admin_password` is recorded. An environment marker never appears in generated files or responses; no password input is rendered. Windows username/computer-name limits, boot disk minimum and unsupported answers fail closed.
