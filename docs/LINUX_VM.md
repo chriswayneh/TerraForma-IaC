@@ -44,6 +44,8 @@ Reference behavior: [EC2 key pairs](https://docs.aws.amazon.com/AWSEC2/latest/Us
 
 Choose **Attach a data disk** to reveal size and storage-class questions. These questions are hidden when the option is off; inactive disk settings are omitted from browser exports and the configuration summary. The CLI asks size/type only when enabled. Existing manifests without these inputs continue with no data disk.
 
+![Choosing an optional data disk and its storage class](images/linux-vm-data-disk.png)
+
 | Provider | Supported classes | Attachment and encryption |
 | --- | --- | --- |
 | AWS | `gp3` (default), `gp2` | One encrypted EBS volume in the VM's availability zone; uses the recipe KMS key when enabled, otherwise the account's default EBS encryption key. Requests `/dev/sdf`; Nitro Linux device names may differ. Forced detach is disabled, and attachment changes may stop the VM before detaching. |
@@ -59,6 +61,8 @@ Provider references: [EBS volumes](https://registry.terraform.io/providers/hashi
 ## New network address range
 
 Choose a private IPv4 range that does not overlap networks you intend to connect. TerraForma checks the input format and recipe bounds; it does not inspect existing networks or account connectivity. Only canonical RFC1918 ranges (`10/8`, `172.16/12`, `192.168/16`) are supported here. Host bits, IPv6, public ranges and carrier-grade NAT ranges are rejected.
+
+![Configuring the new private network range](images/linux-vm-network.png)
 
 | Provider | Recipe range | Generated subnets |
 | --- | --- | --- |
