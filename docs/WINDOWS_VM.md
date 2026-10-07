@@ -84,3 +84,7 @@ The username output records the account you intend to configure; Terraform does 
 Before changing Shielded VM settings, confirm that BitLocker recovery keys are accessible or suspend BitLocker in the guest. [Google documents the recovery risk](https://docs.cloud.google.com/compute/shielded-vm/docs/modifying-shielded-vm): changes to the boot integrity baseline can require a recovery key. TerraForma does not enable BitLocker, escrow keys, stop the VM or verify its boot/activation state.
 
 The guest-agent password workflow changes VM metadata outside Terraform. Review any resulting metadata differences in subsequent plans. Passwords and private keys must stay outside browser preferences, manifests, Git and AI diagnostics; infrastructure state still needs protected storage. Neither generation nor local validation proves the deployment or account credential setup will succeed.
+
+## AWS CPU credit choices
+
+AWS standalone Windows VMs expose the same [CPU credit modes](LINUX_VM.md#aws-cpu-credit-mode) as Linux VMs. Review sustained CPU needs and surplus-credit charges before choosing standard or unlimited. Provider-default mode leaves the setting unmanaged and does not reset an existing VM.

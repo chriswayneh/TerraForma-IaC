@@ -136,4 +136,18 @@ The supported Debian 12 and Ubuntu 24.04 image families support Shielded VM acco
 
 Standalone Linux and Windows VMs accept an optional standard AWS availability zone name, such as `us-east-1b`. Leave it blank for the first available standard zone reported to the account. The selected name must match the entered region; names map differently between AWS accounts, and zone IDs, Local Zones and Wavelength Zones are unsupported. The VM and optional EBS disk use the first generated subnet zone. Public/private subnet pairs still require two standard zones; the selected zone comes first and another reported zone is used second.
 
-Terraform checks reported membership and the two-zone requirement when planning. Offline generation does not check cloud availability. The optional VM-size preflight checks a selected zone's reported instance-type offering after target and CPU metadata checks pass. An offering does not establish capacity, quotas, deployment permissions, image compatibility or a second usable zone. Changing placement can replace subnets, the VM and disks, lose data and change addresses. Regenerating an older project can also change placement if enabled Local Zones previously appeared in its zone list. Review the plan, backups and recovery before deploying. See the [AWS provider zone lookup](https://github.com/hashicorp/terraform-provider-aws/blob/v6.0.0/website/docs/d/availability_zones.html.markdown).
+Terraform checks reported membership and the two-zone requirement when planning. Offline generation does not check cloud availability. The optional VM-size preflight checks a selected zone's reported instance-type offering after required target and machine metadata checks pass. An offering does not establish capacity, quotas, deployment permissions, image compatibility or a second usable zone. Changing placement can replace subnets, the VM and disks, lose data and change addresses. Regenerating an older project can also change placement if enabled Local Zones previously appeared in its zone list. Review the plan, backups and recovery before deploying. See the [AWS provider zone lookup](https://github.com/hashicorp/terraform-provider-aws/blob/v6.0.0/website/docs/d/availability_zones.html.markdown).
+
+## AWS CPU credit mode
+
+Standalone AWS Linux and Windows VMs expose **CPU credit mode** in Operations and identity. Explicit modes support the template's x86 T2, T3 and T3a families; other families require `provider_default`.
+
+| Choice | Meaning |
+| --- | --- |
+| `provider_default` | Omits the credit configuration block. Check the effective provider/account setting; the credit mode is unmanaged by this template. |
+| `standard` | Uses earned CPU credits; sustained performance can fall when credits are depleted. |
+| `unlimited` | Can use surplus credits above baseline performance; additional charges can apply. |
+
+The questionnaire, saved specification and generated variable preserve the choice. Compilation and Terraform preconditions reject explicit modes for unsupported families. This option does not verify availability, OS support, performance or pricing.
+
+Returning to `provider_default` stops managing the mode and **does not reset an existing VM**; review the resulting plan and effective setting. Switching from unlimited to standard can settle outstanding surplus-credit charges. Review [AWS's credit behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances-unlimited-mode-concepts.html) and the [provider's configuration/removal behavior](https://github.com/hashicorp/terraform-provider-aws/blob/v6.0.0/website/docs/r/instance.html.markdown#credit-specification).

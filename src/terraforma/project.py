@@ -65,6 +65,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "network_cidr": "New network address range (CIDR)",
                     "private_ip_address": "Private IPv4 address (optional)",
                     "instance_type": "VM size",
+                    "cpu_credit_mode": "CPU credit mode",
                     "vm_size": "VM size",
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
@@ -323,6 +324,15 @@ def compile_project(specification: ProjectSpecification) -> dict:
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
     if (
+        specification.recipe.provider == "aws"
+        and effective.get("cpu_credit_mode", "provider_default") != "provider_default"
+        and not effective["instance_type"].startswith(("t2.", "t3.", "t3a."))
+    ):
+        raise ProjectInputError(
+            "cpu_credit_mode",
+            "Choose provider_default for this instance family; explicit credit modes support only x86 T2, T3 and T3a.",
+        )
+    if (
         specification.recipe.provider == "azure"
         and effective.get("data_disk_caching", "None") != "None"
         and not effective.get("enable_data_disk", False)
@@ -454,6 +464,8 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
             display = "Allocated by the cloud provider"
         elif definition["kind"] == "optional_zone" and value == "":
             display = "Automatic placement (resolved at planning)"
+        elif name == "cpu_credit_mode" and value == "provider_default":
+            display = "Provider default (credit setting unmanaged)"
         elif type(value) is bool:
             display = "Enabled" if value else "Disabled"
         else:

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added AWS standalone VM CPU credit choices: provider default, standard or unlimited for x86 T2/T3/T3a families. The shared questionnaire/specification and Terraform guards enforce the supported scope; defaults leave the setting unmanaged, and removing an explicit mode does not reset an existing VM.
+
 - AWS standalone VM preflight now checks EBS-backed HVM boot support in the existing size response. Missing, incompatible and malformed capabilities remain distinct and prevent a subsequent zone offering read, including when root encryption is disabled.
 
 - Added a cloud authentication guide linked from the target-check card and documentation. It covers existing AWS SSO profiles, Azure CLI login and separate Google CLI/ADC credentials without collecting secrets or running login commands in TerraForma.

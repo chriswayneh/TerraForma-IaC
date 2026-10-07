@@ -229,6 +229,12 @@ def build_aws(builder: TerraformGenerator) -> None:
     )
     if standalone:
         builder.variable(
+            "cpu_credit_mode",
+            "CPU credit setting for supported x86 T2, T3 and T3a instances. provider_default leaves this setting unmanaged; verify the effective setting in your account. standard can reduce performance when credits run out. unlimited can add surplus-credit charges. Returning to provider_default stops managing this setting and does not reset an existing VM's mode. Other instance families require provider_default. This does not estimate cost or verify capacity.",
+            "provider_default",
+            choices=("provider_default", "standard", "unlimited"),
+        )
+        builder.variable(
             "protect_vm",
             "Enable EC2 API termination protection. Turn this off and apply that change before intentionally deleting or replacing the VM. This does not prevent stopping the VM and is not a backup or a guarantee against every deletion path.",
             True,
@@ -309,6 +315,20 @@ def build_aws(builder: TerraformGenerator) -> None:
             block("root_block_device", **disk),
             block("metadata_options", http_tokens="required"),
         ]
+        + (
+            [
+                block(
+                    "dynamic",
+                    "credit_specification",
+                    for_each=ref(
+                        'var.cpu_credit_mode == "provider_default" ? [] : [var.cpu_credit_mode]'
+                    ),
+                    children=[block("content", cpu_credits=ref("credit_specification.value"))],
+                )
+            ]
+            if standalone
+            else []
+        )
         + ([builder._identity_precondition()] if standalone else []),
         **{"depends_on": [ref("aws_route_table_association.private")]} if private else {},
     )

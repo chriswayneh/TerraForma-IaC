@@ -1,5 +1,12 @@
 # Verification record
 
+## AWS CPU credit choices checkpoint
+
+- The default suite passes 1,642 tests with 244 optional/native/platform cases skipped. Ruff checks and formatting pass across 88 Python files; JavaScript syntax passes.
+- Thirty-two new regressions cover shared choices/defaults, Linux/Windows generation, supported family constraints, unrelated recipe exclusion, API import preservation and incompatible size rejection. Four separately enabled Linux/Windows standard/unlimited cases pass real Terraform validation and TFLint against the cached AWS provider.
+- A temporary browser tab imported an older AWS Windows project, selected standard credits, generated the matching variable and summary, then rejected an incompatible size before generation. The valid example was restored and the tab closed; original sidebar spacing and the user's tab were preserved.
+- No cloud read or apply was run. Credit mode defaults and removal behavior follow the provider contract; performance, account-specific settings and surplus-credit costs remain unverified.
+
 ## AWS standalone boot capability checkpoint
 
 - The default suite passes 1,610 tests with 240 optional/native/platform cases skipped. Ruff checks and formatting pass across 87 Python files; JavaScript syntax passes.

@@ -329,8 +329,21 @@ class TerraformGenerator:
                     error_message="Supply the existing workload identity reference when workload identity is enabled.",
                 ),
                 self._private_ip_precondition(),
-                *([self._gp3_precondition("boot_disk")] if self.config.provider == "aws" else []),
+                *(
+                    [self._gp3_precondition("boot_disk"), self._cpu_credit_precondition()]
+                    if self.config.provider == "aws"
+                    else []
+                ),
             ],
+        )
+
+    def _cpu_credit_precondition(self) -> Block:
+        return block(
+            "precondition",
+            condition=ref(
+                'var.cpu_credit_mode == "provider_default" || anytrue([for family in ["t2.", "t3.", "t3a."] : startswith(var.instance_type, family)])'
+            ),
+            error_message="Explicit CPU credit modes are supported only for x86 T2, T3 and T3a instances; choose provider_default for other families.",
         )
 
     def _private_ip_precondition(self) -> Block:

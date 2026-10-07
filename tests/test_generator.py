@@ -765,6 +765,19 @@ def test_native_aws_standalone_placement(native_directories, windows, zone):
     assert_native_files(native_directories["aws"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize(
+    "windows,mode", list(itertools.product([False, True], ["standard", "unlimited"]))
+)
+def test_native_aws_cpu_credit_modes(native_directories, windows, mode):
+    from terraforma.project import compile_project
+    from tests.test_aws_placement import specification
+
+    assert_native_files(
+        native_directories["aws"],
+        compile_project(specification(windows, cpu_credit_mode=mode))["files"],
+    )
+
+
 @pytest.mark.parametrize("incompatible", [False, True])
 def test_native_validation_preserves_locks_and_rejects_conflicting_requirements(
     native_directories, tmp_path, incompatible

@@ -89,6 +89,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - AWS standalone Linux/Windows VMs expose optional standard availability zone names with automatic placement by default, matching subnet placement and planning guards. Account-specific zone mapping, capacity and replacement recovery remain unverified.
+- AWS standalone VMs expose optional standard/unlimited CPU credit choices for x86 T2/T3/T3a families. The default leaves credit configuration unmanaged; performance, pricing and effective cloud settings remain unverified.
 - Azure standalone Linux/Windows VMs expose regional or single-zone placement with aligned disk, Standard NAT and public-IP settings; live zone support/capacity and replacement recovery require separate verification.
 - GCP standalone Linux/Windows VMs expose host-maintenance and automatic-restart choices for standard instances; live event behavior and machine compatibility require separate verification.
 - Azure standalone Linux/Windows boot and optional data disks expose supported host cache modes with durability guidance. Actual workload behavior and safe cache changes require live verification.
