@@ -69,6 +69,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Add explicit capability metadata so supported, unsupported, and unverified configurations are distinguishable.
 - Maintain one input contract per catalog entry: each configurable field has a plain-language question, type, validation, conditional dependencies, an explained default or required answer, and a sensitive-value handling rule. The UI and generated variables use this same contract so questions cannot drift from output.
 - Add local policy review for Terraform plan JSON: destructive changes, broad network access, missing protections, and unresolved policy coverage.
+- EC2 metadata token response hop limits above one now require manual workload-isolation review. Missing, unknown and malformed controls remain visible review gaps; this does not establish live credential access or IAM permissions.
 - Initial managed disk access review covers Azure remote import/export and public network settings. Effective permissions, private endpoints, encryption and backup/recovery still require separate review.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
 - Preserve existing provider locks during validation with read-only initialization. Missing locks, remote module content trust and independently reviewed dependency upgrades remain explicit boundaries.

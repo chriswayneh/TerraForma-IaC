@@ -11,7 +11,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.9.0"
+POLICY_VERSION = "0.10.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -25,6 +25,51 @@ class Finding:
     severity: str
     resource_id: str
     message: str
+
+
+def metadata_hop_findings(change: dict) -> list[tuple[str, str, str]]:
+    options = change["after"].get("metadata_options")
+    if options is None or options == []:
+        settings = {}
+    elif isinstance(options, list) and len(options) == 1 and isinstance(options[0], dict):
+        settings = options[0]
+    else:
+        raise ValueError("Metadata options must contain one object.")
+    hops = settings.get("http_put_response_hop_limit")
+    if hops is not None and (type(hops) is not int or not 1 <= hops <= 64):
+        raise ValueError("Metadata response hops must be a supported integer.")
+    unknown = change.get("after_unknown", {})
+    if not isinstance(unknown, dict):
+        raise TypeError("Unknown metadata controls must be an object.")
+    markers = unknown.get("metadata_options", False)
+    if type(markers) is bool:
+        endpoint_unknown = hops_unknown = markers
+    elif isinstance(markers, list) and len(markers) == 1 and isinstance(markers[0], dict):
+        endpoint_unknown = markers[0].get("http_endpoint", False)
+        hops_unknown = markers[0].get("http_put_response_hop_limit", False)
+        if type(endpoint_unknown) is not bool or type(hops_unknown) is not bool:
+            raise ValueError("Metadata control markers must be boolean.")
+    else:
+        raise ValueError("Unknown metadata options have an unsupported shape.")
+    if settings.get("http_endpoint") == "disabled" and not endpoint_unknown:
+        return []
+    if hops is None or hops_unknown or endpoint_unknown or settings.get("http_endpoint") is None:
+        return [
+            (
+                "instance_metadata_hops_unknown",
+                "review",
+                "The plan does not establish the effective metadata token-response hop limit and endpoint state. Verify account/AMI defaults and workload access before provisioning.",
+            )
+        ]
+    if hops > 1:
+        return [
+            (
+                "instance_metadata_extra_hops",
+                "review",
+                "Metadata token responses can cross an additional network hop. This can support container networking and expand access to instance credentials; review workload isolation and least-privilege IAM separately.",
+            )
+        ]
+    return []
 
 
 def public_source(value: Any) -> bool:
@@ -474,6 +519,8 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                                 resource_id,
                                 "The plan does not establish whether IMDSv2 tokens are required for the metadata endpoint.",
                             )
+                for code, severity, message in metadata_hop_findings(change):
+                    add(code, severity, resource_id, message)
                 profile = after.get("iam_instance_profile")
                 if profile is not None and not isinstance(profile, str):
                     raise TypeError("Instance profile must be a string.")

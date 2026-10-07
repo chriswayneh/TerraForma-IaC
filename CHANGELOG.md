@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Plan review policy 0.10.0 flags EC2 metadata token responses that can cross additional network hops, with explicit unknown/malformed-control handling. Existing IMDSv1 blocks remain in place; reports remain redacted and never grant provisioning approval.
+
 - Added an AWS standalone metadata token-response hop setting with readable host/container options and an unmanaged default. IMDSv2 stays required; the form explains expanded reachability and that returning to default does not reset an existing setting.
 
 - Azure Windows standalone VMs now offer Server 2022 Core Gen2 alongside the desktop default under Microsoft's refreshed windowsserver2022 offer. External credentials, patching and Trusted Launch controls are preserved; installation changes require replacement and compatibility review.

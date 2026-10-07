@@ -1,5 +1,11 @@
 # Verification record
 
+## Metadata hop policy checkpoint
+
+- The default suite passes 1,876 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 97 Python files; whitespace checks pass.
+- Thirty-four new regressions cover one/additional hops, disabled endpoints, relevant versus unrelated unknown controls, malformed values/markers, preserved IMDSv1 blocking and identical redacted CLI/API reports. A targeted rerun after the exception-type lint correction passes.
+- Policy 0.10.0 remains partial and never grants approval. No cloud request, guest/container access, IAM evaluation or apply was run.
+
 ## AWS metadata response hops checkpoint
 
 - The default suite passes 1,842 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 96 Python files; JavaScript syntax and whitespace checks pass.
