@@ -11,6 +11,42 @@ LINUX_IMAGE_CHOICES = {
     "gcp": ("debian-12", "ubuntu-24.04"),
 }
 
+AZURE_RESERVED_USERNAMES = (
+    "1",
+    "123",
+    "a",
+    "actuser",
+    "adm",
+    "admin",
+    "admin1",
+    "admin2",
+    "administrator",
+    "aspnet",
+    "backup",
+    "console",
+    "david",
+    "guest",
+    "john",
+    "owner",
+    "root",
+    "server",
+    "sql",
+    "support_388945a0",
+    "support",
+    "sys",
+    "test",
+    "test1",
+    "test2",
+    "test3",
+    "user",
+    "user1",
+    "user2",
+    "user3",
+    "user4",
+    "user5",
+    "video",
+)
+
 
 class WizardConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -95,6 +131,7 @@ class TerraformGenerator:
         maximum: int | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
+        forbidden_values: tuple[str, ...] | None = None,
         network_policy: Literal["database_cidr", "database_address", "administrator_cidr"]
         | None = None,
     ) -> None:
@@ -130,6 +167,14 @@ class TerraformGenerator:
                     error_message="Use the required identifier format for this field.",
                 )
             )
+        if forbidden_values:
+            validations.append(
+                block(
+                    "validation",
+                    condition=ref(f"!contains({value_hcl(list(forbidden_values))}, var.{name})"),
+                    error_message="Choose an administrator username outside the provider's reserved-name list.",
+                )
+            )
         if network_policy:
             address = f"var.{name}"
             if network_policy in {"database_cidr", "administrator_cidr"}:
@@ -162,6 +207,7 @@ class TerraformGenerator:
             "maximum": maximum,
             "choices": list(choices) if choices else None,
             "pattern": pattern,
+            "forbidden_values": list(forbidden_values) if forbidden_values else None,
             "network_policy": network_policy,
         }
         self.variables.append(block("variable", name, children=validations, **attributes))
@@ -692,8 +738,15 @@ class TerraformGenerator:
         self.resource("azurerm_subnet", **subnet)
         standalone = self.config.architecture_type == "virtual_machine"
         self.variable(
+            "admin_username",
+            "Linux administrator username: 3–32 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Azure reserved names are rejected; password authentication stays disabled.",
+            "terraforma",
+            pattern=r"^[a-z][a-z0-9_-]{1,30}[a-z0-9]$",
+            forbidden_values=AZURE_RESERVED_USERNAMES,
+        )
+        self.variable(
             "ssh_public_key",
-            "Administrator SSH public key for the terraforma user. Keep the matching private key outside this project."
+            "Administrator SSH public key for the selected user. Keep the matching private key outside this project."
             if standalone
             else "Administrator SSH public key. SSH is not exposed by the generated firewall.",
         )
@@ -813,11 +866,15 @@ class TerraformGenerator:
             sku=ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
             version="latest",
         )
-        key = block("admin_ssh_key", username="terraforma", public_key=ref("var.ssh_public_key"))
+        key = block(
+            "admin_ssh_key",
+            username=ref("var.admin_username"),
+            public_key=ref("var.ssh_public_key"),
+        )
         startup = "#cloud-config\npackage_update: true\npackages:\n  - nginx\nruncmd:\n  - [systemctl, enable, --now, nginx]\n"
         compute = {
             "name": ref("var.project_name"),
-            "admin_username": "terraforma",
+            "admin_username": ref("var.admin_username"),
             "disable_password_authentication": True,
             "custom_data": ref(f"base64encode({value_hcl(startup)})"),
             "encryption_at_host_enabled": self.config.enable_encryption,
@@ -929,7 +986,7 @@ class TerraformGenerator:
             )
             self.output(
                 "ssh_username",
-                '"terraforma"',
+                "var.admin_username",
                 "Administrator username; password authentication is disabled.",
             )
         else:

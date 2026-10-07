@@ -62,6 +62,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
                     "os_image": "Linux operating system",
+                    "admin_username": "Administrator username",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
@@ -177,6 +178,8 @@ def validate_answer(definition: dict, value: str | int) -> None:
             message = "Choose one of: " + ", ".join(definition["choices"]) + "."
         elif definition["name"] == "aws_account_id":
             message = "Enter the 12-digit target AWS account ID."
+        elif definition["name"] == "admin_username":
+            message = "Enter a non-reserved username using 3–32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
         else:
             message = {
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
@@ -202,6 +205,8 @@ def _validate_answer(definition: dict, value: str | int) -> None:
             raise ValueError("Input does not match the required identifier format.")
         if definition["choices"] and value not in definition["choices"]:
             raise ValueError("Input is not one of the supported choices.")
+        if value in (definition.get("forbidden_values") or []):
+            raise ValueError("This value is reserved by the provider.")
         if definition.get("network_policy") in {"database_cidr", "administrator_cidr"}:
             network = ipaddress.IPv4Network(value, strict=True)
             private = any(

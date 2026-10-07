@@ -66,6 +66,10 @@ The label appears in compiled target metadata and the project guide. It does not
 
 ## Recipe capabilities
 
+### Azure administrator username
+
+Azure compute recipes ask for `admin_username`, defaulting to `terraforma`. This recipe accepts 3–32 lowercase letters, digits, underscores, or hyphens, starting with a letter and ending with a letter or digit. Both the questionnaire and Terraform reject the [Azure reserved-name list](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/faq), including `root` and `admin`. The narrower character/length format is a recipe choice. The answer configures the VM or scale set and its SSH public-key username; standalone VMs also return it as `ssh_username`. Password authentication remains disabled.
+
 ### Linux image selection
 
 Compute recipes expose `os_image` as a supported choice, shared by terminal and browser forms. The selected image also determines the AWS package-manager startup script.

@@ -43,7 +43,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         )
         if config.provider == "azure":
             fixed.append(
-                "Administrator username is terraforma; password authentication is disabled."
+                "Administrator username is configurable (default terraforma); password authentication is disabled."
             )
         elif standalone and config.provider == "aws":
             fixed.append(

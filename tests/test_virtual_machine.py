@@ -46,7 +46,7 @@ def test_standalone_vm_exports_explicit_access_without_web_application(provider,
         assert "DenyOtherInbound" in main
         assert "disable_password_authentication = true" in main
         assert "custom_data" not in main
-        assert "terraforma" in outputs
+        assert "var.admin_username" in outputs
     else:
         assert 'ports = ["22"]' in main and 'ports = ["80"]' not in main
         assert '"enable-oslogin" = "TRUE"' in main
