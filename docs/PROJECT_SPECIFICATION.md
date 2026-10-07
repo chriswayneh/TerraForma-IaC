@@ -53,6 +53,10 @@ To reopen a project, extract `terraforma.project.json` from its ZIP and select *
 
 ## Optional cloud target preflight
 
+![Explicit consent before a cloud target check](images/cloud-target-consent.png)
+
+The browser shows **Check your cloud target** after generation or import. Enable the consent checkbox and select **Check cloud target** to request the same bounded cloud read. Consent resets after each attempt. Editing any questionnaire answer removes the previous result; generate again before checking the new target. The button stays disabled until you give fresh consent.
+
 On development `main`, `terraforma preflight --spec terraforma.project.json` validates the saved project and reports `not_checked` without discovering or running cloud tools. To request a cloud read using the installed CLI's existing credentials:
 
 ```text

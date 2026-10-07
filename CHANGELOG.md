@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add browser cloud-target checks with one-time explicit consent, shared native-tool concurrency limits, readable results and invalidation after questionnaire edits.
+
 - Add explicit CLI opt-in for bounded AWS account, Azure subscription and GCP project target reads, with mismatch/state checks, specification digests and reports omitting raw responses and credentials.
 
 - Compare canonical questionnaire digests and template versions during receipt verification; report invalid or inconsistent metadata without revealing values.

@@ -12,7 +12,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictBool
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -24,6 +24,7 @@ from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
 from terraforma.plan_review import MAX_PLAN_BYTES, review_bytes
+from terraforma.preflight import target_preflight
 from terraforma.project import (
     ProjectInputError,
     ProjectSpecification,
@@ -39,6 +40,12 @@ class ValidationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     config: WizardConfig | ProjectSpecification
     explain_with_ai: bool = False
+
+
+class PreflightRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    specification: ProjectSpecification
+    verify_target: StrictBool = False
 
 
 def generate_project(config: WizardConfig) -> dict:
@@ -239,6 +246,29 @@ def create_app() -> FastAPI:
                     detail="This file is not a supported Terraform plan JSON export. Plan values are omitted from this error.",
                 ) from None
 
+    @app.post("/api/projects/preflight")
+    async def project_preflight(payload: PreflightRequest):
+        if validation_lock.locked():
+            raise HTTPException(
+                status_code=409,
+                detail="Another local tool check is running. Try again when it finishes.",
+            )
+        async with validation_lock:
+            try:
+                return await run_in_threadpool(
+                    target_preflight,
+                    payload.specification,
+                    verify_target=payload.verify_target,
+                    timeout=30,
+                )
+            except ProjectInputError:
+                raise
+            except (OSError, ValueError, TypeError, RecursionError):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Unable to check this project specification; input and command values are omitted.",
+                ) from None
+
     @app.post("/api/projects/compile")
     async def project_compile(specification: ProjectSpecification):
         try:
@@ -378,7 +408,8 @@ def create_app() -> FastAPI:
     async def validate(payload: ValidationRequest):
         if validation_lock.locked():
             raise HTTPException(
-                status_code=409, detail="Another validation is running. Try again when it finishes."
+                status_code=409,
+                detail="Another local tool check is running. Try again when it finishes.",
             )
         async with validation_lock:
             project = configured_project(payload.config)

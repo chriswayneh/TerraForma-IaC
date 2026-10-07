@@ -789,6 +789,27 @@ pre code {
   line-height: 1.8;
   color: var(--muted);
 }
+.target-preflight-content {
+  padding: 20px 24px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.target-preflight-content > p {
+  margin: 0 0 12px;
+}
+#target-preflight-results:not(:empty) {
+  margin-top: 20px;
+}
+#target-preflight-results .diagnostic pre {
+  font-family: inherit;
+  background: transparent;
+  padding: 0;
+  color: var(--muted);
+}
+#target-preflight-results details p {
+  overflow-wrap: anywhere;
+}
 .diagnostic {
   padding: 15px 0;
   border-top: 1px solid var(--line);

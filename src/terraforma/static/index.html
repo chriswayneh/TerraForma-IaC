@@ -406,6 +406,18 @@
           ></ol>
           <div class="component-grid" id="component-guide"></div>
         </section>
+        <section class="validation-panel" id="target-preflight-panel" hidden aria-labelledby="target-preflight-heading">
+          <div class="panel-header"><h2 id="target-preflight-heading">Check your cloud target</h2></div>
+          <div class="target-preflight-content">
+          <p>Confirm the requested account, subscription, or project through your installed cloud CLI. Authenticate that tool separately. This check does not verify resource permissions or approve deployment.</p>
+          <label class="ai-option">
+            <input type="checkbox" id="target-preflight-consent" />
+            <span>Allow a cloud target read using my CLI credentials.<small>No raw responses or credentials appear in this report.</small></span>
+          </label>
+          <button class="button outline" id="target-preflight-button" type="button" disabled>Check cloud target</button>
+          <div id="target-preflight-results" role="status" aria-live="polite"></div>
+          </div>
+        </section>
         <section
           class="validation-panel"
           id="validation-panel"

@@ -260,6 +260,8 @@ function setBusy(value) {
   byId("ai-option").disabled = value || !aiAvailable;
   byId("load-project-button").disabled = value;
   byId("review-plan-button").disabled = value;
+  byId("target-preflight-consent").disabled = value || !project?.specification;
+  byId("target-preflight-button").disabled = value || !project?.specification || !byId("target-preflight-consent").checked;
   form.setAttribute("aria-busy", String(value));
   updateInputVisibility();
 }
@@ -362,6 +364,10 @@ function renderFile(file) {
 
 function renderProject(result) {
   project = result;
+  byId("target-preflight-panel").hidden = !result.specification;
+  byId("target-preflight-consent").checked = false;
+  byId("target-preflight-button").disabled = true;
+  byId("target-preflight-results").replaceChildren();
   byId("preview-empty").hidden = true;
   byId("preview-content").hidden = false;
   byId("preview-badge").textContent = "3 FILES READY";
@@ -594,6 +600,10 @@ form.addEventListener("input", (event) => {
     byId("project-details").hidden = true;
     byId("resource-guide").hidden = true;
     byId("validation-panel").hidden = true;
+    byId("target-preflight-panel").hidden = true;
+    byId("target-preflight-consent").checked = false;
+    byId("target-preflight-button").disabled = true;
+    byId("target-preflight-results").replaceChildren();
     notify(
       "Your settings changed. Generate again to preview the updated files.",
     );
@@ -659,6 +669,46 @@ byId("download-button").addEventListener("click", async () => {
   } catch (error) {
     notify(error.message, true);
   } finally {
+    setBusy(false);
+  }
+});
+
+byId("target-preflight-consent").addEventListener("change", () => setBusy(busy));
+
+byId("target-preflight-button").addEventListener("click", async () => {
+  if (busy || !project?.specification || !byId("target-preflight-consent").checked) return;
+  const payload = {specification: project.specification, verify_target: true};
+  setBusy(true);
+  const content = byId("target-preflight-results");
+  content.textContent = "Checking the selected target through your cloud CLI. No infrastructure is being deployed.";
+  try {
+    const report = await (await api("/api/projects/preflight", payload)).json();
+    const titles = {
+      target_confirmed: "Cloud target matches",
+      target_mismatch: "Different cloud target",
+      target_not_ready: "Cloud target needs attention",
+      unavailable: "Cloud CLI setup needed",
+      failed: "Cloud target check failed",
+      invalid_response: "Target response needs review",
+      not_checked: "Cloud target not checked",
+    };
+    content.replaceChildren(
+      diagnostic(titles[report.status] || "Cloud target check", report.message, report.status === "target_confirmed"),
+      diagnostic("Before planning", "Your cloud CLI can use different credentials from Terraform. Review resource permissions, availability, quotas and connectivity before planning. This check does not approve deployment.", true),
+    );
+    const reference = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = "Configuration reference";
+    const digest = document.createElement("p");
+    digest.textContent = `Questionnaire SHA-256: ${report.specification_sha256}`;
+    reference.append(summary, digest);
+    content.append(reference);
+    notify("Cloud target check complete. Review its result and remaining checks.");
+  } catch (error) {
+    content.replaceChildren(diagnostic("Target check unavailable", error.message));
+    notify(error.message, true);
+  } finally {
+    byId("target-preflight-consent").checked = false;
     setBusy(false);
   }
 });
