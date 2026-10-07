@@ -55,6 +55,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "vm_size": "VM size",
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
+                    "os_image": "Linux operating system",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",

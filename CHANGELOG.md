@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Offer supported Linux image choices from official publishers across AWS, Azure, and GCP, with image-specific AWS startup scripts and visible compatibility limits.
+
 - Ask for load-balanced VM capacity across AWS, Azure, and GCP, with matching whole-number bounds and generated counts.
 
 - Restrict database client networks through shared questionnaire and Terraform checks; exclude broad Azure-service firewall access.

@@ -1,4 +1,4 @@
-from terraforma.generator import WizardConfig
+from terraforma.generator import LINUX_IMAGE_CHOICES, WizardConfig
 
 PROVIDERS = ("aws", "azure", "gcp")
 WORKLOADS = {
@@ -19,13 +19,13 @@ def recipe_capabilities(config: WizardConfig) -> dict:
     ]
     if compute:
         image = {
-            "aws": "Amazon Linux 2023 x86_64; latest matching Amazon image",
-            "azure": "Ubuntu 22.04 LTS Gen2; latest Canonical image",
-            "gcp": "Debian 12 from debian-cloud",
+            "aws": "Amazon Linux 2023 or Ubuntu 24.04 LTS from Amazon/Canonical",
+            "azure": "Ubuntu 22.04 or 24.04 LTS Gen2 from Canonical",
+            "gcp": "Debian 12 or Ubuntu 24.04 LTS from debian-cloud/ubuntu-os-cloud",
         }[config.provider]
         fixed.extend(
             [
-                f"Operating system: {image}.",
+                f"Operating system choices: {image}; x86_64/AMD64 only, latest image at planning time (not pinned).",
                 "Startup installs nginx and serves HTTP on port 80.",
                 "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
@@ -40,7 +40,14 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         else:
             fixed.append("Administrator access is not configured by this recipe.")
         unsupported.extend(
-            ["Windows VMs", "Custom images", "Data disks", "Custom initialization", "TLS setup"]
+            [
+                "Windows VMs",
+                "ARM64 VMs",
+                "Custom images",
+                "Data disks",
+                "Custom initialization",
+                "TLS setup",
+            ]
         )
     elif config.architecture_type == "secure_database":
         fixed.extend(
@@ -65,6 +72,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         "workflow": "offline_generation",
         "access_modes": ["private", "public"],
         "fixed_choices": fixed,
+        "image_choices": list(LINUX_IMAGE_CHOICES[config.provider]) if compute else [],
         "unsupported": unsupported,
         "account_checks": "unverified",
         "deployment_checks": "unverified",

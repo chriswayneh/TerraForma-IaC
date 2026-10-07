@@ -71,6 +71,7 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
             False,
             True,
             "development",
+            "amazon-linux-2023",
             "us-west-2",
             "123456789012",
             "10.0.0.0/16",

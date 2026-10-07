@@ -108,6 +108,8 @@ Generation and local review do not apply infrastructure. [Architecture and bound
 
 ## Generated infrastructure
 
+The table below describes **v0.2.0**. Development on `main` adds supported Linux image choices, VM size and boot-disk inputs, and configurable load-balanced tier capacity. See the [project specification guide](docs/PROJECT_SPECIFICATION.md) for current choices and limits.
+
 | Workload | AWS | Azure | Google Cloud |
 | --- | --- | --- | --- |
 | Single web server | EC2, nginx, VPC | Ubuntu VM, nginx, VNet | Debian VM, nginx, VPC |

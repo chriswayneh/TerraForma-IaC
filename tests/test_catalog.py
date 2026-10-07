@@ -24,8 +24,8 @@ def test_catalog_lists_all_recipes_without_claiming_deployment():
 @pytest.mark.parametrize(
     ("provider", "image", "description"),
     [
-        ("aws", "al2023-ami-2023.*-x86_64", "Amazon Linux 2023 x86_64"),
-        ("azure", "22_04-lts-gen2", "Ubuntu 22.04 LTS Gen2"),
+        ("aws", "al2023-ami-2023.*-x86_64", "Amazon Linux 2023"),
+        ("azure", "22_04-lts-gen2", "Ubuntu 22.04"),
         ("gcp", "debian-cloud/debian-12", "Debian 12"),
     ],
 )

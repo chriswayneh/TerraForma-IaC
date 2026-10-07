@@ -64,6 +64,22 @@ The label appears in compiled target metadata and the project guide. It does not
 
 ## Recipe capabilities
 
+### Linux image selection
+
+Compute recipes expose `os_image` as a supported choice, shared by terminal and browser forms. The selected image also determines the AWS package-manager startup script.
+
+| Provider | Choices | Publisher constraint |
+| --- | --- | --- |
+| AWS | `amazon-linux-2023` (default), `ubuntu-24.04` | Amazon-owned AL2023 x86_64 AMIs, or Canonical owner `099720109477` with the Ubuntu Noble AMD64 server filter |
+| Azure | `ubuntu-22.04` (default), `ubuntu-24.04` | Canonical marketplace Gen2 AMD64 server offers; Ubuntu 24.04 uses `ubuntu-24_04-lts:server` |
+| GCP | `debian-12` (default), `ubuntu-24.04` | `debian-cloud/debian-12` or `ubuntu-os-cloud/ubuntu-2404-lts-amd64` |
+
+The catalog accepts these image selectors only. Windows, ARM64, arbitrary image IDs, and custom publishers require future adapters. The generated image references resolve to the latest matching image at planning time; they do not pin an immutable image build. A matching specification or receipt cannot prove which image a future plan will select. Verify regional availability, machine architecture, publisher trust, organizational policy, and the exact resolved image in your Terraform plan before deployment. AWS Ubuntu ownership here is for the standard AWS partition; other partitions require separately reviewed identifiers.
+
+Reference identifiers are based on the official [HashiCorp AWS tutorial](https://docs.hashicorp.com/terraform/tutorials/aws-get-started/aws-create), [Canonical Azure catalog](https://ubuntu.com/azure/docs/azure-how-to/instances/find-ubuntu-images/), and [Google Compute Engine OS documentation](https://docs.cloud.google.com/compute/docs/images/os-details?hl=en). Local schema and selector checks do not establish cloud availability or successful boot/access.
+
+![Choosing a supported Linux image](images/linux-images.png)
+
 ### Tier capacity
 
 Load-balanced compute recipes ask for `instance_count`, a whole number from 2 to 20 with a default of 2. The answer controls EC2 instances and target attachments, Azure scale-set instances, or the GCP managed instance-group target size. Single-server recipes keep exactly one VM and reject this extra input. This is initial capacity; autoscaling and custom placement are not configured. AWS distributes instances across its two generated subnets; Azure and GCP retain their existing recipe placement. Check quotas, availability, and per-instance compute/disk costs before deploying.
@@ -76,6 +92,6 @@ Database recipes constrain client networks in both questionnaires and generated 
 
 The public Azure database recipe accepts one client IPv4 address and rejects `0/8`, loopback, multicast, and reserved `224/3` addresses. In particular, it rejects `0.0.0.0`, which Azure interprets as [access from Azure services](https://learn.microsoft.com/en-ie/azure/postgresql/flexible-server/security-firewall-rules). Syntax and range checks do not establish that an address belongs to the user or is reachable. Private cloud networking and connection routing still need review.
 
-The Configure step includes an expandable **Recipe defaults and limits** section. It identifies fixed operating systems, initialization, network layouts, instance counts, and features outside the selected recipe. ZIP project guides include the same information.
+The Configure step includes an expandable **Recipe defaults and limits** section. It identifies supported operating systems, fixed initialization/network layouts, capacity limits, and features outside the selected recipe. ZIP project guides include the same information.
 
 Use `terraforma catalog` for a readable catalog or `terraforma catalog --json-output` for structured metadata. The local API exposes the same catalog at `/api/catalog` and includes selected capabilities in input contracts and compiled project responses. Account and deployment checks remain explicitly unverified until a future account preflight workflow establishes them.

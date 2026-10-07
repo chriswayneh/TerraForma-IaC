@@ -5,6 +5,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+LINUX_IMAGE_CHOICES = {
+    "aws": ("amazon-linux-2023", "ubuntu-24.04"),
+    "azure": ("ubuntu-22.04", "ubuntu-24.04"),
+    "gcp": ("debian-12", "ubuntu-24.04"),
+}
+
 
 class WizardConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -203,6 +209,13 @@ class TerraformGenerator:
                 minimum=2,
                 maximum=20,
             )
+        if self.config.architecture_type in {"single_web_server", "load_balanced_tier"}:
+            self.variable(
+                "os_image",
+                "Linux image from the supported publisher catalog, using x86_64/AMD64. Image versions resolve at planning time; region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
+                LINUX_IMAGE_CHOICES[self.config.provider][0],
+                choices=LINUX_IMAGE_CHOICES[self.config.provider],
+            )
         getattr(self, f"_{self.config.provider}")()
         return {
             "main.tf": "\n\n".join(item.render() for item in self.main) + "\n",
@@ -346,9 +359,15 @@ class TerraformGenerator:
                 "aws_ami",
                 "linux",
                 most_recent=True,
-                owners=["amazon"],
+                owners=ref('var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]'),
                 children=[
-                    block("filter", name="name", values=["al2023-ami-2023.*-x86_64"]),
+                    block(
+                        "filter",
+                        name="name",
+                        values=ref(
+                            'var.os_image == "amazon-linux-2023" ? ["al2023-ami-2023.*-x86_64"] : ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]'
+                        ),
+                    ),
                     block("filter", name="virtualization-type", values=["hvm"]),
                 ],
             )
@@ -379,7 +398,16 @@ class TerraformGenerator:
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
             vpc_security_group_ids=[ref("aws_security_group.web.id")],
-            user_data="#!/bin/bash\nset -eu\ndnf install -y nginx\nsystemctl enable --now nginx\n",
+            user_data=ref(
+                'var.os_image == "amazon-linux-2023" ? '
+                + value_hcl(
+                    "#!/bin/bash\nset -eu\ndnf install -y nginx\nsystemctl enable --now nginx\n"
+                )
+                + " : "
+                + value_hcl(
+                    "#!/bin/bash\nset -eu\napt-get update\napt-get install -y nginx\nsystemctl enable --now nginx\n"
+                )
+            ),
             tags={"Name": ref("var.project_name")},
             children=[
                 block("root_block_device", **disk),
@@ -707,8 +735,10 @@ class TerraformGenerator:
         image = block(
             "source_image_reference",
             publisher="Canonical",
-            offer="0001-com-ubuntu-server-jammy",
-            sku="22_04-lts-gen2",
+            offer=ref(
+                'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
+            ),
+            sku=ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
             version="latest",
         )
         key = block("admin_ssh_key", username="terraforma", public_key=ref("var.ssh_public_key"))
@@ -1045,7 +1075,9 @@ class TerraformGenerator:
             children=[
                 block(
                     "initialize_params",
-                    image="debian-cloud/debian-12",
+                    image=ref(
+                        'var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"'
+                    ),
                     size=ref("var.boot_disk_size_gb"),
                     type=ref("var.boot_disk_type"),
                 )
@@ -1062,7 +1094,9 @@ class TerraformGenerator:
                 children=[
                     block(
                         "disk",
-                        source_image="debian-cloud/debian-12",
+                        source_image=ref(
+                            'var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"'
+                        ),
                         auto_delete=True,
                         boot=True,
                         disk_size_gb=ref("var.boot_disk_size_gb"),
