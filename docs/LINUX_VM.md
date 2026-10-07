@@ -14,6 +14,8 @@ GCP compute templates explicitly set `serial-port-enable = FALSE` to override pr
 
 Azure standalone VMs include Secure Boot, enabled by default with vTPM retained. Confirm Trusted Launch support for the selected image and size, and review unsigned driver requirements. Guest attestation and Defender monitoring are not configured.
 
+Azure standalone VMs also offer **Enable Azure accelerated networking**, off by default. The option changes the network interface's acceleration setting, while firewall access stays the same. The existing opt-in VM-size check reports Azure's advertised support when the option is enabled; missing or incompatible metadata requires review. It does not verify guest drivers or available capacity. Changes to an existing VM may require stopping and deallocating it. Review [Microsoft's requirements](https://learn.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) before enabling the setting.
+
 ![Azure Secure Boot questionnaire](images/azure-trusted-launch.png)
 
 | Decision | What you provide | What stays fixed |
@@ -27,6 +29,7 @@ Azure standalone VMs include Secure Boot, enabled by default with vTPM retained.
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
 | Workload identity | AWS instance profile, Azure system-assigned identity, or GCP user-managed service account | Disabled by default; no IAM/RBAC grants or credential keys are created |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
+| Azure NIC performance | Optional accelerated networking, off by default | Requires supported VM size and guest drivers; changing an existing VM can require stopping and deallocating it |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 
 Public mode requires an explicit single IPv4 `/32` client address or RFC1918 private subnet. Private mode defaults to `10.0.0.0/16`; review it against your actual routed client network. Broader public administrator ranges, including `0.0.0.0/0`, are rejected in both forms and generated Terraform. Firewall permission alone does not provide routing or prove successful login.

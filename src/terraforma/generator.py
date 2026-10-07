@@ -1058,6 +1058,12 @@ class TerraformGenerator:
         )
         if standalone:
             self.variable(
+                "enable_accelerated_networking",
+                "Enable accelerated networking on the VM's network interface for supported Azure VM sizes and Linux images. This can reduce latency and CPU overhead; it does not change firewall access. Leave it off unless the selected size supports it. Changing an existing VM's setting can require stopping and deallocating the VM; this generator does not perform that operation. The optional VM-size metadata check can report support, but does not prove guest-driver compatibility or capacity.",
+                False,
+                type_name="bool",
+            )
+            self.variable(
                 "enable_secure_boot",
                 "Enable Azure Trusted Launch Secure Boot for the selected Gen2 Ubuntu image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring.",
                 True,
@@ -1181,6 +1187,11 @@ class TerraformGenerator:
             self.resource(
                 "azurerm_network_interface",
                 name=ref('"${var.project_name}-nic"'),
+                **(
+                    {"accelerated_networking_enabled": ref("var.enable_accelerated_networking")}
+                    if standalone
+                    else {}
+                ),
                 children=[block("ip_configuration", **ip)],
                 **common,
             )

@@ -36,11 +36,18 @@ def azure_boot_compatibility(capabilities: list) -> bool | None:
 
 
 def machine_report(
-    provider: str, data, size: str, location: str, *, require_trusted_launch: bool = False
+    provider: str,
+    data,
+    size: str,
+    location: str,
+    *,
+    require_trusted_launch: bool = False,
+    require_accelerated_networking: bool = False,
 ) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
     restricted = False
     boot_compatible = None
+    networking_compatible = None
     if provider == "aws":
         entries = data.get("InstanceTypes") if isinstance(data, dict) else None
         if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
@@ -117,6 +124,19 @@ def machine_report(
         if require_trusted_launch:
             boot_compatible = azure_boot_compatibility(capabilities)
             report["boot_features_compatible"] = boot_compatible
+        if require_accelerated_networking:
+            values = [
+                item.get("value")
+                for item in capabilities
+                if str(item.get("name", "")).lower() == "acceleratednetworkingenabled"
+            ]
+            if len(values) > 1 or any(
+                not isinstance(value, str) or value.lower() not in {"true", "false"}
+                for value in values
+            ):
+                raise ValueError("Ambiguous or malformed accelerated networking capability.")
+            networking_compatible = values[0].lower() == "true" if values else None
+            report["accelerated_networking_compatible"] = networking_compatible
     else:
         architecture = machine.get("architecture")
         if architecture not in {None, "X86_64", "ARM64", "x86_64", "arm64"}:
@@ -144,6 +164,10 @@ def machine_report(
         if require_trusted_launch and boot_compatible is False
         else "boot_features_unknown"
         if require_trusted_launch and boot_compatible is None
+        else "network_features_incompatible"
+        if require_accelerated_networking and networking_compatible is False
+        else "network_features_unknown"
+        if require_accelerated_networking and networking_compatible is None
         else "metadata_confirmed"
     )
     return report
@@ -219,6 +243,9 @@ def inspect_machine(specification, executable, environment, timeout):
             location,
             require_trusted_launch=(
                 provider == "azure" and specification.recipe.architecture_type == "virtual_machine"
+            ),
+            require_accelerated_networking=(
+                provider == "azure" and values.get("enable_accelerated_networking") is True
             ),
         )
     except (ValueError, TypeError, RecursionError):

@@ -304,6 +304,17 @@ def test_native_trusted_launch_choices(native_directories, image, enabled, publi
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
 
 
+@pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
+@pytest.mark.parametrize("enabled", [False, True])
+def test_native_accelerated_networking(native_directories, image, enabled):
+    from terraforma.project import compile_project
+    from tests.test_trusted_launch import specification
+
+    spec = specification(image=image)
+    spec.inputs["enable_accelerated_networking"] = enabled
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
 @pytest.mark.parametrize("image", ["debian-12", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added optional accelerated networking for standalone Azure Linux VMs, off by default, with shared questionnaire/export handling and support metadata in the existing opt-in size check. Incompatible, unknown and malformed capability responses remain distinct from deployment approval.
+
 - Added managed command cleanup with Windows jobs and POSIX process groups, including helper cleanup after normal completion, timeout and output overflow. Trusted-tool limitations and the Windows launch/attachment gap remain explicit.
 
 - Added standalone VM reference outputs across AWS/Azure/GCP: resource ID, name and placement, plus Azure resource group. AWS Name tags are explicitly described as non-unique.

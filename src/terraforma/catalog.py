@@ -110,6 +110,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         if standalone and config.provider == "azure":
             fixed.append(
+                "Accelerated networking is optional (default off). Check selected VM-size and guest-driver support; changing an existing VM's setting can require stopping and deallocating it. Firewall access is unchanged."
+            )
+            fixed.append(
                 "Trusted Launch Secure Boot is configurable (default enabled); vTPM stays enabled. Check selected VM-size support and unsigned driver compatibility. Guest attestation and Defender monitoring are not configured."
             )
             fixed.append(
