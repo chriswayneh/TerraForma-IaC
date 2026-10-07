@@ -80,6 +80,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "windows_username": "Windows username for separate credential setup",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
+                    "host_maintenance_policy": "GCP host maintenance behavior",
+                    "automatic_restart": "Restart the VM after host failures or maintenance",
                     "enable_secure_boot": "Verify signed boot components (Secure Boot)",
                     "enable_boot_diagnostics": "Capture Azure boot diagnostics",
                     "enable_patch_assessment": "Assess Windows patches automatically",

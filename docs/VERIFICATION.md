@@ -1,5 +1,12 @@
 # Verification record
 
+## GCP host lifecycle checkpoint
+
+- The default suite passes 1,321 tests with 220 optional native cases skipped. Seventeen new cases verify standard Linux/Windows scheduling bindings, imported API answers, backwards-compatible defaults, strict enum/boolean rejection and exclusion from web-server/tier input contracts.
+- Four separately enabled Linux/Windows migration/termination combinations pass native Terraform validation and TFLint against the initialized Google 7.46.1 provider. Both automatic-restart choices are covered; these checks create no cloud resources.
+- A temporary browser tab imported a GCP Windows project, displayed MIGRATE and enabled restart defaults in Operations and identity, selected TERMINATE/disabled restart, and generated files successfully. The resulting choice summary retained both answers. The user's tab was preserved.
+- Host event execution, recovery timing, guest/application health and selected machine compatibility remain unverified. These choices do not add guest patch schedules, automatic stopping for Terraform updates, Spot instances or deployment approval.
+
 ## Administrator access guidance checkpoint
 
 - Network-input, plan-review and AWS/Azure/GCP Windows regression tests pass 234 cases with one optional native case skipped. Existing input acceptance and policy decisions are unchanged; question descriptions explain that a public `/32` accepted for generation remains blocked by local administrator-access policy.

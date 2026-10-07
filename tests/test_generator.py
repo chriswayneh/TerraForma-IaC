@@ -729,3 +729,16 @@ def test_native_azure_disk_cache_modes(native_directories, mode):
         True, enable_data_disk=True, boot_disk_caching=mode, data_disk_caching=mode
     )
     assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize(
+    "windows,policy", list(itertools.product([False, True], ["MIGRATE", "TERMINATE"]))
+)
+def test_native_gcp_standard_scheduling(native_directories, windows, policy):
+    from terraforma.project import compile_project
+    from tests.test_gcp_scheduling import specification
+
+    spec = specification(
+        windows, host_maintenance_policy=policy, automatic_restart=policy == "MIGRATE"
+    )
+    assert_native_files(native_directories["gcp"], compile_project(spec)["files"])

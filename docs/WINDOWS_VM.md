@@ -58,6 +58,8 @@ AWS publishes [Windows AMI version history](https://docs.aws.amazon.com/ec2/late
 
 ## Google Cloud
 
+The standard Windows VM exposes host maintenance (`MIGRATE` or `TERMINATE`) and automatic restart after Compute Engine host failures or maintenance. Defaults are migration and enabled restart. These are host lifecycle settings, not Windows patch schedules, application recovery or a promise of uninterrupted access. See [host maintenance and restart](LINUX_VM.md#gcp-host-maintenance-and-restart) for prerequisites and limits.
+
 | Choice | Supported behavior |
 | --- | --- |
 | Image | Latest `windows-cloud/windows-2022` family, x86_64; exact pins are not yet supported |

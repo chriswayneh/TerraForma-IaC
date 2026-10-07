@@ -147,6 +147,10 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             unsupported.append("Azure VM deletion locks")
         if standalone and config.provider == "gcp":
             fixed.append(
+                "Standard VM host maintenance is configurable: MIGRATE (default) or TERMINATE. Automatic restart after host failures/maintenance is configurable (default enabled); it does not restart user-stopped VMs or repair applications. Actual host behavior and machine compatibility require cloud verification."
+            )
+            unsupported.extend(["Spot/preemptible VMs", "Custom host maintenance schedules"])
+            fixed.append(
                 "Shielded VM Secure Boot is configurable (default enabled); vTPM and integrity monitoring stay enabled. Unsigned drivers/modules can prevent booting. Shielded setting changes require a stopped VM; automatic stopping is disabled."
             )
         if standalone and config.provider == "azure":

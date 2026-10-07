@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added GCP standalone Linux/Windows host-maintenance and automatic-restart questions, defaulting to live migration and enabled restart on standard VMs. Inputs persist through generation/import; guest patching, application recovery and live host behavior remain unverified.
+
 - Administrator-network questions now explain the distinction between accepted generation inputs and the stricter local plan policy: a public `/32` can generate files but remains a blocking administrator-access finding during plan review.
 
 - Updated terminal provider/workload prompts to direct selection wording. Standalone VM guidance now explains administrator access and routing; HTTP/TLS guidance appears only for web-server recipes.

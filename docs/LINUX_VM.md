@@ -56,6 +56,12 @@ The generated output has no application startup script or HTTP endpoint. Review 
 
 Reference behavior: [EC2 key pairs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html), [Google SSH connections](https://docs.cloud.google.com/compute/docs/instances/ssh), and [project SSH-key restrictions](https://docs.cloud.google.com/compute/docs/connect/restrict-ssh-keys?hl=en).
 
+## GCP host maintenance and restart
+
+Standalone GCP Linux and Windows VMs expose **GCP host maintenance behavior** and **Restart the VM after host failures or maintenance** in Operations and identity. Defaults are `MIGRATE` and enabled automatic restart for a standard VM. `TERMINATE` stops the VM during host maintenance; automatic restart governs subsequent Compute Engine recovery, not deliberate user stops or application health.
+
+Review machine-family support, downtime tolerance and the Terraform plan before changing these choices. These settings do not configure guest patch schedules, backups, application recovery or Spot/preemptible capacity. Automatic stopping for Terraform updates remains disabled. Live maintenance and restart behavior has not been tested. See [Google's host maintenance guidance](https://docs.cloud.google.com/compute/docs/instances/setting-vm-host-options).
+
 ## Optional data disk
 
 Choose **Attach a data disk** to reveal size and storage-class questions. These questions are hidden when the option is off; inactive disk settings are omitted from browser exports and the configuration summary. The CLI asks size/type only when enabled. Existing manifests without these inputs continue with no data disk.

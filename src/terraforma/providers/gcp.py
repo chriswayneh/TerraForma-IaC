@@ -47,6 +47,18 @@ def build_gcp(builder: TerraformGenerator) -> None:
     standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     if standalone:
         builder.variable(
+            "host_maintenance_policy",
+            "Host maintenance behavior for this standard GCP VM. MIGRATE (default) requests live migration when supported; TERMINATE stops the VM during host maintenance. Machine-family support and actual availability require cloud verification. This does not set guest patch schedules or guarantee application continuity. Review the plan before changing an existing VM.",
+            "MIGRATE",
+            choices=("MIGRATE", "TERMINATE"),
+        )
+        builder.variable(
+            "automatic_restart",
+            "Restart this standard GCP VM after Compute Engine stops it for a host failure or maintenance event. Enabled by default. This does not restart a VM deliberately stopped by a user, repair an application or configure guest services. Spot/preemptible VMs are not supported by this recipe.",
+            True,
+            type_name="bool",
+        )
+        builder.variable(
             "protect_vm",
             "Enable Google Compute Engine VM deletion protection. Turn this off and apply that change before intentionally deleting or replacing the VM. This is not a backup and does not protect the whole project from deletion.",
             True,
@@ -351,6 +363,19 @@ def build_gcp(builder: TerraformGenerator) -> None:
             if standalone
             else {"metadata_startup_script": startup, "metadata": {"serial-port-enable": "FALSE"}},
             children=[disk, network, image_lifecycle]
+            + (
+                [
+                    block(
+                        "scheduling",
+                        provisioning_model="STANDARD",
+                        preemptible=False,
+                        on_host_maintenance=ref("var.host_maintenance_policy"),
+                        automatic_restart=ref("var.automatic_restart"),
+                    )
+                ]
+                if standalone
+                else []
+            )
             + (
                 [
                     block(
