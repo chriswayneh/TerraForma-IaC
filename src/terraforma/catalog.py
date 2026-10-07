@@ -31,7 +31,12 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         }[config.provider]
         fixed.extend(
             [
-                f"Operating system choices: {image}; x86_64/AMD64 only, latest image at planning time (not pinned).",
+                f"Operating system choices: {image}; x86_64/AMD64 only. "
+                + (
+                    "Marketplace version is configurable: latest (default) or an exact Major.Minor.Build version. Version availability remains unverified."
+                    if config.provider == "azure"
+                    else "Latest image at planning time (not pinned)."
+                ),
                 "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
                 if standalone
                 else "Startup installs nginx and serves HTTP on port 80.",

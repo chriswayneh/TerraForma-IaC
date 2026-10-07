@@ -297,7 +297,13 @@ class TerraformGenerator:
         }:
             self.variable(
                 "os_image",
-                "Linux image from the supported publisher catalog, using x86_64/AMD64. Image versions resolve at planning time; region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
+                "Linux image from the supported publisher catalog, using x86_64/AMD64. "
+                + (
+                    "The Azure image version can be pinned separately; latest resolves at planning time. "
+                    if self.config.provider == "azure"
+                    else "Image versions resolve at planning time. "
+                )
+                + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
                 LINUX_IMAGE_CHOICES[self.config.provider][0],
                 choices=LINUX_IMAGE_CHOICES[self.config.provider],
             )
@@ -1039,6 +1045,12 @@ class TerraformGenerator:
                 False,
                 type_name="bool",
             )
+        self.variable(
+            "image_version",
+            "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
+            "latest",
+            pattern=r"^(latest|[0-9]{1,10}\.[0-9]{1,10}\.[0-9]{1,10})$",
+        )
         image = block(
             "source_image_reference",
             publisher="Canonical",
@@ -1046,7 +1058,7 @@ class TerraformGenerator:
                 'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
             ),
             sku=ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
-            version="latest",
+            version=ref("var.image_version"),
         )
         key = block(
             "admin_ssh_key",

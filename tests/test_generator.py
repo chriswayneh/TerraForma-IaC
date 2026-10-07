@@ -179,6 +179,19 @@ def assert_native_files(directory, files):
 
 
 @pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
+@pytest.mark.parametrize("workload", ["virtual_machine", "single_web_server", "load_balanced_tier"])
+def test_native_azure_pinned_image_versions(native_directories, image, workload):
+    from terraforma.project import compile_project
+    from tests.test_trusted_launch import specification
+
+    spec = specification(image=image)
+    spec.recipe.architecture_type = workload
+    spec.inputs.pop("enable_secure_boot")
+    spec.inputs["image_version"] = "22.04.20261001"
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("image", ["ubuntu-22.04", "ubuntu-24.04"])
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("public", [False, True])
 @pytest.mark.parametrize("diagnostics", [False, True])

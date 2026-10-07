@@ -63,6 +63,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
                     "os_image": "Linux operating system",
+                    "image_version": "Azure image version (latest or exact version)",
                     "admin_username": "Administrator username",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an exact Azure marketplace image version input for VM and web-tier recipes, retaining `latest` as the default and the existing Canonical offer/SKU constraints. Export/import preserves the answer, with replacement/data-loss and availability guidance.
+
 - Extended the existing Azure standalone VM metadata check to reported Gen2/Trusted Launch support. Unsupported and unknown boot capabilities remain visible, with no additional cloud request or deployment approval.
 
 - Added optional Azure-managed VM boot diagnostics, off by default, with shared input/export/import handling and console-data/retention guidance. No custom storage account or diagnostic URL output is generated.
