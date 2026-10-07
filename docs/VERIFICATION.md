@@ -1,5 +1,12 @@
 # Verification record
 
+## AWS metadata response hops checkpoint
+
+- The default suite passes 1,842 tests with 280 optional/native/platform cases skipped. Ruff checks and formatting pass across 96 Python files; JavaScript syntax and whitespace checks pass.
+- Twenty-four new regressions cover Linux/Windows, public/private, all supported modes, invalid answers, unrelated recipe exclusion, API import and readable summaries. Existing CLI and VM regressions pass; the unmanaged default preserves existing generated behavior.
+- Six separately enabled Linux/Windows mode cases pass real Terraform validation and TFLint against the cached AWS provider. No guest/container access or effective cloud settings were verified.
+- A temporary browser tab imported an AWS Linux project, selected the two-hop label and generated its matching summary. The tab was closed; original sidebar spacing and the user's tab were preserved. No cloud request, credentials access or apply was run.
+
 ## Azure Windows Core checkpoint
 
 - The default suite passes 1,818 tests with 274 optional/native/platform cases skipped. Ruff checks and formatting pass across 95 Python files; whitespace checks pass.

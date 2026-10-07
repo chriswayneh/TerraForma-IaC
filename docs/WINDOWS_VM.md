@@ -47,7 +47,7 @@ The computer name is an explicit input, independent of the longer project/resour
 | Administrator access | RDP on TCP 3389 from a private administrator subnet or one public IPv4 /32 address |
 | Credentials | Existing RSA public key only; password recovery happens separately in EC2 |
 | Workload identity | Optional existing IAM instance profile; policies and pass-role permission require review |
-| Protection | EC2 termination protection enabled by default; IMDSv2 required |
+| Protection | EC2 termination protection enabled by default; IMDSv2 required; optional explicit one/two-hop token response limit, with unmanaged provider default preserved |
 | Outputs | Instance ID, Name tag, availability zone, address, `Administrator` username and optional disk ID |
 
 ### AWS access after provisioning

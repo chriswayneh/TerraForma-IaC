@@ -91,6 +91,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - Azure Windows generation uses the refreshed windowsserver2022 offer following legacy-offer deprecation. Existing-project image migration, regional version availability and application dependencies require separate review.
 - Azure Windows VMs offer desktop or Server Core Gen2 installation options under the refreshed offer. Core application compatibility, regional image availability and guest boot require separate verification.
 - AWS Windows VMs offer English Full Base or Core Base images, keeping Full Base as the default. Core application/tool compatibility, image availability and replacement recovery require separate verification.
+- AWS standalone Linux/Windows VMs offer unmanaged, one-hop or two-hop IMDSv2 token response limits. Container credential access and effective account/AMI behavior require separate verification.
 - GCP Windows VMs expose latest or supported exact Windows Server 2022 Datacenter image names with a fixed publisher. Image availability, replacement recovery and live boot compatibility require separate verification.
 - GCP Windows VMs offer desktop or Server Core installation options with matching family/pin guards. Guest application compatibility, activation and access remain unverified.
 - AWS standalone Linux/Windows VMs expose optional standard availability zone names with automatic placement by default, matching subnet placement and planning guards. Account-specific zone mapping, capacity and replacement recovery remain unverified.

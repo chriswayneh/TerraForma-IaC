@@ -229,6 +229,12 @@ def build_aws(builder: TerraformGenerator) -> None:
     )
     if standalone:
         builder.variable(
+            "metadata_hop_limit",
+            "IMDSv2 token response network hops. provider_default leaves the hop limit unmanaged, preserving account/AMI/provider behavior; verify the effective setting. one_hop restricts responses to one hop; containers can fail to obtain tokens. two_hops supports an additional container network hop and expands metadata reachability. Require compatible SDKs and restrict workload access to instance credentials. Returning to provider_default does not reset an existing VM's setting. IMDSv2 remains required; this does not configure container isolation or IAM permissions.",
+            "provider_default",
+            choices=("provider_default", "one_hop", "two_hops"),
+        )
+        builder.variable(
             "cpu_credit_mode",
             "CPU credit setting for supported x86 T2, T3 and T3a instances. provider_default leaves this setting unmanaged; verify the effective setting in your account. standard can reduce performance when credits run out. unlimited can add surplus-credit charges. Returning to provider_default stops managing this setting and does not reset an existing VM's mode. Other instance families require provider_default. This does not estimate cost or verify capacity.",
             "provider_default",
@@ -314,7 +320,17 @@ def build_aws(builder: TerraformGenerator) -> None:
         tags={"Name": ref("var.project_name")},
         children=[
             block("root_block_device", **disk),
-            block("metadata_options", http_tokens="required"),
+            block(
+                "metadata_options",
+                http_tokens="required",
+                **{
+                    "http_put_response_hop_limit": ref(
+                        '{"provider_default" = null, "one_hop" = 1, "two_hops" = 2}[var.metadata_hop_limit]'
+                    )
+                }
+                if standalone
+                else {},
+            ),
         ]
         + (
             [

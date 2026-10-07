@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an AWS standalone metadata token-response hop setting with readable host/container options and an unmanaged default. IMDSv2 stays required; the form explains expanded reachability and that returning to default does not reset an existing setting.
+
 - Azure Windows standalone VMs now offer Server 2022 Core Gen2 alongside the desktop default under Microsoft's refreshed windowsserver2022 offer. External credentials, patching and Trusted Launch controls are preserved; installation changes require replacement and compatibility review.
 
 - GCP Windows standalone VMs now offer the published Server 2022 Core family or a matching supported exact image name. Desktop remains the default; input and Terraform guards reject mismatched desktop/Core pins. Existing IAP, activation and boot controls are preserved.

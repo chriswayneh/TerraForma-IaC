@@ -66,6 +66,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "private_ip_address": "Private IPv4 address (optional)",
                     "instance_type": "VM size",
                     "cpu_credit_mode": "CPU credit mode",
+                    "metadata_hop_limit": "EC2 metadata response hops",
                     "vm_size": "VM size",
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
@@ -154,6 +155,11 @@ def input_contract(config: WizardConfig) -> list[dict]:
                         "provider_default": "Provider default (unmanaged)",
                         "standard": "Standard (earned credits)",
                         "unlimited": "Unlimited (surplus charges may apply)",
+                    },
+                    "metadata_hop_limit": {
+                        "provider_default": "Provider default (unmanaged)",
+                        "one_hop": "One hop (host workloads)",
+                        "two_hops": "Two hops (container networking)",
                     },
                     "host_maintenance_policy": {
                         "MIGRATE": "Migrate during maintenance when supported",
@@ -511,6 +517,8 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
             display = "Automatic placement (resolved at planning)"
         elif name == "cpu_credit_mode" and value == "provider_default":
             display = "Provider default (credit setting unmanaged)"
+        elif name == "metadata_hop_limit":
+            display = definition["choice_labels"][value]
         elif type(value) is bool:
             display = "Enabled" if value else "Disabled"
         else:

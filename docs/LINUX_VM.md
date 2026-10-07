@@ -144,6 +144,8 @@ Terraform checks reported membership and the two-zone requirement when planning.
 
 ## AWS CPU credit mode
 
+Standalone AWS Linux and Windows VMs also expose **EC2 metadata response hops**. **Provider default** leaves the hop limit unmanaged; **One hop** explicitly selects 1 and **Two hops** selects 2 for an additional container network hop. IMDSv2 remains required. [AWS documents container hop-limit behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html). Two hops broadens metadata reachability; review workload isolation and least-privilege instance credentials. Returning to Provider default does not reset an existing VM's setting. Guest access, account policy and effective cloud settings remain unverified.
+
 Standalone AWS Linux and Windows VMs expose **CPU credit mode** in Operations and identity. Explicit modes support the template's x86 T2, T3 and T3a families; other families require `provider_default`.
 
 | Choice | Meaning |

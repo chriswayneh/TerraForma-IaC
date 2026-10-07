@@ -788,6 +788,20 @@ def test_native_aws_windows_core(native_directories, public, version):
 
 
 @pytest.mark.parametrize(
+    "windows,mode",
+    list(itertools.product([False, True], ["provider_default", "one_hop", "two_hops"])),
+)
+def test_native_aws_metadata_hops(native_directories, windows, mode):
+    from terraforma.project import compile_project
+    from tests.test_aws_metadata_hops import specification
+
+    assert_native_files(
+        native_directories["aws"],
+        compile_project(specification(windows, metadata_hop_limit=mode))["files"],
+    )
+
+
+@pytest.mark.parametrize(
     "public,version", list(itertools.product([False, True], ["latest", "20348.1.1"]))
 )
 def test_native_azure_refreshed_windows_offer(native_directories, public, version):
