@@ -225,6 +225,7 @@ function restoreChoices() {
       ![
         "single_web_server",
         "virtual_machine",
+        "windows_virtual_machine",
         "load_balanced_tier",
         "secure_database",
         "static_site",
@@ -303,6 +304,13 @@ function showStep(index) {
 }
 
 function updateGuidance() {
+  const windowsChoice = byId("windows-vm-choice");
+  const aws = form.elements.provider.value === "aws";
+  windowsChoice.hidden = !aws;
+  windowsChoice.querySelector("input").disabled = !aws;
+  if (!aws && form.elements.architecture_type.value === "windows_virtual_machine") {
+    form.querySelector('[name="architecture_type"][value="virtual_machine"]').checked = true;
+  }
   const config = configuration();
   const storageAlwaysEncrypted =
     config.provider === "gcp" ||
@@ -315,6 +323,7 @@ function updateGuidance() {
       ? "Also enable encryption at host. Requires subscription and VM-size support."
       : "Enable customer-managed KMS encryption for your stored data.";
   const notes = {
+    windows_virtual_machine: "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
     virtual_machine: "SSH is restricted to your administrator network. AWS/Azure need your public key; Google uses OS Login IAM access. Private VMs require a routed access path. No application is installed.",
     single_web_server: config.is_public
       ? "Public mode opens HTTP access. SSH stays closed by default. Add TLS before sensitive use."
@@ -382,7 +391,7 @@ function renderProject(result) {
   byId("target-preflight-panel").hidden = !result.specification;
   byId("target-preflight-consent").checked = false;
   byId("target-machine-check").checked = false;
-  byId("target-machine-option").hidden = !["virtual_machine", "single_web_server", "load_balanced_tier"].includes(result.specification?.recipe.architecture_type);
+  byId("target-machine-option").hidden = !["virtual_machine", "windows_virtual_machine", "single_web_server", "load_balanced_tier"].includes(result.specification?.recipe.architecture_type);
   byId("target-preflight-button").disabled = true;
   byId("target-preflight-results").replaceChildren();
   byId("preview-empty").hidden = true;
@@ -607,9 +616,9 @@ form.addEventListener("input", (event) => {
     event.target.setCustomValidity("");
     event.target.removeAttribute("aria-invalid");
   }
+  updateGuidance();
   saveChoices();
   if (event.target.id === "remember-choice") return;
-  updateGuidance();
   if (project) {
     project = null;
     byId("preview-empty").hidden = false;

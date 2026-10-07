@@ -26,20 +26,29 @@ def infrastructure_guide(config: WizardConfig) -> dict:
                 "explanation": "A separate cloud network groups your resources. Subnets divide its address space into smaller sections.",
             }
         )
-    if config.architecture_type == "virtual_machine":
+    if config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
+        windows = config.architecture_type == "windows_virtual_machine"
         components.extend(
             [
                 {
                     "name": compute,
-                    "explanation": "One Linux VM uses the selected operating system, machine size, and boot disk. Application initialization is left for your workload setup.",
+                    "explanation": "One Windows VM uses the selected machine size and boot disk, with the Amazon Windows Server 2022 image. Application initialization is left for your workload setup."
+                    if windows
+                    else "One Linux VM uses the selected operating system, machine size, and boot disk. Application initialization is left for your workload setup.",
                 },
                 {
                     "name": "Administrator access",
-                    "explanation": "Only SSH from the supplied administrator CIDR is added. AWS and Azure use your public key; Google uses OS Login and requires appropriate IAM roles. Private VMs also require an existing routed access path such as a VPN or bastion.",
+                    "explanation": "Only RDP from the supplied administrator CIDR is added. Recover the Administrator password separately through EC2 with the private key matching the supplied RSA public key. Private VMs need an existing routed access path. TerraForma does not collect either credential."
+                    if windows
+                    else "Only SSH from the supplied administrator CIDR is added. AWS and Azure use your public key; Google uses OS Login and requires appropriate IAM roles. Private VMs also require an existing routed access path such as a VPN or bastion.",
                 },
             ]
         )
-        route = ["Allowed administrator network", "SSH access rules", "Linux VM"]
+        route = [
+            "Allowed administrator network",
+            "RDP access rules" if windows else "SSH access rules",
+            "Windows VM" if windows else "Linux VM",
+        ]
     elif config.architecture_type in {"single_web_server", "load_balanced_tier"}:
         balanced = config.architecture_type == "load_balanced_tier"
         components.append(

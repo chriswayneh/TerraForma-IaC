@@ -684,3 +684,12 @@ def test_native_identity_checks_require_reference_only_when_enabled(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(json.loads(result.stdout)) == [True, False, True, False]
+
+
+@pytest.mark.parametrize("public,encryption", list(itertools.product([False, True], repeat=2)))
+def test_native_windows_vm_validation_and_lint(native_directories, public, encryption):
+    from terraforma.project import compile_project
+    from tests.test_windows_vm import specification
+
+    spec = specification(public, encryption, enable_data_disk=True)
+    assert_native_files(native_directories["aws"], compile_project(spec)["files"])

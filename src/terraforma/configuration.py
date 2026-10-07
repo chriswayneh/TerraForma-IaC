@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 LINUX_IMAGE_CHOICES = {
     "aws": ("amazon-linux-2023", "ubuntu-24.04"),
@@ -51,6 +51,7 @@ class WizardConfig(BaseModel):
     project_name: str = Field(pattern="^[a-z][a-z0-9\\-]{1,18}[a-z0-9]$")
     architecture_type: Literal[
         "virtual_machine",
+        "windows_virtual_machine",
         "single_web_server",
         "load_balanced_tier",
         "secure_database",
@@ -58,3 +59,9 @@ class WizardConfig(BaseModel):
     ]
     is_public: bool = False
     enable_encryption: bool = True
+
+    @model_validator(mode="after")
+    def supported_windows_provider(self):
+        if self.architecture_type == "windows_virtual_machine" and self.provider != "aws":
+            raise ValueError("Windows VM generation currently supports AWS only.")
+        return self

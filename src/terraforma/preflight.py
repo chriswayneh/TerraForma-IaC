@@ -429,7 +429,12 @@ def target_preflight(
             report["machine_check"] = (
                 inspect_machine(specification, executable, environment, timeout)
                 if specification.recipe.architecture_type
-                in {"virtual_machine", "single_web_server", "load_balanced_tier"}
+                in {
+                    "virtual_machine",
+                    "windows_virtual_machine",
+                    "single_web_server",
+                    "load_balanced_tier",
+                }
                 else {"status": "not_applicable", "architecture_compatible": None}
             )
     return report

@@ -205,18 +205,27 @@ class TerraformGenerator:
             )
         if self.config.architecture_type in {
             "virtual_machine",
+            "windows_virtual_machine",
             "single_web_server",
             "load_balanced_tier",
         }:
             self.variable(
                 "os_image",
-                "Linux image from the supported publisher catalog, using x86_64/AMD64. "
+                (
+                    "Windows Server 2022 English Full Base from Amazon, using x86_64. "
+                    if self.config.architecture_type == "windows_virtual_machine"
+                    else "Linux image from the supported publisher catalog, using x86_64/AMD64. "
+                )
                 + "The image version can be pinned separately; latest resolves at planning time. "
                 + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
-                LINUX_IMAGE_CHOICES[self.config.provider][0],
-                choices=LINUX_IMAGE_CHOICES[self.config.provider],
+                "windows-server-2022"
+                if self.config.architecture_type == "windows_virtual_machine"
+                else LINUX_IMAGE_CHOICES[self.config.provider][0],
+                choices=("windows-server-2022",)
+                if self.config.architecture_type == "windows_virtual_machine"
+                else LINUX_IMAGE_CHOICES[self.config.provider],
             )
-        if self.config.architecture_type == "virtual_machine":
+        if self.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
             self.variable(
                 "network_cidr",
                 "Address range for the new VM network. Check for overlap with networks you will connect; existing-network attachment is not configured. "
@@ -241,14 +250,24 @@ class TerraformGenerator:
             self._workload_identity_inputs()
             self.variable(
                 "allowed_cidr",
-                "Administrator network permitted to connect on SSH port 22. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
+                (
+                    "Administrator network permitted to connect on RDP port 3389. "
+                    if self.config.architecture_type == "windows_virtual_machine"
+                    else "Administrator network permitted to connect on SSH port 22. "
+                )
+                + "Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
                 None if self.config.is_public else "10.0.0.0/16",
                 network_policy="administrator_cidr",
             )
             if self.config.provider == "aws":
                 self.variable(
                     "ssh_public_key",
-                    "Existing administrator Ed25519 or RSA public key to import into EC2. Keep the matching private key outside this project.",
+                    "Existing RSA public key for Windows password recovery. Keep the matching private key outside TerraForma; recover the Administrator password separately through EC2 after provisioning."
+                    if self.config.architecture_type == "windows_virtual_machine"
+                    else "Existing administrator Ed25519 or RSA public key to import into EC2. Keep the matching private key outside this project.",
+                    pattern=r"^ssh-rsa [A-Za-z0-9+/]+={0,2}( .*)?$"
+                    if self.config.architecture_type == "windows_virtual_machine"
+                    else None,
                 )
         getattr(self, f"_{self.config.provider}")()
         return {

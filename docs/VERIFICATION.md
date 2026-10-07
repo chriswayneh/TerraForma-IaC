@@ -116,3 +116,13 @@ For native cases, put Terraform and TFLint on PATH and set `TERRAFORMA_NATIVE_TE
 - Containment of untrusted Terraform/provider/linter execution; temporary workspace isolation is not a process security boundary.
 
 The test environment currently emits a third-party Starlette warning about future TestClient HTTP transport changes. It does not indicate a test failure; future dependency upgrades should include transport compatibility checks.
+
+## AWS Windows VM development checkpoint
+
+- The Windows Server 2022 recipe covers public/private access and encryption combinations, restricted RDP, trusted Amazon image filters and optional exact AMI pins, RSA-only public-key validation, disk defaults, gp3 ratios and private-address guards.
+- Generation/export tests verify that no administrator password, private key, password retrieval argument or credential output is introduced. API guidance and catalog metadata describe external EC2 password recovery and retain unverified deployment status.
+- Native Terraform 1.14.0 provider validation and TFLint 0.61.0 pass all four public/private and encryption combinations with an optional data disk. CI includes the same native cases.
+- A temporary browser tab completed AWS Windows generation, showed the RSA recovery question and 50 GiB boot default, and confirmed that switching to Azure hides Windows and selects Linux. The user's existing tab was preserved.
+- These checks do not establish cloud availability, creation, password recovery, RDP access or teardown. Azure/GCP Windows recipes remain planned.
+
+The AWS Windows checkpoint passes 1,198 local tests (205 optional native cases skipped in the default run), Ruff checks across 73 Python files, JavaScript syntax checks and four separately enabled native provider/lint cases. An installed-wheel smoke verifies Windows generation, bundled UI assets and the 16-entry catalog. Target metadata tests use mocked responses, and the terminal questionnaire resolves required public-key/account inputs without collecting a password.

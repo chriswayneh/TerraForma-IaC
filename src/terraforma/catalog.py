@@ -3,6 +3,7 @@ from terraforma.generator import LINUX_IMAGE_CHOICES, WizardConfig
 PROVIDERS = ("aws", "azure", "gcp")
 WORKLOADS = {
     "virtual_machine": "Linux virtual machine",
+    "windows_virtual_machine": "Windows virtual machine (AWS)",
     "single_web_server": "Single web server",
     "load_balanced_tier": "Load-balanced application",
     "secure_database": "Managed PostgreSQL",
@@ -13,10 +14,12 @@ WORKLOADS = {
 def recipe_capabilities(config: WizardConfig) -> dict:
     compute = config.architecture_type in {
         "virtual_machine",
+        "windows_virtual_machine",
         "single_web_server",
         "load_balanced_tier",
     }
-    standalone = config.architecture_type == "virtual_machine"
+    windows = config.architecture_type == "windows_virtual_machine"
+    standalone = config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     fixed = []
     unsupported = [
         "Automatic provisioning",
@@ -29,6 +32,8 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             "azure": "Ubuntu 22.04 or 24.04 LTS Gen2 from Canonical",
             "gcp": "Debian 12 or Ubuntu 24.04 LTS from debian-cloud/ubuntu-os-cloud",
         }[config.provider]
+        if windows:
+            image = "Windows Server 2022 English Full Base from Amazon"
         fixed.extend(
             [
                 f"Operating system choices: {image}; x86_64/AMD64 only. "
@@ -39,14 +44,19 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     if config.provider == "gcp"
                     else "Image version is configurable: latest (default) or an exact AMI ID matching the trusted owner and selected x86 OS filters. Regional availability remains unverified."
                 ),
-                "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
+                (
+                    "No application initialization is configured; RDP is restricted to the supplied administrator CIDR."
+                    if windows
+                    else "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
+                )
                 if standalone
                 else "Startup installs nginx and serves HTTP on port 80.",
                 "Creates a new network with a configurable private IPv4 range; subnet count and derivation are fixed by this recipe. Connected-network overlap requires manual preflight."
                 if standalone
                 else "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
-                if config.architecture_type in {"virtual_machine", "single_web_server"}
+                if config.architecture_type
+                in {"virtual_machine", "windows_virtual_machine", "single_web_server"}
                 else "Creates a tier with 2–20 instances (default 2); placement is fixed and automatic scaling is not configured.",
             ]
         )
@@ -56,7 +66,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         elif standalone and config.provider == "aws":
             fixed.append(
-                "Imports the supplied public key into EC2; image username is ec2-user for Amazon Linux or ubuntu for Ubuntu. No private key is generated or stored."
+                "Imports an RSA public key for EC2 Windows password recovery. The administrator is Administrator; recover the password through EC2 using the matching private key after provisioning. TerraForma neither collects nor decrypts passwords/private keys."
+                if windows
+                else "Imports the supplied public key into EC2; image username is ec2-user for Amazon Linux or ubuntu for Ubuntu. No private key is generated or stored."
             )
         elif standalone:
             fixed.append(
@@ -71,7 +83,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             unsupported.append("Interactive serial console access")
         unsupported.extend(
             [
-                "Windows VMs",
+                "Other Windows versions or publishers" if windows else "Windows VMs",
                 "ARM64 VMs",
                 "Custom images",
                 "Multiple data disks" if standalone else "Data disks",
@@ -167,4 +179,5 @@ def recipe_catalog() -> list[dict]:
         )
         for provider in PROVIDERS
         for workload in WORKLOADS
+        if workload != "windows_virtual_machine" or provider == "aws"
     ]

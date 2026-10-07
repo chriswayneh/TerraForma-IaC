@@ -36,7 +36,7 @@ def build_aws(builder: TerraformGenerator) -> None:
     builder.resource(
         "aws_vpc",
         cidr_block=ref("var.network_cidr")
-        if builder.config.architecture_type == "virtual_machine"
+        if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else "10.0.0.0/16",
         enable_dns_support=True,
         enable_dns_hostnames=True,
@@ -85,7 +85,8 @@ def build_aws(builder: TerraformGenerator) -> None:
     if builder.config.architecture_type == "secure_database":
         build_database(builder)
         return
-    standalone = builder.config.architecture_type == "virtual_machine"
+    windows = builder.config.architecture_type == "windows_virtual_machine"
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     if not standalone:
         builder.variable(
             "allowed_cidr",
@@ -122,8 +123,8 @@ def build_aws(builder: TerraformGenerator) -> None:
     egress = block("egress", from_port=0, to_port=0, protocol="-1", cidr_blocks=["0.0.0.0/0"])
     ingress = block(
         "ingress",
-        from_port=22 if standalone else 80,
-        to_port=22 if standalone else 80,
+        from_port=3389 if windows else 22 if standalone else 80,
+        to_port=3389 if windows else 22 if standalone else 80,
         protocol="tcp",
         **{"security_groups": [ref("aws_security_group.lb.id")]}
         if balanced
@@ -146,14 +147,20 @@ def build_aws(builder: TerraformGenerator) -> None:
         block(
             "data",
             "aws_ami",
-            "linux",
+            "windows" if windows else "linux",
             most_recent=True,
-            owners=ref('var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]'),
+            owners=["amazon"]
+            if windows
+            else ref('var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]'),
             children=[
                 block(
                     "filter",
                     name="name",
                     values=ref(
+                        '[{"windows-server-2022" = "Windows_Server-2022-English-Full-Base-*"}[var.os_image]]'
+                    )
+                    if windows
+                    else ref(
                         'var.os_image == "amazon-linux-2023" ? ["al2023-ami-2023.*-x86_64"] : ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]'
                     ),
                 ),
@@ -168,7 +175,13 @@ def build_aws(builder: TerraformGenerator) -> None:
             ],
         )
     )
-    builder.variable("instance_type", "EC2 instance size.", "t3.micro")
+    builder.variable(
+        "instance_type",
+        "EC2 instance size. Verify Windows licensing, memory and image requirements before planning."
+        if windows
+        else "EC2 instance size.",
+        "t3.small" if windows else "t3.micro",
+    )
     if standalone:
         builder.variable(
             "protect_vm",
@@ -185,9 +198,9 @@ def build_aws(builder: TerraformGenerator) -> None:
     builder.variable(
         "boot_disk_size_gb",
         "Boot disk size in GiB; review the image minimum and ongoing storage cost.",
-        20,
+        50 if windows else 20,
         type_name="number",
-        minimum=20,
+        minimum=30 if windows else 20,
         maximum=2048,
     )
     builder.variable("boot_disk_type", "EBS boot disk class.", "gp3", choices=("gp3", "gp2"))
@@ -215,7 +228,7 @@ def build_aws(builder: TerraformGenerator) -> None:
         "aws_instance",
         "web",
         count=ref("var.instance_count") if balanced else 1,
-        ami=ref("data.aws_ami.linux.id"),
+        ami=ref("data.aws_ami.windows.id" if windows else "data.aws_ami.linux.id"),
         instance_type=ref("var.instance_type"),
         monitoring=ref("var.detailed_monitoring"),
         **{
@@ -283,7 +296,9 @@ def build_aws(builder: TerraformGenerator) -> None:
         builder.output(
             "data_disk_id",
             "var.enable_data_disk ? aws_ebs_volume.data[0].id : null",
-            "Optional data volume ID. Map the actual Linux device before formatting; this project does not mount or back it up. AWS attachment changes may stop the VM.",
+            "Optional data volume ID. Identify the new empty disk in Windows Disk Management before initializing it; formatting, backups and recovery are not configured. AWS attachment changes may stop the VM."
+            if windows
+            else "Optional data volume ID. Map the actual Linux device before formatting; this project does not mount or back it up. AWS attachment changes may stop the VM.",
         )
     if balanced:
         builder.resource(
@@ -365,11 +380,15 @@ def build_aws(builder: TerraformGenerator) -> None:
             builder.output(
                 "vm_address",
                 f"aws_instance.web[0].{address}",
-                "VM IPv4 address; SSH requires the allowed client network and matching private key.",
+                "VM IPv4 address; RDP requires the allowed client network and an Administrator password recovered separately through EC2 with the matching private key."
+                if windows
+                else "VM IPv4 address; SSH requires the allowed client network and matching private key.",
             )
             builder.output(
-                "ssh_username",
-                'var.os_image == "amazon-linux-2023" ? "ec2-user" : "ubuntu"',
+                "administrator_username" if windows else "ssh_username",
+                '"Administrator"'
+                if windows
+                else 'var.os_image == "amazon-linux-2023" ? "ec2-user" : "ubuntu"',
                 "Default administrator username for the selected publisher image.",
             )
             return

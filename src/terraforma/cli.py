@@ -276,6 +276,16 @@ def wizard(target_dir: Path | None):
                 questionary.Choice(
                     "A Linux virtual machine with restricted SSH", value="virtual_machine"
                 ),
+                *(
+                    [
+                        questionary.Choice(
+                            "A Windows Server 2022 VM with restricted RDP",
+                            value="windows_virtual_machine",
+                        )
+                    ]
+                    if provider == "aws"
+                    else []
+                ),
                 questionary.Choice("A single web server", value="single_web_server"),
                 questionary.Choice(
                     "A web VM tier behind a load balancer", value="load_balanced_tier"

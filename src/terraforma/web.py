@@ -62,10 +62,12 @@ def generate_project(config: WizardConfig) -> dict:
         if "default" not in variable.attributes
     ]
     notes = ["Review the Terraform plan and your cloud account before deployment."]
-    if config.architecture_type == "virtual_machine":
+    if config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
         notes.extend(
             [
-                "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",
+                "RDP requires the selected administrator network and an Administrator password recovered separately with your RSA private key through EC2. TerraForma does not collect or decrypt it. Private access needs a routed path."
+                if config.architecture_type == "windows_virtual_machine"
+                else "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",
                 "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur charges.",
             ]
         )
@@ -125,9 +127,10 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
     project["notes"].append(compiled["verification"])
-    if payload.recipe.architecture_type == "virtual_machine" and payload.inputs.get(
-        "enable_workload_identity", False
-    ):
+    if payload.recipe.architecture_type in {
+        "virtual_machine",
+        "windows_virtual_machine",
+    } and payload.inputs.get("enable_workload_identity", False):
         project["guide"]["components"].append(
             {
                 "name": "Workload identity",
@@ -141,9 +144,10 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         project["notes"].append(
             "Review workload identity permissions and attachment authorization separately. An identity reference is not a credential or a verification of least privilege. No role grants or credential keys are created by this recipe."
         )
-    if payload.recipe.architecture_type == "virtual_machine" and payload.inputs.get(
-        "enable_data_disk", False
-    ):
+    if payload.recipe.architecture_type in {
+        "virtual_machine",
+        "windows_virtual_machine",
+    } and payload.inputs.get("enable_data_disk", False):
         project["guide"]["components"].append(
             {
                 "name": {
@@ -159,9 +163,14 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         )
         if payload.recipe.provider == "aws":
             project["notes"].append(
-                "AWS data disk attachment changes may stop the VM before detaching. Forced detach is disabled. Nitro instances can expose a different Linux device name than /dev/sdf."
+                "AWS data disk attachment changes may stop the VM before detaching. Forced detach is disabled. Identify the disk in Windows Disk Management before initializing it."
+                if payload.recipe.architecture_type == "windows_virtual_machine"
+                else "AWS data disk attachment changes may stop the VM before detaching. Forced detach is disabled. Nitro instances can expose a different Linux device name than /dev/sdf."
             )
-    if payload.recipe.architecture_type == "virtual_machine" and payload.recipe.provider in {
+    if payload.recipe.architecture_type in {
+        "virtual_machine",
+        "windows_virtual_machine",
+    } and payload.recipe.provider in {
         "aws",
         "gcp",
     }:

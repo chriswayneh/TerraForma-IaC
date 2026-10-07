@@ -65,7 +65,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "vm_size": "VM size",
                     "machine_type": "VM size",
                     "instance_count": "Number of web VMs",
-                    "os_image": "Linux operating system",
+                    "os_image": "Windows operating system"
+                    if config.architecture_type == "windows_virtual_machine"
+                    else "Linux operating system",
                     "image_version": "Azure image version (latest or exact version)"
                     if config.provider == "azure"
                     else "AWS image version (latest or AMI ID)"
@@ -94,7 +96,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "subscription_id": "Azure subscription ID",
                     "aws_account_id": "Target AWS account ID",
                     "environment": "Environment label",
-                    "ssh_public_key": "Administrator SSH public key (Ed25519 or RSA)",
+                    "ssh_public_key": "Windows password recovery public key (RSA only)"
+                    if config.architecture_type == "windows_virtual_machine"
+                    else "Administrator SSH public key (Ed25519 or RSA)",
                     "database_client_ip": "Database client IPv4 address",
                     "index_html": "Website HTML",
                 }.get(name, name.replace("_", " ").capitalize()),
@@ -215,6 +219,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter the 12-digit target AWS account ID."
         elif definition["name"] == "admin_username":
             message = "Enter a non-reserved username using 3–32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
+        elif definition["kind"] == "ssh_public_key" and definition["pattern"]:
+            message = "Enter a structurally valid OpenSSH RSA public key for Windows password recovery; Ed25519 and private keys are unsupported."
         else:
             message = {
                 "ipv4_cidr": "Enter an IPv4 network in CIDR notation, with no host bits (for example, 10.0.0.0/16).",
@@ -300,10 +306,10 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
-    if (
-        specification.recipe.provider == "aws"
-        and specification.recipe.architecture_type == "virtual_machine"
-    ):
+    if specification.recipe.provider == "aws" and specification.recipe.architecture_type in {
+        "virtual_machine",
+        "windows_virtual_machine",
+    }:
         for prefix in ("boot_disk", "data_disk"):
             active = (prefix == "boot_disk" or effective["enable_data_disk"]) and effective[
                 f"{prefix}_type"
