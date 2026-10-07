@@ -129,6 +129,7 @@ class TerraformGenerator:
         type_name: str = "string",
         minimum: int | None = None,
         maximum: int | None = None,
+        visible_when: dict[str, bool] | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
         forbidden_values: tuple[str, ...] | None = None,
@@ -209,6 +210,7 @@ class TerraformGenerator:
             "pattern": pattern,
             "forbidden_values": list(forbidden_values) if forbidden_values else None,
             "network_policy": network_policy,
+            "visible_when": visible_when,
         }
         self.variables.append(block("variable", name, children=validations, **attributes))
 
@@ -275,6 +277,7 @@ class TerraformGenerator:
                 choices=LINUX_IMAGE_CHOICES[self.config.provider],
             )
         if self.config.architecture_type == "virtual_machine":
+            self._data_disk_inputs()
             self.variable(
                 "allowed_cidr",
                 "Administrator network permitted to connect on SSH port 22. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
@@ -292,6 +295,35 @@ class TerraformGenerator:
             "variables.tf": "\n\n".join(item.render() for item in self.variables) + "\n",
             "outputs.tf": "\n\n".join(item.render() for item in self.outputs) + "\n",
         }
+
+    def _data_disk_inputs(self) -> None:
+        disk_types = {
+            "aws": ("gp3", "gp2"),
+            "azure": ("StandardSSD_LRS", "Standard_LRS", "Premium_LRS"),
+            "gcp": ("pd-balanced", "pd-standard", "pd-ssd"),
+        }[self.config.provider]
+        self.variable(
+            "enable_data_disk",
+            "Attach one new empty data disk. It adds storage charges and is managed by this Terraform project, so teardown can delete it. No filesystem formatting, mounting, backup, or recovery policy is configured.",
+            False,
+            type_name="bool",
+        )
+        self.variable(
+            "data_disk_size_gb",
+            "Data disk size in GiB. Size affects billing and provider disk tiers; shrinking an existing disk is not supported by this recipe.",
+            100,
+            type_name="number",
+            minimum=32,
+            maximum=2048,
+            visible_when={"enable_data_disk": True},
+        )
+        self.variable(
+            "data_disk_type",
+            "Data disk storage class. Review VM, region, performance and billing compatibility before provisioning.",
+            disk_types[0],
+            choices=disk_types,
+            visible_when={"enable_data_disk": True},
+        )
 
     def _aws(self) -> None:
         self.variable("region", "AWS region.", "us-east-1")
@@ -514,6 +546,36 @@ class TerraformGenerator:
             ],
             **({"depends_on": [ref("aws_route_table_association.private")]} if private else {}),
         )
+        if standalone:
+            self.resource(
+                "aws_ebs_volume",
+                "data",
+                count=ref("var.enable_data_disk ? 1 : 0"),
+                availability_zone=ref("aws_instance.web[0].availability_zone"),
+                size=ref("var.data_disk_size_gb"),
+                type=ref("var.data_disk_type"),
+                encrypted=True,
+                **(
+                    {"kms_key_id": ref("aws_kms_key.this.arn")}
+                    if self.config.enable_encryption
+                    else {}
+                ),
+            )
+            self.resource(
+                "aws_volume_attachment",
+                "data",
+                count=ref("var.enable_data_disk ? 1 : 0"),
+                device_name="/dev/sdf",
+                volume_id=ref("aws_ebs_volume.data[0].id"),
+                instance_id=ref("aws_instance.web[0].id"),
+                force_detach=False,
+                stop_instance_before_detaching=True,
+            )
+            self.output(
+                "data_disk_id",
+                "var.enable_data_disk ? aws_ebs_volume.data[0].id : null",
+                "Optional data volume ID. Map the actual Linux device before formatting; this project does not mount or back it up. AWS attachment changes may stop the VM.",
+            )
         if balanced:
             self.resource(
                 "aws_security_group",
@@ -994,6 +1056,31 @@ class TerraformGenerator:
                 else "azurerm_network_interface.this.private_ip_address"
             )
         if standalone:
+            self.resource(
+                "azurerm_managed_disk",
+                "data",
+                count=ref("var.enable_data_disk ? 1 : 0"),
+                name=ref('"${var.project_name}-data"'),
+                create_option="Empty",
+                disk_size_gb=ref("var.data_disk_size_gb"),
+                storage_account_type=ref("var.data_disk_type"),
+                **common,
+            )
+            self.resource(
+                "azurerm_virtual_machine_data_disk_attachment",
+                "data",
+                count=ref("var.enable_data_disk ? 1 : 0"),
+                managed_disk_id=ref("azurerm_managed_disk.data[0].id"),
+                virtual_machine_id=ref("azurerm_linux_virtual_machine.this.id"),
+                lun=0,
+                caching="None",
+            )
+            self.output(
+                "data_disk_id",
+                "var.enable_data_disk ? azurerm_managed_disk.data[0].id : null",
+                "Optional empty data disk ID, attached at LUN 0. Formatting, mounting, backups and recovery are not configured.",
+            )
+        if standalone:
             self.output(
                 "vm_address",
                 endpoint,
@@ -1252,6 +1339,23 @@ class TerraformGenerator:
                 )
             ],
         )
+        if standalone:
+            self.resource(
+                "google_compute_disk",
+                "data",
+                count=ref("var.enable_data_disk ? 1 : 0"),
+                name=ref('"${var.project_name}-data"'),
+                zone=ref("var.zone"),
+                size=ref("var.data_disk_size_gb"),
+                type=ref("var.data_disk_type"),
+                labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
+                depends_on=[ref("google_project_service.compute")],
+            )
+            self.output(
+                "data_disk_id",
+                "var.enable_data_disk ? google_compute_disk.data[0].id : null",
+                "Optional empty persistent disk ID, attached as data-disk. Formatting, mounting, backups and recovery are not configured.",
+            )
         if balanced:
             self.resource(
                 "google_compute_instance_template",
@@ -1371,7 +1475,28 @@ class TerraformGenerator:
                     if standalone
                     else {"metadata_startup_script": startup}
                 ),
-                children=[disk, network],
+                children=[disk, network]
+                + (
+                    [
+                        block(
+                            "dynamic",
+                            "attached_disk",
+                            for_each=ref(
+                                "var.enable_data_disk ? [google_compute_disk.data[0].id] : []"
+                            ),
+                            children=[
+                                block(
+                                    "content",
+                                    source=ref("attached_disk.value"),
+                                    device_name="data-disk",
+                                    mode="READ_WRITE",
+                                )
+                            ],
+                        )
+                    ]
+                    if standalone
+                    else []
+                ),
                 depends_on=[ref("google_compute_router_nat.this")],
             )
             endpoint = (

@@ -48,6 +48,10 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
     for definition in input_contract(config):
         if not definition["editable"]:
             continue
+        if definition.get("visible_when") and any(
+            inputs.get(name) != expected for name, expected in definition["visible_when"].items()
+        ):
+            continue
         if definition["sensitive"]:
             references[definition["name"]] = definition["environment_variable"]
             click.echo(

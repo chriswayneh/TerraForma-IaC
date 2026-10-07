@@ -60,11 +60,23 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 "Windows VMs",
                 "ARM64 VMs",
                 "Custom images",
-                "Data disks",
+                "Multiple data disks" if standalone else "Data disks",
                 "Custom initialization",
                 "TLS setup",
             ]
         )
+        if standalone:
+            fixed.append(
+                "One optional empty data disk is configurable (default off); formatting, mounting, backups and recovery are not configured. Teardown can delete this managed disk."
+            )
+            unsupported.extend(
+                [
+                    "Existing disks or snapshots",
+                    "Automatic disk formatting/mounting",
+                    "Data disk backup policy",
+                    "Custom disk IOPS/throughput",
+                ]
+            )
         if standalone and config.provider in {"aws", "gcp"}:
             fixed.append(
                 "VM deletion protection is configurable (default enabled); disable and apply that change before deliberate deletion or replacement. It is not a backup."

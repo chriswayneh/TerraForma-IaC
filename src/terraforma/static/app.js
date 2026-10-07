@@ -25,6 +25,7 @@ function projectSpecification() {
       secret_references[definition.name] = definition.environment_variable;
     } else if (definition.editable) {
       const input = byId(`recipe-${definition.name}`);
+      if (definition.visible_when && byId(`recipe-group-${definition.name}`).hidden) return;
       const value = definition.kind === "boolean" ? input.checked : input.value;
       inputs[definition.name] =
         definition.kind === "integer" ? Number(value) : value;
@@ -77,6 +78,7 @@ async function loadRecipeInputs() {
   contract.forEach((definition) => {
     if (!definition.editable) return;
     const group = document.createElement("div");
+    group.id = `recipe-group-${definition.name}`;
     group.className = "recipe-input-group";
     const label = document.createElement("label");
     label.className = "input-label";
@@ -131,6 +133,20 @@ async function loadRecipeInputs() {
     container.append(group);
   });
   contractKey = key;
+  updateInputVisibility();
+}
+
+function updateInputVisibility() {
+  contract.forEach((definition) => {
+    if (!definition.visible_when) return;
+    const visible = Object.entries(definition.visible_when).every(([name, expected]) => {
+      const input = byId(`recipe-${name}`);
+      return input && (input.type === "checkbox" ? input.checked : input.value) === expected;
+    });
+    byId(`recipe-group-${definition.name}`).hidden = !visible;
+    const input = byId(`recipe-${definition.name}`);
+    if (input) input.disabled = busy || !visible;
+  });
 }
 
 function setTheme(theme) {
@@ -243,6 +259,7 @@ function setBusy(value) {
   byId("load-project-button").disabled = value;
   byId("review-plan-button").disabled = value;
   form.setAttribute("aria-busy", String(value));
+  updateInputVisibility();
 }
 
 function showStep(index) {
@@ -438,6 +455,7 @@ byId("project-file").addEventListener("change", async () => {
       if (typeof value === "boolean") input.checked = value;
       else input.value = value;
     });
+    updateInputVisibility();
     showStep(2);
     updateGuidance();
     byId("validation-panel").hidden = true;
@@ -558,6 +576,7 @@ byId("back-button").addEventListener("click", () => {
   if (!busy && step > 0) showStep(step - 1);
 });
 form.addEventListener("input", (event) => {
+  updateInputVisibility();
   if (typeof event.target.setCustomValidity === "function") {
     event.target.setCustomValidity("");
     event.target.removeAttribute("aria-invalid");

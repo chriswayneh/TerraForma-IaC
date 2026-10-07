@@ -67,6 +67,8 @@ The contract is derived from the actual variables declared by the existing recip
 
 Existing compute recipes now expose VM size, boot-disk size, and supported disk classes. Boot sizes are whole numbers in a bounded range: 20–2048 GiB for AWS/GCP and 30–2048 GiB for Azure. These are the current recipe limits, not universal cloud limits. Both the contract and generated Terraform enforce them. The selected image can impose a higher minimum, and live account/SKU/storage compatibility still requires preflight.
 
+Standalone Linux VMs also expose `enable_data_disk`, default `false`. Its dependent `data_disk_size_gb` and `data_disk_type` questions appear only when enabled, using contract `visible_when` metadata. Sizes are 32–2048 GiB; available types depend on the provider. The CLI skips inactive questions; browser exports omit inactive answers and use recipe defaults for their unused Terraform variables. All supplied manifest values are still validated, including inactive fields. The configuration summary omits inactive disk size/type choices. See [data disk behavior and limits](LINUX_VM.md#optional-data-disk).
+
 Generation is offline. Provider permissions, account identity, live image/SKU availability, quotas, and deployment are not established by the input checks. Schema/template versions are recorded; the current development workflow does not yet promise cross-version migration or reproducible generation across changing development commits.
 
 ## Environment labels

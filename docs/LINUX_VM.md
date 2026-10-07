@@ -13,7 +13,8 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 | Target | AWS account ID, Azure subscription UUID, or Google Cloud project ID; environment label | Credentials use the cloud provider's normal credential chain; identity remains unverified offline |
 | Placement | Region/location, plus zone for GCP | New network address ranges; existing-network attachment is not supported |
 | Operating system | Supported provider-specific Linux choice | x86_64/AMD64 only; latest matching publisher image at planning time |
-| Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no data disks, autoscaling, custom images, or custom initialization |
+| Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no autoscaling, custom images, or custom initialization |
+| Data storage | Enable one data disk, size from 32–2048 GiB, supported disk class | Disabled by default; one new empty disk, no formatting/mounting, backup, or recovery policy |
 | Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
@@ -38,3 +39,19 @@ Private VMs need connectivity into the generated network, such as a reviewed VPN
 The generated output has no application startup script or HTTP endpoint. Review the exported project guide, [supported image choices](PROJECT_SPECIFICATION.md#linux-image-selection), artifact receipt, cloud policy, and a Terraform plan before provisioning through your own workflow. TerraForma currently generates and validates; it does not execute apply or destroy.
 
 Reference behavior: [EC2 key pairs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html), [Google SSH connections](https://docs.cloud.google.com/compute/docs/instances/ssh), and [project SSH-key restrictions](https://docs.cloud.google.com/compute/docs/connect/restrict-ssh-keys?hl=en).
+
+## Optional data disk
+
+Choose **Attach a data disk** to reveal size and storage-class questions. These questions are hidden when the option is off; inactive disk settings are omitted from browser exports and the configuration summary. The CLI asks size/type only when enabled. Existing manifests without these inputs continue with no data disk.
+
+| Provider | Supported classes | Attachment and encryption |
+| --- | --- | --- |
+| AWS | `gp3` (default), `gp2` | One encrypted EBS volume in the VM's availability zone; uses the recipe KMS key when enabled, otherwise the account's default EBS encryption key. Requests `/dev/sdf`; Nitro Linux device names may differ. Forced detach is disabled, and attachment changes may stop the VM before detaching. |
+| Azure | `StandardSSD_LRS` (default), `Standard_LRS`, `Premium_LRS` | One empty managed disk at LUN 0, with caching set to None. Azure storage encryption applies; the VM's optional host encryption still requires subscription support. |
+| GCP | `pd-balanced` (default), `pd-standard`, `pd-ssd` | One zonal persistent disk attached as `data-disk`, with provider-managed encryption. No customer-managed disk key is configured. |
+
+The `data_disk_id` output identifies the disk when enabled. Attachment alone does not provide a mounted filesystem: identify the actual device, then arrange filesystem setup, mounting, backups, and recovery through your reviewed workload workflow. The tool performs none of those guest operations. Disk class and size compatibility, quotas, permissions, and costs require account preflight.
+
+This disk is managed by the exported Terraform project. Teardown can delete it, and VM deletion protection does not protect every disk or connected resource. Review data preservation before detaching, replacing, disabling, or removing it. Multiple disks, existing volumes/snapshots, custom IOPS/throughput, disk shrinking, and web-tier data disks remain unsupported.
+
+Provider references: [EBS volumes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume), [Azure disk attachments](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_data_disk_attachment), and [GCP persistent disks](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk).

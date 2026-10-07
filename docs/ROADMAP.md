@@ -82,7 +82,7 @@ Exit criteria: invalid specifications fail closed; review reports expose no raw 
 
 Target: **v0.4.0**.
 
-Status: initial Linux patterns are in development alongside the foundation. [Standalone Linux VM recipes](LINUX_VM.md) collect region, supported Linux image, VM size, boot-disk size/type, and restricted administrator access. Web tiers also expose their initial count. Full Linux/Windows, custom image, network, identity, and lifecycle adapters remain planned; cloud creation/access/teardown has not been verified.
+Status: initial Linux patterns are in development alongside the foundation. [Standalone Linux VM recipes](LINUX_VM.md) collect region, supported Linux image, VM size, boot-disk size/type, one optional empty data disk, and restricted administrator access. AWS exposes detailed monitoring; AWS/GCP expose VM deletion protection. Optional data disk size/type questions appear only when enabled. Web tiers also expose their initial count. Full Linux/Windows, custom image, network, identity, and lifecycle adapters remain planned; cloud creation/access/teardown has not been verified.
 
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.

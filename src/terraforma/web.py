@@ -117,6 +117,26 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         item for item in project["required_inputs"] if item["name"] not in payload.inputs
     ]
     project["notes"].append(compiled["verification"])
+    if payload.recipe.architecture_type == "virtual_machine" and payload.inputs.get(
+        "enable_data_disk", False
+    ):
+        project["guide"]["components"].append(
+            {
+                "name": {
+                    "aws": "Amazon EBS data disk",
+                    "azure": "Azure managed data disk",
+                    "gcp": "Google persistent data disk",
+                }[payload.recipe.provider],
+                "explanation": "One empty disk is attached for your workload data. Identify the actual device and arrange formatting, mounting, backups and recovery separately; attachment alone does not make a mounted filesystem.",
+            }
+        )
+        project["notes"].append(
+            "One new empty data disk is attached and adds storage cost. Identify the actual device before formatting or mounting it. This project does not configure backups, recovery or retention; Terraform teardown can delete the disk."
+        )
+        if payload.recipe.provider == "aws":
+            project["notes"].append(
+                "AWS data disk attachment changes may stop the VM before detaching. Forced detach is disabled. Nitro instances can expose a different Linux device name than /dev/sdf."
+            )
     if payload.recipe.architecture_type == "virtual_machine" and payload.recipe.provider in {
         "aws",
         "gcp",

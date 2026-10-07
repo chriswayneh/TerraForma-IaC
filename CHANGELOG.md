@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add one optional empty data disk to standalone AWS/Azure/GCP Linux VMs, with conditional size/type questions, provider-specific attachments, and explicit cost/data-lifecycle guidance.
+
 - Explain effective configuration answers/defaults in the browser and exported guide, with a read-only `describe` command for saved projects and external-secret requirements.
 
 - Update pinned GitHub checkout/Python setup actions to official Node 24 releases and disable checkout credential persistence in CI.

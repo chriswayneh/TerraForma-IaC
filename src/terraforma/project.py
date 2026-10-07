@@ -65,6 +65,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "admin_username": "Administrator username",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
+                    "enable_data_disk": "Attach a data disk",
+                    "data_disk_size_gb": "Data disk size (GiB)",
+                    "data_disk_type": "Data disk type",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
@@ -299,6 +302,11 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
     choices = []
     for definition in contract:
         name = definition["name"]
+        if definition.get("visible_when") and any(
+            effective.get(field) != expected
+            for field, expected in definition["visible_when"].items()
+        ):
+            continue
         value = effective.get(name)
         source = "answer" if name in supplied else "default"
         if definition["sensitive"]:

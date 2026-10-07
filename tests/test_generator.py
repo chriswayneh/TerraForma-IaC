@@ -148,6 +148,10 @@ def test_native_provider_validation_and_lint(
             enable_encryption=encryption,
         )
     ).generate()
+    assert_native_files(directory, files)
+
+
+def assert_native_files(directory, files):
     for name, text in files.items():
         (directory / name).write_text(text, encoding="utf-8")
     result = subprocess.run(
@@ -171,3 +175,45 @@ def test_native_provider_validation_and_lint(
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "provider,disk_type",
+    [
+        ("aws", "gp3"),
+        ("aws", "gp2"),
+        ("azure", "StandardSSD_LRS"),
+        ("azure", "Standard_LRS"),
+        ("azure", "Premium_LRS"),
+        ("gcp", "pd-balanced"),
+        ("gcp", "pd-standard"),
+        ("gcp", "pd-ssd"),
+    ],
+)
+@pytest.mark.parametrize("enabled", [True, False])
+def test_native_optional_data_disk_types(native_directories, provider, disk_type, enabled):
+    from terraforma.project import ProjectSpecification, compile_project
+
+    inputs = {
+        "aws": {
+            "aws_account_id": "123456789012",
+            "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+        },
+        "azure": {
+            "subscription_id": "12345678-1234-1234-1234-123456789abc",
+            "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+        },
+        "gcp": {"gcp_project_id": "example-project"},
+    }[provider]
+    specification = ProjectSpecification(
+        recipe=WizardConfig(
+            provider=provider, project_name="disk-test", architecture_type="virtual_machine"
+        ),
+        inputs={
+            **inputs,
+            "enable_data_disk": enabled,
+            "data_disk_type": disk_type,
+            "data_disk_size_gb": 256,
+        },
+    )
+    assert_native_files(native_directories[provider], compile_project(specification)["files"])
