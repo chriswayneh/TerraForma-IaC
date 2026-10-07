@@ -1,59 +1,482 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Create and understand Terraform with a guided local workspace.">
-  <title>TerraForma-IaC · Local workspace</title>
-  <link rel="stylesheet" href="/static/styles.css">
-  <link rel="stylesheet" href="/static/theme.css">
-  <script src="/static/app.js" defer></script>
-</head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="TerraForma home"><span class="brand-mark">T<span>F</span></span><span>TerraForma<span class="brand-sub">IaC</span></span></a>
-    <div class="header-right"><span class="local-badge"><span class="dot"></span> Local workspace</span><button class="theme-button" id="theme-button" aria-label="Switch to light theme" title="Switch to light theme">☀</button><button class="button subtle" id="help-button">How it works <span aria-hidden="true">↗</span></button></div>
-  </header>
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="workspace-label">YOUR WORKSPACE</div>
-      <div class="nav-active"><span aria-hidden="true">◇</span> Infrastructure builder</div>
-      <div class="sidebar-bottom"><div class="status-heading">LOCAL TOOLS</div><div class="tool-row"><span>Terraform</span><span id="terraform-status">Checking…</span></div><div class="tool-row"><span>TFLint</span><span id="tflint-status">Checking…</span></div><p id="tools-help">Generation works without local validation tools.</p><div class="sidebar-foot">Built to learn. Made to build.<br><span id="version">TerraForma-IaC</span></div></div>
-    </aside>
-    <main>
-      <div class="page-intro"><div class="eyebrow">FROM IDEA TO INFRASTRUCTURE</div><h1>Your infrastructure,<br><span>one step at a time.</span></h1><p>Tell us what you want to build. We’ll turn it into Terraform<br class="desktop-break"> you can read, understand, and make your own.</p></div>
-      <div class="builder-grid">
-        <section class="wizard-panel" aria-labelledby="wizard-heading">
-          <div class="panel-header"><h2 id="wizard-heading">Build your configuration</h2><span class="step-count" id="step-count">STEP 1 OF 3</span></div>
-          <div class="stepper" aria-label="Progress"><span class="step active" data-step="0"><b>1</b> Cloud</span><span class="step" data-step="1"><b>2</b> Workload</span><span class="step" data-step="2"><b>3</b> Configure</span></div>
-          <form id="wizard-form">
-            <fieldset class="form-step" id="cloud-step"><legend>Where will it live?</legend><p class="field-help">Choose the cloud account you’ll use for this project.</p><div class="option-stack">
-              <label class="choice"><input type="radio" name="provider" value="aws" checked><span class="provider-icon aws">a<span>↗</span></span><span><strong>Amazon Web Services</strong><small>Flexible infrastructure on AWS</small></span><span class="radio-indicator"></span></label>
-              <label class="choice"><input type="radio" name="provider" value="azure"><span class="provider-icon azure">A</span><span><strong>Microsoft Azure</strong><small>Build within your Azure subscription</small></span><span class="radio-indicator"></span></label>
-              <label class="choice"><input type="radio" name="provider" value="gcp"><span class="provider-icon google">G</span><span><strong>Google Cloud</strong><small>Infrastructure in your Google Cloud project</small></span><span class="radio-indicator"></span></label>
-            </div><div class="learn-note"><span aria-hidden="true">ⓘ</span><p>Your credentials stay with your cloud tools. You won’t enter them here.</p></div></fieldset>
-            <fieldset class="form-step" id="workload-step" hidden><legend>What are you building?</legend><p class="field-help">Start with a practical foundation you can customize.</p><div class="option-stack compact">
-              <label class="choice"><input type="radio" name="architecture_type" value="single_web_server" checked><span class="workload-icon">▤</span><span><strong>A web server</strong><small>One virtual machine running nginx</small></span><span class="radio-indicator"></span></label>
-              <label class="choice"><input type="radio" name="architecture_type" value="load_balanced_tier"><span class="workload-icon">⇄</span><span><strong>A load-balanced application</strong><small>Two servers sharing incoming traffic</small></span><span class="radio-indicator"></span></label>
-              <label class="choice"><input type="radio" name="architecture_type" value="secure_database"><span class="workload-icon">▱</span><span><strong>A PostgreSQL database</strong><small>A managed database with a standby and backups</small></span><span class="radio-indicator"></span></label>
-              <label class="choice"><input type="radio" name="architecture_type" value="static_site"><span class="workload-icon">⌘</span><span><strong>A static website</strong><small>HTML files hosted in cloud object storage</small></span><span class="radio-indicator"></span></label>
-            </div></fieldset>
-            <fieldset class="form-step" id="configure-step" hidden><legend>Make it yours.</legend><p class="field-help">A few decisions to shape your configuration.</p><label class="input-label" for="project-name">Project name</label><input class="text-input" id="project-name" name="project_name" value="my-project" minlength="3" maxlength="20" pattern="[a-z][a-z0-9-]{1,18}[a-z0-9]" required aria-describedby="name-help"><p class="input-help" id="name-help">3–20 lowercase letters, digits, or hyphens. Start with a letter and end with a letter or digit.</p>
-              <label class="toggle-row"><span><strong>Public internet access</strong><small>Off keeps this workload private.</small></span><input type="checkbox" name="is_public" id="public-access" role="switch"><span class="toggle-track"></span></label>
-              <label class="toggle-row"><span><strong>Storage encryption</strong><small id="encryption-help">Enable encrypted storage for this workload.</small></span><input type="checkbox" name="enable_encryption" id="encryption" role="switch" checked><span class="toggle-track"></span></label>
-              <div class="learn-note"><span aria-hidden="true">ⓘ</span><p id="configuration-note">A private web server can be reached from its cloud network.</p></div>
-            </fieldset>
-            <div class="form-footer"><button class="button subtle" type="button" id="back-button" disabled>← Back</button><button class="button primary" type="submit" id="next-button">Continue <span aria-hidden="true">→</span></button></div>
-          </form>
-        </section>
-        <section class="preview-panel" aria-labelledby="preview-heading"><div class="panel-header"><h2 id="preview-heading">Your Terraform</h2><span class="preview-badge" id="preview-badge">PREVIEW</span></div><div id="preview-empty"><div class="empty-art" aria-hidden="true"><span>{</span><div><i></i><i></i><i></i></div><span>}</span></div><h3>A clear plan starts here.</h3><p>Your configuration will appear here<br>when you complete the three steps.</p><div class="file-pills"><span>main.tf</span><span>variables.tf</span><span>outputs.tf</span></div></div><div id="preview-content" hidden><div class="code-toolbar"><div class="file-tabs" role="tablist" aria-label="Terraform files"><button class="file-tab active" role="tab" aria-selected="true" id="main-tab" data-file="main.tf" aria-controls="code-panel">main.tf</button><button class="file-tab" role="tab" aria-selected="false" data-file="variables.tf" aria-controls="code-panel">variables.tf</button><button class="file-tab" role="tab" aria-selected="false" data-file="outputs.tf" aria-controls="code-panel">outputs.tf</button></div><button class="copy-button" id="copy-button" aria-label="Copy selected file">Copy</button></div><pre id="code-panel" role="tabpanel" tabindex="0" aria-labelledby="main-tab"><code id="code-preview"></code></pre><div class="preview-actions"><button class="button outline" id="validate-button">✓ Validate locally</button><button class="button primary" id="download-button">Download .zip ↓</button></div><label class="ai-option"><input type="checkbox" id="ai-option"><span>Explain failures with AI <small id="ai-help">Sends redacted error logs to OpenAI.</small></span></label></div><div class="preview-foot"><span aria-hidden="true">◈</span> Files are generated locally. Nothing is deployed.</div></section>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Create and understand Terraform with a guided local workspace."
+    />
+    <title>TerraForma-IaC · Local workspace</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/theme.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="TerraForma home"
+        ><span class="brand-mark">T<span>F</span></span
+        ><span>TerraForma<span class="brand-sub">IaC</span></span></a
+      >
+      <div class="header-right">
+        <span class="local-badge"
+          ><span class="dot"></span> Local workspace</span
+        ><button
+          class="theme-button"
+          id="theme-button"
+          aria-label="Switch to light theme"
+          title="Switch to light theme"
+        >
+          ☀</button
+        ><button class="button subtle" id="help-button">
+          How it works <span aria-hidden="true">↗</span>
+        </button>
       </div>
-      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
-      <section class="project-details" id="project-details" hidden><div><div class="eyebrow">BEFORE YOU DEPLOY</div><h2>A little context goes a long way.</h2><ul id="project-notes"></ul></div><div class="inputs-card"><h3>Inputs you’ll need</h3><p>Supply these when planning in Terraform. Keep secrets out of your source files.</p><div id="required-inputs"></div></div></section>
-      <section class="validation-panel" id="validation-panel" hidden aria-live="polite"><div class="panel-header"><h2 id="validation-heading">Validation results</h2><span id="validation-state" class="preview-badge">CHECKING</span></div><div id="validation-results"></div></section>
-      <div class="bottom-note"><span class="dot"></span> A local workspace for learning and building <span>Terraform knowledge optional. Curiosity encouraged.</span></div>
-    </main>
-  </div>
-  <dialog id="help-dialog"><button class="dialog-close" id="help-close" aria-label="Close help">×</button><div class="eyebrow">HOW IT WORKS</div><h2>Small steps. Real Terraform.</h2><ol><li><strong>Choose your foundation.</strong> Pick a cloud provider, workload, and access settings.</li><li><strong>Read your configuration.</strong> Preview the three generated files and learn which inputs are required.</li><li><strong>Check and download.</strong> Validate using your installed tools, then download a ZIP to work with locally.</li></ol><p>Validation checks Terraform structure and lint rules. Review a Terraform plan, costs, and cloud permissions before deployment. This app never applies infrastructure.</p><button class="button primary" id="help-done">Got it</button></dialog>
-</body>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="workspace-label">YOUR WORKSPACE</div>
+        <div class="nav-active">
+          <span aria-hidden="true">◇</span> Infrastructure builder
+        </div>
+        <div class="sidebar-bottom">
+          <div class="status-heading">LOCAL TOOLS</div>
+          <div class="tool-row">
+            <span>Terraform</span><span id="terraform-status">Checking…</span>
+          </div>
+          <div class="tool-row">
+            <span>TFLint</span><span id="tflint-status">Checking…</span>
+          </div>
+          <p id="tools-help">
+            Generation works without local validation tools.
+          </p>
+          <button
+            class="button subtle tool-setup-button"
+            id="tool-setup-button"
+          >
+            Tool setup →
+          </button>
+          <div class="sidebar-foot">
+            Built to learn. Made to build.<br /><span id="version"
+              >TerraForma-IaC</span
+            >
+          </div>
+        </div>
+      </aside>
+      <main>
+        <div class="page-intro">
+          <div class="eyebrow">FROM IDEA TO INFRASTRUCTURE</div>
+          <h1>Your infrastructure,<br /><span>one step at a time.</span></h1>
+          <p>
+            Tell us what you want to build. We’ll turn it into Terraform<br
+              class="desktop-break"
+            />
+            you can read, understand, and make your own.
+          </p>
+        </div>
+        <div class="builder-grid">
+          <section class="wizard-panel" aria-labelledby="wizard-heading">
+            <div class="panel-header">
+              <h2 id="wizard-heading">Build your configuration</h2>
+              <span class="step-count" id="step-count">STEP 1 OF 3</span>
+            </div>
+            <div class="stepper" aria-label="Progress">
+              <span class="step active" data-step="0"><b>1</b> Cloud</span
+              ><span class="step" data-step="1"><b>2</b> Workload</span
+              ><span class="step" data-step="2"><b>3</b> Configure</span>
+            </div>
+            <form id="wizard-form">
+              <fieldset class="form-step" id="cloud-step">
+                <legend>Where will it live?</legend>
+                <p class="field-help">
+                  Choose the cloud account you’ll use for this project.
+                </p>
+                <div class="option-stack">
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="provider"
+                      value="aws"
+                      checked /><span class="provider-icon aws"
+                      >a<span>↗</span></span
+                    ><span
+                      ><strong>Amazon Web Services</strong
+                      ><small>Flexible infrastructure on AWS</small></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                  <label class="choice"
+                    ><input type="radio" name="provider" value="azure" /><span
+                      class="provider-icon azure"
+                      >A</span
+                    ><span
+                      ><strong>Microsoft Azure</strong
+                      ><small>Build within your Azure subscription</small></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                  <label class="choice"
+                    ><input type="radio" name="provider" value="gcp" /><span
+                      class="provider-icon google"
+                      >G</span
+                    ><span
+                      ><strong>Google Cloud</strong
+                      ><small
+                        >Infrastructure in your Google Cloud project</small
+                      ></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                </div>
+                <div class="learn-note">
+                  <span aria-hidden="true">ⓘ</span>
+                  <p>
+                    Your credentials stay with your cloud tools. You won’t enter
+                    them here.
+                  </p>
+                </div>
+              </fieldset>
+              <fieldset class="form-step" id="workload-step" hidden>
+                <legend>What are you building?</legend>
+                <p class="field-help">
+                  Start with a practical foundation you can customize.
+                </p>
+                <div class="option-stack compact">
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="architecture_type"
+                      value="single_web_server"
+                      checked /><span class="workload-icon">▤</span
+                    ><span
+                      ><strong>A web server</strong
+                      ><small>One virtual machine running nginx</small></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="architecture_type"
+                      value="load_balanced_tier" /><span class="workload-icon"
+                      >⇄</span
+                    ><span
+                      ><strong>A load-balanced application</strong
+                      ><small>Two servers sharing incoming traffic</small></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="architecture_type"
+                      value="secure_database" /><span class="workload-icon"
+                      >▱</span
+                    ><span
+                      ><strong>A PostgreSQL database</strong
+                      ><small
+                        >A managed database with a standby and backups</small
+                      ></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="architecture_type"
+                      value="static_site" /><span class="workload-icon">⌘</span
+                    ><span
+                      ><strong>A static website</strong
+                      ><small
+                        >HTML files hosted in cloud object storage</small
+                      ></span
+                    ><span class="radio-indicator"></span
+                  ></label>
+                </div>
+              </fieldset>
+              <fieldset class="form-step" id="configure-step" hidden>
+                <legend>Make it yours.</legend>
+                <p class="field-help">
+                  A few decisions to shape your configuration.
+                </p>
+                <label class="input-label" for="project-name"
+                  >Project name</label
+                ><input
+                  class="text-input"
+                  id="project-name"
+                  name="project_name"
+                  value="my-project"
+                  minlength="3"
+                  maxlength="20"
+                  pattern="[a-z][a-z0-9-]{1,18}[a-z0-9]"
+                  required
+                  aria-describedby="name-help"
+                />
+                <p class="input-help" id="name-help">
+                  3–20 lowercase letters, digits, or hyphens. Start with a
+                  letter and end with a letter or digit.
+                </p>
+                <label class="toggle-row"
+                  ><span
+                    ><strong>Public internet access</strong
+                    ><small>Off keeps this workload private.</small></span
+                  ><input
+                    type="checkbox"
+                    name="is_public"
+                    id="public-access"
+                    role="switch" /><span class="toggle-track"></span
+                ></label>
+                <label class="toggle-row"
+                  ><span
+                    ><strong>Storage encryption</strong
+                    ><small id="encryption-help"
+                      >Enable encrypted storage for this workload.</small
+                    ></span
+                  ><input
+                    type="checkbox"
+                    name="enable_encryption"
+                    id="encryption"
+                    role="switch"
+                    checked /><span class="toggle-track"></span
+                ></label>
+                <div class="learn-note">
+                  <span aria-hidden="true">ⓘ</span>
+                  <p id="configuration-note">
+                    A private web server can be reached from its cloud network.
+                  </p>
+                </div>
+              </fieldset>
+              <div class="form-footer">
+                <button
+                  class="button subtle"
+                  type="button"
+                  id="back-button"
+                  disabled
+                >
+                  ← Back</button
+                ><button class="button primary" type="submit" id="next-button">
+                  Continue <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </form>
+          </section>
+          <section class="preview-panel" aria-labelledby="preview-heading">
+            <div class="panel-header">
+              <h2 id="preview-heading">Your Terraform</h2>
+              <span class="preview-badge" id="preview-badge">PREVIEW</span>
+            </div>
+            <div id="preview-empty">
+              <div class="empty-art" aria-hidden="true">
+                <span>{</span>
+                <div><i></i><i></i><i></i></div>
+                <span>}</span>
+              </div>
+              <h3>A clear plan starts here.</h3>
+              <p>
+                Your configuration will appear here<br />when you complete the
+                three steps.
+              </p>
+              <div class="file-pills">
+                <span>main.tf</span><span>variables.tf</span
+                ><span>outputs.tf</span>
+              </div>
+            </div>
+            <div id="preview-content" hidden>
+              <div class="code-toolbar">
+                <div
+                  class="file-tabs"
+                  role="tablist"
+                  aria-label="Terraform files"
+                >
+                  <button
+                    class="file-tab active"
+                    role="tab"
+                    aria-selected="true"
+                    id="main-tab"
+                    data-file="main.tf"
+                    aria-controls="code-panel"
+                  >
+                    main.tf</button
+                  ><button
+                    class="file-tab"
+                    role="tab"
+                    aria-selected="false"
+                    data-file="variables.tf"
+                    aria-controls="code-panel"
+                  >
+                    variables.tf</button
+                  ><button
+                    class="file-tab"
+                    role="tab"
+                    aria-selected="false"
+                    data-file="outputs.tf"
+                    aria-controls="code-panel"
+                  >
+                    outputs.tf
+                  </button>
+                </div>
+                <button
+                  class="copy-button"
+                  id="copy-button"
+                  aria-label="Copy selected file"
+                >
+                  Copy
+                </button>
+              </div>
+              <pre
+                id="code-panel"
+                role="tabpanel"
+                tabindex="0"
+                aria-labelledby="main-tab"
+              ><code id="code-preview"></code></pre>
+              <div class="preview-actions">
+                <button class="button outline" id="validate-button">
+                  ✓ Validate locally</button
+                ><button class="button primary" id="download-button">
+                  Download .zip ↓
+                </button>
+              </div>
+              <label class="ai-option"
+                ><input type="checkbox" id="ai-option" /><span
+                  >Explain failures with AI
+                  <small id="ai-help"
+                    >Sends redacted error logs to OpenAI.</small
+                  ></span
+                ></label
+              >
+            </div>
+            <div class="preview-foot">
+              <span aria-hidden="true">◈</span> Files are generated locally.
+              Nothing is deployed.
+            </div>
+          </section>
+        </div>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+        <section class="project-details" id="project-details" hidden>
+          <div>
+            <div class="eyebrow">BEFORE YOU DEPLOY</div>
+            <h2>A little context goes a long way.</h2>
+            <ul id="project-notes"></ul>
+          </div>
+          <div class="inputs-card">
+            <h3>Inputs you’ll need</h3>
+            <p>
+              Supply these when planning in Terraform. Keep secrets out of your
+              source files.
+            </p>
+            <div id="required-inputs"></div>
+          </div>
+        </section>
+        <section
+          class="resource-guide"
+          id="resource-guide"
+          hidden
+          aria-labelledby="resource-heading"
+        >
+          <div class="eyebrow">UNDERSTAND WHAT YOU’RE BUILDING</div>
+          <h2 id="resource-heading">A look inside your infrastructure.</h2>
+          <ol
+            class="infrastructure-route"
+            id="infrastructure-route"
+            aria-label="Simplified access path"
+          ></ol>
+          <div class="component-grid" id="component-guide"></div>
+        </section>
+        <section
+          class="validation-panel"
+          id="validation-panel"
+          hidden
+          aria-live="polite"
+        >
+          <div class="panel-header">
+            <h2 id="validation-heading">Validation results</h2>
+            <span id="validation-state" class="preview-badge">CHECKING</span>
+          </div>
+          <div id="validation-results"></div>
+        </section>
+        <div class="bottom-note">
+          <span class="dot"></span> A local workspace for learning and building
+          <span>Terraform knowledge optional. Curiosity encouraged.</span>
+        </div>
+      </main>
+    </div>
+    <dialog id="help-dialog">
+      <button class="dialog-close" id="help-close" aria-label="Close help">
+        ×
+      </button>
+      <div class="eyebrow">HOW IT WORKS</div>
+      <h2>Small steps. Real Terraform.</h2>
+      <ol>
+        <li>
+          <strong>Choose your foundation.</strong> Pick a cloud provider,
+          workload, and access settings.
+        </li>
+        <li>
+          <strong>Read your configuration.</strong> Preview the three generated
+          files and learn which inputs are required.
+        </li>
+        <li>
+          <strong>Check and download.</strong> Validate using your installed
+          tools, then download a ZIP to work with locally.
+        </li>
+      </ol>
+      <p>
+        Validation checks Terraform structure and lint rules. Review a Terraform
+        plan, costs, and cloud permissions before deployment. This app never
+        applies infrastructure.
+      </p>
+      <button class="button primary" id="help-done">Got it</button>
+      <button class="button outline" id="help-tools">
+        Set up validation tools
+      </button>
+    </dialog>
+    <dialog id="tools-dialog" aria-labelledby="tools-heading">
+      <button
+        class="dialog-close"
+        id="tools-close"
+        aria-label="Close tool setup"
+      >
+        ×
+      </button>
+      <div class="eyebrow">OPTIONAL LOCAL CHECKS</div>
+      <h2 id="tools-heading">Set up your validation tools.</h2>
+      <p>
+        You can generate and download now. Install these tools when you want to
+        check the configuration on this computer.
+      </p>
+      <ol>
+        <li>
+          <strong>Terraform</strong> reads your configuration and checks
+          resource schemas.
+          <a
+            href="https://developer.hashicorp.com/terraform/install"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Official installation guide ↗</a
+          >
+        </li>
+        <li>
+          <strong>TFLint</strong> checks common Terraform mistakes.
+          <a
+            href="https://github.com/terraform-linters/tflint#installation"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Official installation guide ↗</a
+          >
+        </li>
+      </ol>
+      <p>
+        Choose the binary for your operating system and CPU. On Windows, extract
+        both executables into a directory on your user PATH. On macOS/Linux, use
+        the official package-manager or binary instructions.
+      </p>
+      <p>Verify in a new terminal:</p>
+      <pre class="setup-code">terraform -version&#10;tflint --version</pre>
+      <p>
+        After changing PATH, restart TerraForma so it can see the installed
+        tools. Provider downloads need network access.
+      </p>
+      <button class="button primary" id="tools-done">Got it</button>
+    </dialog>
+  </body>
 </html>

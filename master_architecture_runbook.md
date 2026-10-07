@@ -37,7 +37,7 @@ Save this block as `AI_INSTRUCTIONS.md` at the root of your workspace. Paste thi
 
 ```markdown
 # Role & Context Alignment
-You are an expert DevOps and Full-Stack AI Engineer. You are helping me build an open-source GitHub portfolio project called "Terraform GuardRails Wizard". 
+You are an expert DevOps and Full-Stack AI Engineer. You are helping me build an open-source GitHub portfolio project called "Terraform GuardRails Wizard".
 
 ## Project Objective
 A visual web application that lets beginners generate Terraform code via a TurboTax-style multi-step questionnaire, executes background testing/linting binaries locally, intercepts obscure CLI error logs, and uses an AI API to provide friendly, human-readable structural and security changes.
@@ -146,7 +146,7 @@ async def validate_terraform(payload: CodePayload):
     sandbox_id = str(uuid.uuid4())
     sandbox_dir = f"/tmp/tf_sandbox_{sandbox_id}"
     os.makedirs(sandbox_dir, exist_ok=True)
-    
+
     try:
         # Step 2: Write ephemeral code files locally
         with open(os.path.join(sandbox_dir, "main.tf"), "w") as f:
@@ -155,27 +155,27 @@ async def validate_terraform(payload: CodePayload):
             f.write(payload.variables_tf)
         with open(os.path.join(sandbox_dir, "outputs.tf"), "w") as f:
             f.write(payload.outputs_tf)
-            
+
         # Initialize working workspace context
         subprocess.run(["terraform", "init", "-backend=false"], cwd=sandbox_dir, capture_output=True, text=True)
-        
+
         # Step 3: Execute low-level structural code analysis
         result = subprocess.run(["terraform", "validate", "-json"], cwd=sandbox_dir, capture_output=True, text=True)
-        
+
         errors_list = []
         is_valid = (result.returncode == 0)
-        
+
         if not is_valid:
             errors_list.append(ValidationErrorDetail(
                 tool="terraform_validate",
                 raw_output=result.stdout if result.stdout else result.stderr
             ))
-            
+
         return ValidationResponse(is_valid=is_valid, errors=errors_list)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sandbox Execution Failure: {str(e)}")
-        
+
     finally:
         # Step 4: Strict cleanup pass to prevent local disk bloat
         if os.path.exists(sandbox_dir):
@@ -199,23 +199,23 @@ def generate_diagnostics_prompt(raw_error_log: str, source_code: str) -> dict:
         "Your job is to analyze cryptic Terraform CLI logs and explain the exact issue "
         "without using complex jargon, then supply the exact fixed code block."
     )
-    
+
     user_prompt = f"""
     The user is trying to deploy infrastructure but their build failed.
-    
+
     [RAW CLI ERROR LOG]
     {raw_error_log}
-    
+
     [ORIGINAL SOURCE CODE DEPLOYED]
     {source_code}
-    
+
     Respond strictly in JSON matching this contract structure:
     {{
       "friendly_explanation": "A clear description of what went wrong conceptually.",
       "recommended_fix": "The exact modified code snippet that completely replaces the broken code block."
     }}
     """
-    
+
     return {
         "system": system_role,
         "messages": [{"role": "user", "content": user_prompt}]

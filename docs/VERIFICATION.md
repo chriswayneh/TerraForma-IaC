@@ -1,0 +1,37 @@
+# Verification record
+
+Development checkpoint: `0.2.0.dev0`, October 6, 2026. This is not a release certification.
+
+## Local checks
+
+- 106 unit/API/generator/guidance tests pass on Windows with Python 3.14.
+- The 48 optional native template cases are skipped in the normal unit command. They were separately verified against Terraform 1.14.0 and TFLint 0.61.0 with installed AWS/Azure/Google provider schemas.
+- Python lint and formatting checks pass. Browser JavaScript passes `node --check`.
+- A built wheel contains the HTML, JavaScript, and both CSS files.
+- The CLI returns exit 0 for a valid configuration and exit 1 for an invalid configuration.
+- The browser completed guided generation, native validation, and ZIP download. The later onboarding flow displays required inputs and a resource guide.
+- Desktop, 390-pixel, and 320-pixel layouts were inspected. Dark/light theme switching was exercised; the narrow layout had no horizontal document overflow.
+
+## GitHub Actions
+
+The [initial GitHub Actions run](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37556086219) passed all four unit-test jobs (Windows/Linux, Python 3.11/3.14) and the native provider-validation job. Follow-up changes add a clean installed-wheel smoke test. Check the [latest workflow runs](https://github.com/chriswayneh/TerraForma-IaC/actions) for current commit results.
+
+## Reproduce
+
+```text
+python -m pip install -e ".[dev]"
+python -m ruff check src tests
+python -m ruff format --check src tests
+python -m pytest -q
+```
+
+For native cases, put Terraform and TFLint on PATH and set `TERRAFORMA_NATIVE_TESTS=1` before running tests. Provider downloads need network access. Native tests use temporary configurations and do not apply infrastructure.
+
+## Unverified behavior
+
+- Live OpenAI requests; diagnostics use mocked HTTP responses in tests.
+- Cloud provisioning, quotas, organization policies, application reachability, and teardown.
+- macOS runtime behavior; automated platform coverage currently includes Windows and Linux.
+- Containment of untrusted Terraform/provider/linter execution; temporary workspace isolation is not a process security boundary.
+
+The test environment currently emits a third-party Starlette warning about future TestClient HTTP transport changes. It does not indicate a test failure; future dependency upgrades should include transport compatibility checks.

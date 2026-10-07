@@ -18,6 +18,7 @@ from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
+from terraforma.guidance import infrastructure_guide
 from terraforma.sandbox import ValidationSandbox
 
 
@@ -61,7 +62,12 @@ def generate_project(config: WizardConfig) -> dict:
         )
     if config.provider == "gcp" or config.architecture_type == "static_site":
         notes.append("This service always encrypts stored data using provider-managed keys.")
-    return {"files": files, "required_inputs": inputs, "notes": notes}
+    return {
+        "files": files,
+        "required_inputs": inputs,
+        "notes": notes,
+        "guide": infrastructure_guide(config),
+    }
 
 
 def create_app() -> FastAPI:
@@ -81,12 +87,19 @@ def create_app() -> FastAPI:
     async def local_request_guard(request: Request, call_next):
         if request.method not in {"GET", "HEAD"}:
             origin = request.headers.get("origin")
-            if origin and (
-                urlsplit(origin).netloc != request.url.netloc
-                or urlsplit(origin).scheme != request.url.scheme
+            if origin:
+                try:
+                    parsed = urlsplit(origin)
+                    same_origin = (
+                        parsed.netloc == request.url.netloc and parsed.scheme == request.url.scheme
+                    )
+                except ValueError:
+                    same_origin = False
+                if not same_origin:
+                    return Response("Cross-origin requests are not allowed.", status_code=403)
+            if not secrets.compare_digest(
+                request.headers.get("x-terraforma-token", "").encode("utf-8"), token.encode("ascii")
             ):
-                return Response("Cross-origin requests are not allowed.", status_code=403)
-            if not secrets.compare_digest(request.headers.get("x-terraforma-token", ""), token):
                 return Response("Open the local app to start a new session.", status_code=403)
         response = await call_next(request)
         response.headers.update(
@@ -135,6 +148,9 @@ def create_app() -> FastAPI:
             instructions.append(
                 "No additional required Terraform variables. Configure your cloud credentials separately."
             )
+        instructions.extend(["", "## What the configuration creates", ""])
+        for component in project["guide"]["components"]:
+            instructions.append(f"- {component['name']}: {component['explanation']}")
         instructions.extend(
             [
                 "",

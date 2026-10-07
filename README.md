@@ -13,7 +13,7 @@ A lightweight local workspace for creating Terraform through a guided questionna
 
 **Development version:** `0.2.0.dev0`. The local visual workspace is being verified before the first release.
 
-[Quick Start](#install-and-use) · [Workloads](#generated-infrastructure) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick Start](#install-and-use) · [Getting Started](docs/GETTING_STARTED.md) · [Workloads](#generated-infrastructure) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -26,6 +26,7 @@ A lightweight local workspace for creating Terraform through a guided questionna
 - A three-step browser wizard with a dark theme and an optional light theme.
 - AWS, Azure, and Google Cloud configurations with public/private access choices.
 - Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.
+- A simplified access diagram and plain-language resource explanations.
 - ZIP downloads with project-specific input guidance.
 - Local Terraform and TFLint checks, with optional AI explanations of failures.
 - A CLI and reusable GitHub Action over the same backend.

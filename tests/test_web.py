@@ -1,6 +1,9 @@
+import asyncio
 import io
+import threading
 import zipfile
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -57,6 +60,12 @@ def test_cross_origin_and_untrusted_host_are_rejected(client):
     request_headers = {**headers(client), "Origin": "https://external.example"}
     assert client.post("/api/generate", json=CONFIG, headers=request_headers).status_code == 403
     assert client.get("/api/session", headers={"Host": "external.example"}).status_code == 400
+    assert (
+        client.post(
+            "/api/generate", json=CONFIG, headers={**headers(client), "Origin": "http://["}
+        ).status_code
+        == 403
+    )
 
 
 def test_same_origin_can_generate(client):
@@ -77,6 +86,8 @@ def test_required_inputs_are_explained(client):
     inputs = {item["name"]: item for item in result.json()["required_inputs"]}
     assert inputs["database_password"]["sensitive"]
     assert "subscription_id" in inputs
+    assert len(result.json()["guide"]["route"]) == 3
+    assert any("PostgreSQL" in item["name"] for item in result.json()["guide"]["components"])
 
 
 def test_download_contains_expected_files_only(client):
@@ -155,3 +166,37 @@ def test_generated_files_cannot_escape_sandbox():
     with pytest.raises(ValueError, match="filenames"):
         sandbox.create_environment()
     assert sandbox.temp_dir is None
+
+
+def test_validation_does_not_block_session_checks_and_rejects_overlap(monkeypatch):
+    async def execute():
+        started = asyncio.Event()
+        release = threading.Event()
+        loop = asyncio.get_running_loop()
+
+        def validate(self):
+            loop.call_soon_threadsafe(started.set)
+            assert release.wait(timeout=5)
+            return {"is_valid": True, "logs": "ok", "errors": []}
+
+        monkeypatch.setattr("terraforma.web.ValidationSandbox.validate", validate)
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app()), base_url="http://127.0.0.1"
+        ) as client:
+            token = (await client.get("/api/session")).json()["token"]
+            request_headers = {"X-TerraForma-Token": token}
+            first = asyncio.create_task(
+                client.post("/api/validate", json={"config": CONFIG}, headers=request_headers)
+            )
+            try:
+                await asyncio.wait_for(started.wait(), timeout=5)
+                assert (await client.get("/api/session")).status_code == 200
+                second = await client.post(
+                    "/api/validate", json={"config": CONFIG}, headers=request_headers
+                )
+                assert second.status_code == 409
+            finally:
+                release.set()
+            assert (await first).json()["is_valid"]
+
+    asyncio.run(execute())
