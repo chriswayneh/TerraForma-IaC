@@ -2,9 +2,9 @@
 
 # TerraForma-IaC
 
-### Generate. Understand. Validate.
+### Build cloud configuration by answering questions.
 
-A lightweight local workspace for creating Terraform through a guided questionnaire, reading the generated configuration, and checking it before deployment.
+TerraForma-IaC helps IT professionals create Terraform files without having to learn Terraform syntax first. Run it on your own computer, choose the cloud system you need, and review the configuration it produces.
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
@@ -18,6 +18,18 @@ A lightweight local workspace for creating Terraform through a guided questionna
 </div>
 
 ---
+
+## What does it actually do?
+
+Terraform describes servers, networks, storage, and access rules in text files so a cloud setup can be reviewed, repeated, and kept in version control. TerraForma helps you write those files through a guided questionnaire. It is for people who understand IT infrastructure but are still learning how to express it in Terraform.
+
+**Example:** you want a small web server on AWS. Choose AWS and “single web server,” give the project a name, and choose whether it should be reachable from the internet and which encryption options to use. TerraForma generates the Terraform configuration for the server, its network, and its access rules, and explains the resources involved. Azure and Google Cloud have their own supported templates.
+
+You can use a **local browser interface** or a **command-line questionnaire**. The output is ordinary, editable `main.tf`, `variables.tf`, and `outputs.tf` files; the browser can download them as a ZIP. With Terraform and TFLint installed, you can check the configuration's structure and common mistakes before taking it further.
+
+**What happens next is still your decision.** TerraForma currently generates, explains, exports, and validates configuration. It can also review a Terraform plan JSON file that you created separately. It does **not** run Terraform plan, apply, or destroy, and it does not create or delete cloud resources. Passing local checks does not prove that a setup will deploy successfully in your cloud account.
+
+The released **v0.2.0** provides the guided generator and local review tools. Development on `main` adds richer configuration questions, saved project specifications, project import, export receipts, and initial standalone Linux VM templates. Complete Linux/Windows VM configuration and an approved cloud-deployment workflow are future [roadmap milestones](docs/ROADMAP.md).
 
 ## Screenshots
 
