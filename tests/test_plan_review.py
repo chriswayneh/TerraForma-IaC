@@ -278,7 +278,7 @@ def test_malformed_identity_attachment_fields_fail_closed(resource_type, after):
 
 
 def test_unknown_configuration_and_coverage_remain_visible():
-    data = plan("azurerm_windows_virtual_machine", {"password": "private-secret-value"})
+    data = plan("azurerm_windows_virtual_machine_scale_set", {"password": "private-secret-value"})
     data["resource_changes"][0]["change"]["after_unknown"] = {"disk": [True]}
     report = review_plan(data, artifact_sha256="test")
     assert {"policy_coverage_gap", "unknown_values"} <= codes(data)

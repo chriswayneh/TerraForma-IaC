@@ -215,6 +215,8 @@ class TerraformGenerator:
                     (
                         "Windows Server 2022 English Full Base from Amazon, using x86_64. "
                         if self.config.provider == "aws"
+                        else "Windows Server 2022 Gen2 from MicrosoftWindowsServer, using x86_64. "
+                        if self.config.provider == "azure"
                         else "Windows Server 2022 from windows-cloud, using x86_64. "
                     )
                     if self.config.architecture_type == "windows_virtual_machine"

@@ -20,7 +20,7 @@ Generation never applies or destroys infrastructure. Generated templates still r
 
 ## AI diagnostics
 
-Passwords supplied through Terraform environment variables can still be retained in provider state and saved plans. A sensitive variable controls display; it does not establish encrypted storage or restrict who can read those artifacts. Generated projects do not configure a protected remote backend automatically. Keep state, saved plans and their exports outside Git and ordinary AI diagnostics, with access and retention appropriate to their contents. See the [Azure Windows credential design](docs/AZURE_WINDOWS_DESIGN.md) for the verified provider boundary and proposed adapter requirements.
+Passwords supplied through Terraform environment variables can still be retained in provider state and saved plans. A sensitive variable controls display; it does not establish encrypted storage or restrict who can read those artifacts. Generated projects do not configure a protected remote backend automatically. Keep state, saved plans and their exports outside Git and ordinary AI diagnostics, with access and retention appropriate to their contents. See the [Azure Windows credential design](docs/AZURE_WINDOWS_DESIGN.md) for the implemented external credential boundary and remaining protected-state requirements.
 
 The web UI sends failed command logs to OpenAI only when the user enables AI explanations. The CLI uses its documented `--ai/--no-ai` option. Known-secret redaction is best effort; tool logs can contain source snippets or sensitive data that is not recognized. Use local-only diagnosis when that is inappropriate. An AI suggestion is unverified advice and does not change files automatically.
 

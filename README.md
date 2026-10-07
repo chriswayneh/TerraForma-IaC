@@ -35,7 +35,7 @@ TerraForma creates Terraform configuration files from scratch based on answers t
 
 The setup files use **Terraform**, a tool that describes infrastructure in text files so a setup can be reviewed, reused, and tracked over time. TerraForma exports `main.tf`, `variables.tf`, and `outputs.tf` for AWS, Microsoft Azure, and Google Cloud. The terminal interface is a command-line interface (CLI); installed Terraform and TFLint tools provide local validation. An existing Terraform plan JSON can also be reviewed, but TerraForma does not run plan, apply, or destroy.
 
-The released **v0.2.0** provides guided generation and local review. Development on `main` adds richer configuration questions, saved project specifications, import, export receipts, Linux virtual-machine templates and an initial [AWS/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows configuration and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
+The released **v0.2.0** provides guided generation and local review. Development on `main` adds richer configuration questions, saved project specifications, import, export receipts, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows configuration and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
 
 ## Screenshots
 

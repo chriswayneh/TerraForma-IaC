@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 LINUX_IMAGE_CHOICES = {
     "aws": ("amazon-linux-2023", "ubuntu-24.04"),
@@ -59,9 +59,3 @@ class WizardConfig(BaseModel):
     ]
     is_public: bool = False
     enable_encryption: bool = True
-
-    @model_validator(mode="after")
-    def supported_windows_provider(self):
-        if self.architecture_type == "windows_virtual_machine" and self.provider == "azure":
-            raise ValueError("Windows VM generation currently supports AWS and GCP only.")
-        return self

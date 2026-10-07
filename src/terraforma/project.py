@@ -74,6 +74,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "aws"
                     else "GCP image version (latest or exact image name)",
                     "admin_username": "Administrator username",
+                    "computer_name": "Windows computer name",
+                    "license_type": "Windows licensing",
+                    "admin_password": "Administrator password (external reference)",
                     "windows_username": "Windows username for separate credential setup",
                     "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "protect_vm": "Protect this VM from accidental deletion",
@@ -219,7 +222,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
         elif definition["name"] == "aws_account_id":
             message = "Enter the 12-digit target AWS account ID."
         elif definition["name"] == "admin_username":
-            message = "Enter a non-reserved username using 3–32 lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
+            message = "Enter a non-reserved username within the documented length using lowercase letters, digits, underscores or hyphens; start with a letter and end with a letter or digit."
         elif definition["kind"] == "ssh_public_key" and definition["pattern"]:
             message = "Enter a structurally valid OpenSSH RSA public key for Windows password recovery; Ed25519 and private keys are unsupported."
         else:

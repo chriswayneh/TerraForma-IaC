@@ -1,5 +1,15 @@
 # Verification record
 
+## Azure Windows VM development checkpoint
+
+- The default suite passes 1,279 tests with 213 optional native cases skipped. Ruff checks and formatting pass across 75 Python files; browser JavaScript syntax checks pass.
+- Four separately enabled Terraform/provider and TFLint cases pass for Azure Windows public/private networking and both Secure Boot settings, with an optional data disk. These are structural checks without cloud authentication or deployment.
+- Generation, terminal, API and ZIP round-trip cases verify that only `TF_VAR_admin_password` is recorded. An environment marker never appears in generated files or responses; no password input is rendered. Windows username/computer-name limits, boot disk minimum and unsupported answers fail closed.
+- Policy `0.7.0` covers Azure Windows Secure Boot/vTPM disabling, removal, missing controls and malformed values. Reports retain partial coverage and never grant deployment approval. Mocked SKU metadata checks cover Gen2 compatibility and unknown/incompatible responses.
+- A rebuilt installed wheel verifies the 18-entry catalog, Azure Windows generation and bundled updated introduction/questionnaire labels. A temporary browser tab imports an example Azure Windows specification and verifies 128 GiB boot and Standard_D2s_v5 defaults, separate computer naming and external password/state guidance.
+- Current GitHub screenshots containing the former introduction were recaptured from the workspace. The wording checkpoint passed [all CI jobs](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37590039941).
+- Cloud creation, marketplace availability, password acceptance, RDP access, licensing activation, update completion, BitLocker recovery and teardown remain unverified. Protected backend configuration and managed plan/apply remain planned.
+
 First release: `0.2.0`, October 6, 2026. This record distinguishes structural/local checks from unverified cloud behavior.
 
 ## Local checks

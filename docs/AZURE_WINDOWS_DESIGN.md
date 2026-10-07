@@ -1,8 +1,8 @@
 # Azure Windows credential design
 
-Status: proposed adapter; Azure Windows generation is not available yet. AWS and Google Cloud Windows recipes are described in [Windows VMs](WINDOWS_VM.md).
+Status: initial native Azure Windows generation is implemented on `main`. Live deployment and protected backend configuration remain unverified or planned. Operational inputs for all three clouds are described in [Windows VMs](WINDOWS_VM.md).
 
-The next Azure adapter should use a native Windows VM resource and the existing shared questionnaire contract. It must expose the credential and state boundary plainly before users export or deploy a configuration.
+The adapter uses a native Windows VM resource and the shared questionnaire contract. Both interfaces expose the credential and state boundary plainly before users export or deploy a configuration.
 
 ## Verified provider boundary
 
@@ -10,7 +10,7 @@ Native schema inspection with AzureRM 4.81.0 found `admin_password` marked sensi
 
 Do not invent `admin_password_wo` or mark the normal field as an ephemeral value. Provider support and the minimum Terraform version must be verified before adopting either mechanism. The generated projects currently permit Terraform 1.6 and use AzureRM 4.x.
 
-## Proposed delivery boundary
+## Delivery boundary
 
 | Requirement | Adapter behavior |
 | --- | --- |
@@ -31,7 +31,7 @@ Azure Resource Manager supports [a Key Vault reference for a secure deployment p
 
 An ARM deployment adapter would require additional permission checks, resource ownership and teardown rules, and policy inspection of resources inside its template. A deployment wrapper must not conceal VM changes from the plan reviewer or silently switch lifecycle semantics. It is a separate candidate adapter, rather than an implicit substitute for the native VM resource.
 
-## Inputs to implement and verify
+## Supported inputs and remaining verification
 
 | Area | Required operational choices |
 | --- | --- |
@@ -45,4 +45,4 @@ An ARM deployment adapter would require additional permission checks, resource o
 
 Windows naming limits differ from the existing Linux adapter; [Microsoft's OS profile documentation](https://learn.microsoft.com/en-us/python/api/azure-mgmt-compute-bulkaction/azure.mgmt.compute.bulkaction.types.osprofile?view=azure-python-preview) specifies a 20-character administrator username and 15-character computer name. Do not silently truncate the project name into a hostname. Show the chosen hostname in the questionnaire and exported summary.
 
-Before enabling the adapter, add input validation and export/import tests, native provider/lint cases, Windows resource policy coverage, and account-specific image/size review. Release acceptance also requires a dedicated test-account creation, credential/access verification and controlled teardown. These deployment checks remain outstanding.
+Input validation, export/import, native provider/lint cases and Windows boot policy coverage are implemented. Account-specific image availability, size compatibility, guest boot and password acceptance still need live verification. Release acceptance requires a dedicated test-account creation, credential/access verification and controlled teardown. These deployment checks remain outstanding.

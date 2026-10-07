@@ -702,3 +702,12 @@ def test_native_gcp_windows_vm_validation_and_lint(native_directories, public, s
 
     spec = specification(public, enable_data_disk=True, enable_secure_boot=secure_boot)
     assert_native_files(native_directories["gcp"], compile_project(spec)["files"])
+
+
+@pytest.mark.parametrize("public,secure_boot", list(itertools.product([False, True], repeat=2)))
+def test_native_azure_windows_vm_validation_and_lint(native_directories, public, secure_boot):
+    from terraforma.project import compile_project
+    from tests.test_azure_windows_vm import specification
+
+    spec = specification(public, enable_data_disk=True, enable_secure_boot=secure_boot)
+    assert_native_files(native_directories["azure"], compile_project(spec)["files"])

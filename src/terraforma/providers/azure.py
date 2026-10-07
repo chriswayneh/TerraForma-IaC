@@ -38,7 +38,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         "azurerm_virtual_network",
         name=ref('"${var.project_name}-vnet"'),
         address_space=[ref("var.network_cidr")]
-        if builder.config.architecture_type == "virtual_machine"
+        if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else ["10.0.0.0/16"],
         **common,
     )
@@ -47,27 +47,67 @@ def build_azure(builder: TerraformGenerator) -> None:
         "resource_group_name": common["resource_group_name"],
         "virtual_network_name": ref("azurerm_virtual_network.this.name"),
         "address_prefixes": [ref("cidrsubnet(var.network_cidr, 8, 1)")]
-        if builder.config.architecture_type == "virtual_machine"
+        if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else ["10.0.1.0/24"],
     }
     if builder.config.architecture_type == "secure_database":
         build_database(builder, common, subnet)
         return
     builder.resource("azurerm_subnet", **subnet)
-    standalone = builder.config.architecture_type == "virtual_machine"
+    windows = builder.config.architecture_type == "windows_virtual_machine"
+    vm_resource = "azurerm_windows_virtual_machine" if windows else "azurerm_linux_virtual_machine"
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     builder.variable(
         "admin_username",
-        "Linux administrator username: 3–32 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Azure reserved names are rejected; password authentication stays disabled.",
+        "Windows administrator username: 3–20 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Reserved names are rejected. Supply the password externally and protect Terraform state and plans."
+        if windows
+        else "Linux administrator username: 3–32 lowercase letters, digits, underscores or hyphens. Start with a letter and end with a letter or digit. Azure reserved names are rejected; password authentication stays disabled.",
         "terraforma",
-        pattern="^[a-z][a-z0-9_\\-]{1,30}[a-z0-9]$",
+        pattern="^[a-z][a-z0-9_\\-]{1,18}[a-z0-9]$"
+        if windows
+        else "^[a-z][a-z0-9_\\-]{1,30}[a-z0-9]$",
         forbidden_values=AZURE_RESERVED_USERNAMES,
     )
-    builder.variable(
-        "ssh_public_key",
-        "Administrator SSH public key for the selected user. Keep the matching private key outside this project."
-        if standalone
-        else "Administrator SSH public key. SSH is not exposed by the generated firewall.",
-    )
+    if windows:
+        builder.variable(
+            "admin_password",
+            "Supply TF_VAR_admin_password externally before planning. Never enter a password in this project. AzureRM stores this password in Terraform state even though it is sensitive; protect state, saved plans and access before use. This generator does not configure a protected backend. Password changes replace the VM.",
+            sensitive=True,
+        )
+        condition = (
+            "length(var.admin_password) >= 12 && length(var.admin_password) <= 123 && ("
+            + " + ".join(
+                f"(length(regexall({value_hcl(pattern)}, var.admin_password)) > 0 ? 1 : 0)"
+                for pattern in ("[A-Z]", "[a-z]", "[0-9]", "[^A-Za-z0-9]")
+            )
+            + ") >= 3"
+        )
+        builder.variables[-1].children.append(
+            block(
+                "validation",
+                condition=ref(condition),
+                error_message="Use 12–123 characters and at least three categories: uppercase, lowercase, digits and symbols. Provider restrictions also apply.",
+            )
+        )
+        builder.variable(
+            "computer_name",
+            "Windows computer name, separate from the Azure resource name: 3–15 lowercase letters, digits or hyphens, starting with a letter and ending with a letter or digit. Changing it replaces the VM. Check hostname uniqueness on connected networks.",
+            "terraforma",
+            pattern="^[a-z][a-z0-9-]{1,13}[a-z0-9]$",
+        )
+        builder.variable(
+            "license_type",
+            "Use None for standard Azure Windows licensing. Windows_Server requests Azure Hybrid Benefit only if you hold qualifying licenses; eligibility is not checked by this tool.",
+            "None",
+            choices=("None", "Windows_Server"),
+        )
+    else:
+        builder.variable(
+            "ssh_public_key",
+            "Administrator SSH public key for the selected user. Keep the matching private key outside this project."
+            if standalone
+            else "Administrator SSH public key. SSH is not exposed by the generated firewall.",
+        )
     if not standalone:
         builder.variable(
             "allowed_cidr",
@@ -80,13 +120,13 @@ def build_azure(builder: TerraformGenerator) -> None:
         children=[
             block(
                 "security_rule",
-                name="SSH" if standalone else "HTTP",
+                name="RDP" if windows else "SSH" if standalone else "HTTP",
                 priority=100,
                 direction="Inbound",
                 access="Allow",
                 protocol="Tcp",
                 source_port_range="*",
-                destination_port_range="22" if standalone else "80",
+                destination_port_range="3389" if windows else "22" if standalone else "80",
                 source_address_prefix=ref("var.allowed_cidr"),
                 destination_address_prefix="*",
             )
@@ -150,14 +190,14 @@ def build_azure(builder: TerraformGenerator) -> None:
     builder.variable(
         "vm_size",
         "Azure VM size; availability and encryption-at-host support require account preflight.",
-        "Standard_B1s",
+        "Standard_D2s_v5" if windows else "Standard_B1s",
     )
     builder.variable(
         "boot_disk_size_gb",
         "OS disk size in GiB; cannot be smaller than the selected image.",
-        30,
+        128 if windows else 30,
         type_name="number",
-        minimum=30,
+        minimum=128 if windows else 30,
         maximum=2048,
     )
     builder.variable(
@@ -175,13 +215,18 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         builder.variable(
             "enable_accelerated_networking",
-            "Enable accelerated networking on the VM's network interface for supported Azure VM sizes and Linux images. This can reduce latency and CPU overhead; it does not change firewall access. Leave it off unless the selected size supports it. Changing an existing VM's setting can require stopping and deallocating the VM; this generator does not perform that operation. The optional VM-size metadata check can report support, but does not prove guest-driver compatibility or capacity.",
+            "Enable accelerated networking on the VM's network interface for supported Azure VM sizes and guest images. This can reduce latency and CPU overhead; it does not change firewall access. Leave it off unless the selected size supports it. Changing an existing VM's setting can require stopping and deallocating the VM; this generator does not perform that operation. The optional VM-size metadata check can report support, but does not prove guest-driver compatibility or capacity.",
             False,
             type_name="bool",
         )
         builder.variable(
             "enable_secure_boot",
-            "Enable Azure Trusted Launch Secure Boot for the selected Gen2 Ubuntu image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring.",
+            "Enable Azure Trusted Launch Secure Boot for the selected Gen2 image. vTPM stays enabled. Unsigned kernel drivers can prevent booting; check VM-size support and workload compatibility before deployment. This recipe does not configure guest attestation or Defender monitoring."
+            + (
+                " Protect BitLocker recovery keys before changing boot settings; guest encryption and recovery are not configured by this recipe."
+                if windows
+                else ""
+            ),
             True,
             type_name="bool",
         )
@@ -193,21 +238,33 @@ def build_azure(builder: TerraformGenerator) -> None:
         )
     builder.variable(
         "image_version",
-        "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
+        "Azure Windows marketplace version for MicrosoftWindowsServer/WindowsServer/2022-datacenter-g2: latest or exact Major.Minor.Build. Regional availability and compatibility require review; changing images can replace the VM and delete boot data."
+        if windows
+        else "Azure marketplace image version for the selected Canonical offer/SKU. Use latest to resolve at planning time, or an exact Major.Minor.Build version to pin the image. A version number does not prove availability or compatibility; check the selected image and location before planning. Changing a VM image can replace the VM and destroy its boot-disk data. Custom publishers and gallery images are unsupported.",
         "latest",
         pattern="^(latest|[0-9]{1,10}\\.[0-9]{1,10}\\.[0-9]{1,10})$",
     )
     image = block(
         "source_image_reference",
-        publisher="Canonical",
-        offer=ref(
+        publisher="MicrosoftWindowsServer" if windows else "Canonical",
+        offer="WindowsServer"
+        if windows
+        else ref(
             'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
         ),
-        sku=ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
+        sku=ref('{"windows-server-2022" = "2022-datacenter-g2"}[var.os_image]')
+        if windows
+        else ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),
         version=ref("var.image_version"),
     )
-    key = block(
-        "admin_ssh_key", username=ref("var.admin_username"), public_key=ref("var.ssh_public_key")
+    key = (
+        None
+        if windows
+        else block(
+            "admin_ssh_key",
+            username=ref("var.admin_username"),
+            public_key=ref("var.ssh_public_key"),
+        )
     )
     startup = "#cloud-config\npackage_update: true\npackages:\n  - nginx\nruncmd:\n  - [systemctl, enable, --now, nginx]\n"
     compute = {
@@ -225,6 +282,16 @@ def build_azure(builder: TerraformGenerator) -> None:
     }
     if standalone:
         compute.pop("custom_data")
+    if windows:
+        compute.pop("disable_password_authentication")
+        compute.update(
+            admin_password=ref("var.admin_password"),
+            computer_name=ref("var.computer_name"),
+            license_type=ref("var.license_type"),
+            automatic_updates_enabled=True,
+            patch_mode="AutomaticByOS",
+            provision_vm_agent=True,
+        )
     if balanced:
         frontend = {"name": "frontend"}
         if builder.config.is_public:
@@ -311,13 +378,14 @@ def build_azure(builder: TerraformGenerator) -> None:
             **common,
         )
         builder.resource(
-            "azurerm_linux_virtual_machine",
+            vm_resource,
             size=ref("var.vm_size"),
             network_interface_ids=[ref("azurerm_network_interface.this.id")],
             **{"secure_boot_enabled": ref("var.enable_secure_boot"), "vtpm_enabled": True}
             if standalone
             else {},
-            children=[disk, image, key]
+            children=[disk, image]
+            + ([] if windows else [key])
             + (
                 [block("lifecycle", children=[builder._private_ip_precondition()])]
                 if standalone
@@ -357,7 +425,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         builder.output(
             "managed_identity_principal_id",
-            "var.enable_workload_identity ? azurerm_linux_virtual_machine.this.identity[0].principal_id : null",
+            f"var.enable_workload_identity ? {vm_resource}.this.identity[0].principal_id : null",
             "Optional system-assigned identity principal. No role assignments are created; the identity is removed with the VM.",
         )
         builder.resource(
@@ -375,7 +443,7 @@ def build_azure(builder: TerraformGenerator) -> None:
             "data",
             count=ref("var.enable_data_disk ? 1 : 0"),
             managed_disk_id=ref("azurerm_managed_disk.data[0].id"),
-            virtual_machine_id=ref("azurerm_linux_virtual_machine.this.id"),
+            virtual_machine_id=ref(f"{vm_resource}.this.id"),
             lun=0,
             caching="None",
         )
@@ -387,17 +455,17 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         builder.output(
             "vm_id",
-            "azurerm_linux_virtual_machine.this.id",
+            f"{vm_resource}.this.id",
             "Azure VM resource ID for cloud operations; available after provisioning.",
         )
         builder.output(
             "vm_name",
-            "azurerm_linux_virtual_machine.this.name",
+            f"{vm_resource}.this.name",
             "Azure VM name within its resource group.",
         )
         builder.output(
             "vm_location",
-            "azurerm_linux_virtual_machine.this.location",
+            f"{vm_resource}.this.location",
             "Azure VM location; this recipe does not select an availability zone.",
         )
         builder.output(
@@ -408,12 +476,16 @@ def build_azure(builder: TerraformGenerator) -> None:
         builder.output(
             "vm_address",
             endpoint,
-            "VM IPv4 address; SSH requires the allowed client network and matching private key.",
+            "VM IPv4 address; RDP requires the allowed administrator network and externally supplied password. Protect state and plans; private VMs require routed access."
+            if windows
+            else "VM IPv4 address; SSH requires the allowed client network and matching private key.",
         )
         builder.output(
-            "ssh_username",
+            "administrator_username" if windows else "ssh_username",
             "var.admin_username",
-            "Administrator username; password authentication is disabled.",
+            "Windows administrator username; the password is supplied externally and retained in sensitive Terraform state."
+            if windows
+            else "Administrator username; password authentication is disabled.",
         )
     else:
         builder.output("endpoint", f'"http://${{{endpoint}}}"', "Web workload HTTP endpoint.")

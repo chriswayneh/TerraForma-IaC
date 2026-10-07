@@ -68,6 +68,9 @@ def generate_project(config: WizardConfig) -> dict:
                 "RDP requires the selected administrator network and separate Windows account/password setup through Google Cloud after provisioning. Terraform does not create that account. Verify guest-agent readiness, IAM permissions and Windows activation; private access needs a routed path."
                 if config.architecture_type == "windows_virtual_machine"
                 and config.provider == "gcp"
+                else "RDP requires the selected administrator network and externally supplied TF_VAR_admin_password. AzureRM retains the password in Terraform state and saved plans; protect their storage/access before use. This generator does not configure a protected backend. Private access needs a routed path."
+                if config.architecture_type == "windows_virtual_machine"
+                and config.provider == "azure"
                 else "RDP requires the selected administrator network and an Administrator password recovered separately with your RSA private key through EC2. TerraForma does not collect or decrypt it. Private access needs a routed path."
                 if config.architecture_type == "windows_virtual_machine"
                 else "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",

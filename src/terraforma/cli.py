@@ -276,15 +276,9 @@ def wizard(target_dir: Path | None):
                 questionary.Choice(
                     "A Linux virtual machine with restricted SSH", value="virtual_machine"
                 ),
-                *(
-                    [
-                        questionary.Choice(
-                            "A Windows Server 2022 VM with restricted RDP",
-                            value="windows_virtual_machine",
-                        )
-                    ]
-                    if provider in {"aws", "gcp"}
-                    else []
+                questionary.Choice(
+                    "A Windows Server 2022 VM with restricted RDP",
+                    value="windows_virtual_machine",
                 ),
                 questionary.Choice("A single web server", value="single_web_server"),
                 questionary.Choice(

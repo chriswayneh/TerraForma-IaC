@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added initial Azure Windows Server 2022 generation with restricted RDP, separate guest naming, licensing choices and an external administrator-password reference. Passwords remain outside saved questionnaire files but AzureRM retains them in Terraform state/plans; protected backend setup and live deployment checks remain outstanding. Plan policy `0.7.0` extends Azure Secure Boot/vTPM review to Windows VM resources.
+
 - Updated the workspace introduction and questionnaire labels to direct input wording, and refreshed GitHub screenshots that still showed older copy.
 
 - Added a GCP Windows Server 2022 recipe with restricted RDP, external user/password setup, activation routing, configurable Shielded VM settings and no password or private-key collection. Exact Windows image pins and Azure Windows remain planned.

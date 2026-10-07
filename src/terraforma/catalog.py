@@ -36,6 +36,8 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             image = (
                 "Windows Server 2022 English Full Base from Amazon"
                 if config.provider == "aws"
+                else "Windows Server 2022 Gen2 from MicrosoftWindowsServer"
+                if config.provider == "azure"
                 else "Windows Server 2022 from windows-cloud"
             )
         fixed.extend(
@@ -68,7 +70,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         )
         if config.provider == "azure":
             fixed.append(
-                "Administrator username is configurable (default terraforma); password authentication is disabled."
+                "Windows administrator and computer names are configurable. Supply TF_VAR_admin_password externally; AzureRM retains it in state and saved plans. Protect storage/access before use; this generator configures no protected backend. Standard licensing and automatic OS updates are defaults; Azure Hybrid Benefit requires qualifying licenses."
+                if windows
+                else "Administrator username is configurable (default terraforma); password authentication is disabled."
             )
         elif standalone and config.provider == "aws":
             fixed.append(
@@ -193,5 +197,4 @@ def recipe_catalog() -> list[dict]:
         )
         for provider in PROVIDERS
         for workload in WORKLOADS
-        if workload != "windows_virtual_machine" or provider != "azure"
     ]

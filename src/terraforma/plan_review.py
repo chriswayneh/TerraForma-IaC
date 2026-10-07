@@ -10,7 +10,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.6.0"
+POLICY_VERSION = "0.7.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -117,6 +117,7 @@ NETWORK_TYPES = {
 }
 POLICY_TYPES = NETWORK_TYPES | {
     "azurerm_linux_virtual_machine",
+    "azurerm_windows_virtual_machine",
     "aws_instance",
     "aws_ebs_volume",
     "aws_volume_attachment",
@@ -359,7 +360,10 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                         resource_id,
                         "An IAM instance profile is attached, but this plan review does not establish its role policies, trust or attachment authorization. Review least privilege separately.",
                     )
-            elif resource_type == "azurerm_linux_virtual_machine":
+            elif resource_type in {
+                "azurerm_linux_virtual_machine",
+                "azurerm_windows_virtual_machine",
+            }:
                 before = change.get("before")
                 if before is not None and not isinstance(before, dict):
                     raise TypeError("Previous resource values must be an object.")

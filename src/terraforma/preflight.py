@@ -258,7 +258,9 @@ def inspect_machine(specification, executable, environment, timeout):
             size,
             location,
             require_trusted_launch=(
-                provider == "azure" and specification.recipe.architecture_type == "virtual_machine"
+                provider == "azure"
+                and specification.recipe.architecture_type
+                in {"virtual_machine", "windows_virtual_machine"}
             ),
             require_accelerated_networking=(
                 provider == "azure" and values.get("enable_accelerated_networking") is True

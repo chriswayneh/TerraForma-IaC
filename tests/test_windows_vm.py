@@ -5,7 +5,6 @@ import zipfile
 import hcl2
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
@@ -66,16 +65,6 @@ def test_windows_access_image_and_no_secret_collection(public, encryption, data_
     assert all("password" not in item["name"] for item in result["input_contract"])
     assert any("RDP" in item for item in result["capabilities"]["fixed_choices"])
     assert not any("ec2-user" in item for item in result["capabilities"]["fixed_choices"])
-
-
-@pytest.mark.parametrize("provider", ["azure"])
-def test_other_windows_providers_fail_closed(provider):
-    with pytest.raises(ValidationError, match="AWS and GCP only"):
-        WizardConfig(
-            provider=provider,
-            project_name="windows-demo",
-            architecture_type="windows_virtual_machine",
-        )
 
 
 @pytest.mark.parametrize("key", [KEY, "ssh-rsa broken", "-----BEGIN PRIVATE KEY-----"])

@@ -1,6 +1,25 @@
 # Windows virtual machines
 
-Development on `main` includes initial **AWS and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. Azure Windows remains planned; its [credential and state design](AZURE_WINDOWS_DESIGN.md) records the next adapter's requirements. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
+Development on `main` includes initial **AWS, Azure and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
+
+## Azure
+
+| Choice | Supported behavior |
+| --- | --- |
+| Image | MicrosoftWindowsServer / WindowsServer / 2022-datacenter-g2, with latest or an exact marketplace version |
+| Capacity | Standard_D2s_v5 default; configurable size, 128 GiB boot disk default/minimum, optional empty data disk |
+| Guest naming | Separate 3–15 character computer name and 3–20 character administrator username; reserved usernames rejected |
+| Administration | Restricted RDP on TCP 3389; optional public VM address or an existing private routed access path |
+| Password | External `TF_VAR_admin_password` reference, sensitive variable without a default; no password entry, retrieval or output |
+| Licensing | Standard licensing (`None`) by default; `Windows_Server` requires independently verified Azure Hybrid Benefit eligibility |
+| Protection | Secure Boot enabled by default and configurable, vTPM enabled; optional diagnostics, accelerated networking and managed identity |
+| Guest updates | Windows automatic updates and VM agent enabled with `AutomaticByOS`; patch completion is not verified |
+
+**Protect Terraform state and saved plans before using the Azure recipe.** AzureRM retains the administrator password in those artifacts even when it comes from an environment variable and is marked sensitive. The exported project stores only the environment-variable reference; it does not configure a protected backend. Password changes replace the VM. See the [credential and state boundary](AZURE_WINDOWS_DESIGN.md).
+
+The generated Terraform validates a 12–123 character password with at least three character categories when Terraform receives it; TerraForma never reads that value. Azure and guest policy can impose additional restrictions. Microsoft documents [Windows VM password requirements](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/faq) and the [supported Windows marketplace images](https://learn.microsoft.com/en-us/azure/virtual-machines/automatic-vm-guest-patching). Availability, eligibility and successful provisioning still need account-specific verification.
+
+The computer name is an explicit input, independent of the longer project/resource name. Changing it can replace the VM. Before changing Secure Boot settings, protect BitLocker recovery keys and review guest compatibility. This recipe does not enable or escrow BitLocker, join a domain, configure backups or verify recovery. NAT provides outbound access and can incur charges; its public address does not make a private VM reachable through RDP.
 
 ## AWS
 
