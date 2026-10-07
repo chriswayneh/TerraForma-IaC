@@ -18,7 +18,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
-from terraforma.artifacts import checksum_document, project_artifacts
+from terraforma.artifacts import PROJECT_GITIGNORE, checksum_document, project_artifacts
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
@@ -379,6 +379,7 @@ def create_app() -> FastAPI:
                 *project["notes"],
                 "",
                 "Run `terraform init` and `terraform plan` after reviewing the configuration and supplying required values. Secure state storage; sensitive variables can still appear in state.",
+                "The included .gitignore excludes common state, variable, plan and credential filenames. Keep .terraform.lock.hcl in version control for reproducible provider selections. Ignore rules do not protect already tracked files, force-added files or custom artifact names; review git status before committing.",
             ]
         )
         if "receipt" in project:
@@ -391,7 +392,9 @@ def create_app() -> FastAPI:
                 ]
             )
         artifacts = (
-            project_artifacts(project) if "specification" in project else dict(project["files"])
+            project_artifacts(project)
+            if "specification" in project
+            else {**project["files"], ".gitignore": PROJECT_GITIGNORE}
         )
         artifacts["README.md"] = "\n".join(instructions) + "\n"
         artifacts["SHA256SUMS.txt"] = checksum_document(artifacts)

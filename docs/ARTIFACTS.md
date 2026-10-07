@@ -11,10 +11,15 @@ Both terminal generation and browser exports preserve the non-secret questionnai
 | `terraforma.receipt.json` | Generator/template versions, canonical specification digest, and hashes of the four files above |
 | `SHA256SUMS.txt` | Hashes of exported files, including the receipt; excludes itself |
 | `README.md` | Browser ZIP guide with required inputs, target context, resources, and review steps |
+| `.gitignore` | Excludes common later state, plan, variable, crash log and local credential files from ordinary Git staging |
 
 Receipt generation is deterministic for the same normalized specification and generated file bytes. The specification digest uses sorted JSON keys, UTF-8, and compact JSON separators; file digests use the exact UTF-8 bytes written by the tool. Dictionary key order does not change the normalized specification digest. Development templates can still change between commits sharing a development version; the receipt records hashes of the actual outputs.
 
 ## Local output permissions
+
+Generated projects include ignore rules for common private artifacts, including nested Terraform caches, state/backup files, `.tfvars`/`.tfvars.json` files, `.tfplan`/`.plan` files and their JSON exports, `.env` files, crash logs and local CLI configuration. Terraform source, the questionnaire, receipt and `.terraform.lock.hcl` remain eligible for version control. Commit the lock file after initializing and reviewing provider selections.
+
+Ignore rules do not remove already tracked files, prevent force-adds, encrypt data or cover every custom filename. Review `git status` and artifact names before committing. Existing `.gitignore` files are preserved by the fresh-directory overwrite checks. The checksum list covers the exported ignore file; the four-file generation receipt does not compare it.
 
 On Unix filesystems supporting mode bits, terminal generation creates files with owner-only read/write permissions (`0600`) and a newly created destination directory with owner-only access (`0700`). A stricter process umask can remove additional permissions. Existing destination directories retain their permissions; newly created intermediate parent directories follow Python's normal defaults.
 

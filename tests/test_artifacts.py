@@ -2,7 +2,9 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import stat
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -26,6 +28,62 @@ def project():
             inputs={"aws_account_id": "123456789012", "environment": "development"},
         )
     )
+
+
+def test_generated_ignore_rules_exclude_private_artifacts_but_keep_source_and_lock(tmp_path):
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("Git is required to verify exported ignore semantics.")
+    write_configuration(project_artifacts(project()), tmp_path)
+    subprocess.run(
+        [git, "init", "--quiet", str(tmp_path)], check=True, capture_output=True, timeout=15
+    )
+    ignored = [
+        ".terraform/providers/provider.exe",
+        "terraform.tfstate",
+        "terraform.tfstate.backup",
+        "secret.tfvars",
+        "production.auto.tfvars.json",
+        "review.tfplan",
+        "review.tfplan.json",
+        "review.plan",
+        "review.plan.json",
+        "crash.log",
+        "crash.123.log",
+        ".env",
+        ".env.local",
+        ".terraformrc",
+        "terraform.rc",
+        "environments/dev/terraform.tfstate",
+    ]
+    visible = [
+        ".gitignore",
+        ".terraform.lock.hcl",
+        "main.tf",
+        "variables.tf",
+        "outputs.tf",
+        "terraforma.project.json",
+        "terraforma.receipt.json",
+        "SHA256SUMS.txt",
+    ]
+    result = subprocess.run(
+        [git, "check-ignore", "--no-index", "--stdin", "-z"],
+        input=("\0".join(ignored + visible) + "\0").encode(),
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert set(result.stdout.decode().rstrip("\0").split("\0")) == set(ignored)
+
+
+def test_generation_preserves_existing_ignore_file(tmp_path):
+    (tmp_path / ".gitignore").write_text("existing-project-rules\n")
+    with pytest.raises(FileExistsError):
+        write_configuration(project_artifacts(project()), tmp_path)
+    assert (tmp_path / ".gitignore").read_text() == "existing-project-rules\n"
+    assert not (tmp_path / "main.tf").exists()
 
 
 def test_receipt_is_deterministic_and_changes_with_answers():

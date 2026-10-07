@@ -130,6 +130,7 @@ def test_download_contains_expected_files_only(client):
             "outputs.tf",
             "README.md",
             "SHA256SUMS.txt",
+            ".gitignore",
         }
         assert "terraform plan" in archive.read("README.md").decode()
 

@@ -11,6 +11,22 @@ from terraforma.plan_review import reject_constant, unique_object
 ArtifactName = Literal["main.tf", "variables.tf", "outputs.tf", "terraforma.project.json"]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 MAX_ARTIFACT_BYTES = 8 * 1024 * 1024
+PROJECT_GITIGNORE = """.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.tfplan.json
+*.plan
+*.plan.json
+crash.log
+crash.*.log
+.env
+.env.*
+.terraformrc
+terraform.rc
+"""
 
 
 class GenerationReceipt(BaseModel):
@@ -55,6 +71,7 @@ def create_receipt(specification: dict, files: dict[str, str]) -> dict:
 def project_artifacts(project: dict) -> dict[str, str]:
     return {
         **project["files"],
+        ".gitignore": PROJECT_GITIGNORE,
         "terraforma.project.json": json_document(project["specification"]),
         "terraforma.receipt.json": json_document(project["receipt"]),
     }

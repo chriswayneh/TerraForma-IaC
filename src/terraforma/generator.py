@@ -1793,6 +1793,7 @@ class TerraformGenerator:
 
 GENERATED_FILENAMES = frozenset(
     {
+        ".gitignore",
         "main.tf",
         "variables.tf",
         "outputs.tf",
