@@ -68,7 +68,11 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
         click.echo(definition["description"])
         if definition["kind"] == "integer":
             click.echo(f"Whole number: {definition['minimum']}–{definition['maximum']}.")
-        if definition["choices"]:
+        if definition["kind"] == "boolean":
+            answer = ask(
+                questionary.confirm(definition["label"] + "?", default=definition["default"])
+            )
+        elif definition["choices"]:
             answer = ask(
                 questionary.select(
                     definition["label"] + ":",

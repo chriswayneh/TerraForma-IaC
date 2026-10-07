@@ -14,12 +14,15 @@ Choose **A Linux virtual machine** in the browser or terminal wizard. This gener
 | Placement | Region/location, plus zone for GCP | New network address ranges; existing-network attachment is not supported |
 | Operating system | Supported provider-specific Linux choice | x86_64/AMD64 only; latest matching publisher image at planning time |
 | Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no data disks, autoscaling, custom images, or custom initialization |
+| Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 
 Public mode requires an explicit single IPv4 `/32` client address or RFC1918 private subnet. Private mode defaults to `10.0.0.0/16`; review it against your actual routed client network. Broader public administrator ranges, including `0.0.0.0/0`, are rejected in both forms and generated Terraform. Firewall permission alone does not provide routing or prove successful login.
 
 ## Provider access
+
+For AWS VMs and web tiers, **Enable detailed EC2 monitoring** changes most EC2 metrics from five-minute to one-minute periods. Status checks already use one-minute periods. Detailed monitoring can add CloudWatch charges for each instance, including every VM in a tier; it does not provide guest memory metrics, application logs, or alarms. Review [AWS monitoring behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-detailed-monitoring.html) and [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) before enabling it.
 
 | Provider | Generated authentication | Outputs and prerequisites |
 | --- | --- | --- |

@@ -24,7 +24,8 @@ function projectSpecification() {
     if (definition.sensitive) {
       secret_references[definition.name] = definition.environment_variable;
     } else if (definition.editable) {
-      const value = byId(`recipe-${definition.name}`).value;
+      const input = byId(`recipe-${definition.name}`);
+      const value = definition.kind === "boolean" ? input.checked : input.value;
       inputs[definition.name] =
         definition.kind === "integer" ? Number(value) : value;
     }
@@ -53,8 +54,9 @@ async function loadRecipeInputs() {
   ) {
     contract.forEach((definition) => {
       const input = byId(`recipe-${definition.name}`);
-      if (input && input.value !== (definition.default ?? ""))
-        retained[definition.name] = input.value;
+      const value = input && (definition.kind === "boolean" ? input.checked : input.value);
+      if (input && value !== (definition.default ?? ""))
+        retained[definition.name] = value;
     });
   }
   const result = await (await api("/api/input-contract", config)).json();
@@ -103,16 +105,19 @@ async function loadRecipeInputs() {
           input.append(option);
         });
       } else if (definition.kind === "multiline") input.rows = 4;
-      else input.type = definition.kind === "integer" ? "number" : "text";
+      else input.type = definition.kind === "boolean" ? "checkbox" : definition.kind === "integer" ? "number" : "text";
       if (definition.kind === "integer") {
         input.min = definition.minimum;
         input.max = definition.maximum;
         input.step = 1;
       }
-      input.required = true;
+      input.required = definition.kind !== "boolean";
       input.maxLength = 16384;
       if (definition.pattern) input.pattern = definition.pattern;
-      input.value = retained[definition.name] ?? definition.default ?? "";
+      if (definition.kind === "boolean") {
+        input.checked = retained[definition.name] ?? definition.default ?? false;
+        input.className = "recipe-checkbox";
+      } else input.value = retained[definition.name] ?? definition.default ?? "";
       input.autocomplete = "off";
       input.setAttribute("aria-describedby", help.id);
       label.htmlFor = input.id;
@@ -417,7 +422,9 @@ byId("project-file").addEventListener("change", async () => {
     contractKey = "";
     await loadRecipeInputs();
     Object.entries(specification.inputs).forEach(([name, value]) => {
-      byId(`recipe-${name}`).value = value;
+      const input = byId(`recipe-${name}`);
+      if (typeof value === "boolean") input.checked = value;
+      else input.value = value;
     });
     showStep(2);
     updateGuidance();

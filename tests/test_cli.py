@@ -76,6 +76,7 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
             "123456789012",
             "10.0.0.0/16",
             "t3.small",
+            False,
             "100",
             "gp2",
         ]

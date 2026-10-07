@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an opt-in detailed EC2 monitoring question to AWS VM and web-tier recipes, with cost guidance and typed boolean preservation through CLI, browser, import, and export.
+
 - Collect Azure Linux administrator usernames with matching format/reserved-name checks in the questionnaire and generated Terraform.
 
 - Add standalone Linux VM recipes for AWS, Azure, and GCP with supported image/disk inputs, restricted SSH networks, public-key or OS Login authentication, and VM address outputs.

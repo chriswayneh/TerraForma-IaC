@@ -20,7 +20,7 @@ class ProjectSpecification(BaseModel):
     schema_version: Literal[1] = 1
     template_version: Literal["0.3.0.dev0"] = "0.3.0.dev0"
     recipe: WizardConfig
-    inputs: dict[str, str | int] = Field(default_factory=dict, max_length=32)
+    inputs: dict[str, str | int | bool] = Field(default_factory=dict, max_length=32)
     secret_references: dict[str, str] = Field(default_factory=dict, max_length=16)
 
     @field_validator("schema_version", mode="before")
@@ -63,6 +63,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "instance_count": "Number of web VMs",
                     "os_image": "Linux operating system",
                     "admin_username": "Administrator username",
+                    "detailed_monitoring": "Enable detailed EC2 monitoring",
                     "boot_disk_size_gb": "Boot disk size (GiB)",
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
@@ -77,6 +78,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "type": attributes["type"].value,
                 "kind": "external_secret"
                 if sensitive
+                else "boolean"
+                if attributes["type"].value == "bool"
                 else "integer"
                 if attributes["type"].value == "number"
                 else kind,
@@ -160,11 +163,13 @@ def validate_input(name: str, value: str, kind: str):
         )
 
 
-def validate_answer(definition: dict, value: str | int) -> None:
+def validate_answer(definition: dict, value: str | int | bool) -> None:
     try:
         _validate_answer(definition, value)
     except (ValueError, TypeError):
-        if definition["kind"] == "integer":
+        if definition["kind"] == "boolean":
+            message = "Choose enabled or disabled; this input requires a JSON true or false value."
+        elif definition["kind"] == "integer":
             message = (
                 f"Enter a whole number from {definition['minimum']} to {definition['maximum']}."
             )
@@ -193,8 +198,11 @@ def validate_answer(definition: dict, value: str | int) -> None:
         raise ProjectInputError(definition["name"], message) from None
 
 
-def _validate_answer(definition: dict, value: str | int) -> None:
-    if definition["kind"] == "integer":
+def _validate_answer(definition: dict, value: str | int | bool) -> None:
+    if definition["kind"] == "boolean":
+        if type(value) is not bool:
+            raise ValueError("This input requires a boolean.")
+    elif definition["kind"] == "integer":
         if type(value) is not int or not definition["minimum"] <= value <= definition["maximum"]:
             raise ValueError("Numeric input is outside the supported whole-number range.")
     else:

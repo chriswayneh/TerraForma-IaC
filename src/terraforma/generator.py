@@ -446,6 +446,12 @@ class TerraformGenerator:
         )
         self.variable("instance_type", "EC2 instance size.", "t3.micro")
         self.variable(
+            "detailed_monitoring",
+            "Publish most EC2 metrics every minute instead of the basic five-minute interval. Detailed monitoring can add CloudWatch charges per instance; status checks already use one-minute periods. This does not install an agent or configure logs/alarms.",
+            False,
+            type_name="bool",
+        )
+        self.variable(
             "boot_disk_size_gb",
             "Boot disk size in GiB; review the image minimum and ongoing storage cost.",
             20,
@@ -473,6 +479,7 @@ class TerraformGenerator:
             count=ref("var.instance_count") if balanced else 1,
             ami=ref("data.aws_ami.linux.id"),
             instance_type=ref("var.instance_type"),
+            monitoring=ref("var.detailed_monitoring"),
             subnet_id=ref(f"aws_subnet.{'private' if private else 'public'}[count.index % 2].id"),
             associate_public_ip_address=not private,
             vpc_security_group_ids=[ref("aws_security_group.web.id")],
