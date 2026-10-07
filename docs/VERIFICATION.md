@@ -16,7 +16,7 @@ First release: `0.2.0`, October 6, 2026. This record distinguishes structural/lo
 
 ## Development toward v0.3.0
 
-- 181 local unit/API/generator/guidance/plan-review tests pass, including shared specifications, input contracts, numeric bounds, export/import preservation, terminal input collection, and recipe capability metadata.
+- 199 local unit/API/generator/guidance/plan-review tests pass, including shared specifications, input contracts, numeric bounds, export/import preservation, terminal input collection, recipe capability metadata, and SSH key structure/type checks.
 - All 48 native generator cases pass with Terraform 1.14.0 and TFLint 0.61.0 after adding VM-size and boot-disk inputs. These checks validate provider schemas; they do not deploy resources.
 - Browser checks confirm required-field validation, numeric disk bounds, and configured values in the generated Terraform preview. The 390-pixel layout has no horizontal document overflow.
 - A saved AWS project was imported through the browser file chooser; region, VM size, disk size/type, project name, and preview were restored from the specification.

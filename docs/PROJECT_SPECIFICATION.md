@@ -40,6 +40,8 @@ Sensitive variables remain required Terraform variables without generated defaul
 
 Unknown input names, private keys, secret values in declared sensitive fields, missing required non-secret inputs, invalid UUID/CIDR formats, and incompatible GCP region/zone combinations are rejected. Request/CLI errors omit input values. This is not a general detector for secrets hidden in arbitrary non-secret text such as website HTML; review manifests and generated files before sharing them.
 
+Azure SSH inputs accept OpenSSH Ed25519 or RSA public keys, matching [Microsoft's supported formats](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/create-ssh-keys-detailed). The validator checks base64 encoding, algorithm identity, binary field lengths, and RSA integers with a minimum 2048-bit modulus. This is structural validation, not proof of key ownership, cryptographic validity, or successful VM authentication. Private keys, authorized-keys options, ECDSA, truncated blobs, and trailing fields are rejected.
+
 ## Current scope
 
 The contract is derived from the actual variables declared by the existing recipes, so their questions and HCL variables stay aligned. It does not expose settings still hardcoded in those recipes, such as all image, OS, network, and availability choices. The complete VM adapter work remains on the roadmap.

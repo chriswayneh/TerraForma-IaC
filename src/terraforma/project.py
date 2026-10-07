@@ -1,3 +1,5 @@
+import base64
+import binascii
 import ipaddress
 import json
 import re
@@ -55,7 +57,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "boot_disk_type": "Boot disk type",
                     "gcp_project_id": "Google Cloud project ID",
                     "subscription_id": "Azure subscription ID",
-                    "ssh_public_key": "Administrator SSH public key",
+                    "ssh_public_key": "Administrator SSH public key (Ed25519 or RSA)",
                     "database_client_ip": "Database client IPv4 address",
                     "index_html": "Website HTML",
                 }.get(name, name.replace("_", " ").capitalize()),
@@ -77,6 +79,48 @@ def input_contract(config: WizardConfig) -> list[dict]:
     return contract
 
 
+def validate_ssh_public_key(value: str) -> None:
+    parts = value.split(" ", 2)
+    if len(parts) < 2 or parts[0] not in {"ssh-ed25519", "ssh-rsa"}:
+        raise ValueError("Use an OpenSSH Ed25519 or RSA public key for this recipe.")
+    try:
+        encoded = parts[1]
+        raw = base64.b64decode(encoded + "=" * (-len(encoded) % 4), validate=True)
+        if base64.b64encode(raw).decode().rstrip("=") != encoded.rstrip("="):
+            raise ValueError("Noncanonical public-key encoding.")
+        offset = 0
+        fields = []
+        for _ in range(2 if parts[0] == "ssh-ed25519" else 3):
+            if len(raw) - offset < 4:
+                raise ValueError("Incomplete public key.")
+            size = int.from_bytes(raw[offset : offset + 4], "big")
+            offset += 4
+            if not size or size > len(raw) - offset:
+                raise ValueError("Incomplete public-key field.")
+            fields.append(raw[offset : offset + size])
+            offset += size
+        if offset != len(raw) or fields[0] != parts[0].encode("ascii"):
+            raise ValueError("Mismatched public-key structure.")
+        if parts[0] == "ssh-ed25519":
+            if len(fields[1]) != 32:
+                raise ValueError("Ed25519 public keys require 32 bytes.")
+        else:
+            for integer in fields[1:]:
+                if integer[0] & 128 or (
+                    len(integer) > 1 and integer[0] == 0 and not integer[1] & 128
+                ):
+                    raise ValueError("Invalid RSA integer encoding.")
+            exponent, modulus = (int.from_bytes(item, "big") for item in fields[1:])
+            if exponent < 3 or exponent % 2 == 0 or modulus.bit_length() < 2048 or modulus % 2 == 0:
+                raise ValueError(
+                    "RSA keys require an odd exponent and at least a 2048-bit modulus."
+                )
+    except (ValueError, binascii.Error):
+        raise ValueError(
+            "Public-key structure is invalid or unsupported; supply a valid OpenSSH public key."
+        ) from None
+
+
 def validate_input(name: str, value: str, kind: str):
     if not value or len(value.encode("utf-8")) > 16384:
         raise ValueError("Input must be nonempty and at most 16 KiB.")
@@ -91,11 +135,7 @@ def validate_input(name: str, value: str, kind: str):
     elif kind == "uuid":
         UUID(value)
     elif kind == "ssh_public_key":
-        if not re.fullmatch(
-            r"(?:ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(?:256|384|521)) [A-Za-z0-9+/]+={0,3}(?: [^\r\n]+)?",
-            value,
-        ):
-            raise ValueError("Supply an OpenSSH public key, not a private key.")
+        validate_ssh_public_key(value)
     elif name == "vm_size":
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{1,63}", value):
             raise ValueError("Azure VM-size identifier has an invalid format.")

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class WizardConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", strict=True)
     provider: Literal["aws", "azure", "gcp"]
     project_name: str = Field(pattern=r"^[a-z][a-z0-9-]{1,18}[a-z0-9]$")
     architecture_type: Literal[
