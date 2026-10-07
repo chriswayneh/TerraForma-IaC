@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Grouped browser inputs into cloud target, image/capacity, network/access, storage, operations/identity and workload sections. All declared questions remain visible when applicable; section headings do not hide required inputs or change the saved specification.
+
 - Azure Secure Boot guidance now explicitly identifies AzureRM's VM replacement and potential OS-disk deletion behavior when that setting changes.
 
 - External-secret questions now display their complete contract guidance before generation, including Azure Windows password retention in Terraform state and plans.

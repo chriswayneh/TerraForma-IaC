@@ -16,6 +16,10 @@ On macOS/Linux, replace `.venv/Scripts/` with `.venv/bin/`. Open `http://127.0.0
 
 ## 2. Create a first configuration
 
+Development on `main` groups configuration inputs by cloud target, image/capacity, network/access, storage and operations/identity. Enter the supported variables in each section; conditional disk and identity questions appear when enabled. External secrets are shown as references rather than password fields.
+
+![Configuration inputs grouped by purpose](images/grouped-inputs.png)
+
 For a small first example, select **Amazon Web Services → A static website**, name the project `first-site`, and leave public access off. Generate the files and inspect all three tabs.
 
 - `main.tf` defines the provider and resources to create.
@@ -27,6 +31,14 @@ The diagram and resource guide explain the major parts. This example stores an H
 Enable **Remember choices on this browser** to retain the questionnaire selections and current step locally. No credentials, API key, AI opt-in, generated code, or validation logs are saved with these choices. Uncheck it to remove the saved choices; the current form stays available. Storage access is optional, and the app remains usable when browser storage is disabled.
 
 ## 3. Set up optional local validation
+
+You do not need accounts with all three clouds to work on or test TerraForma locally. A configuration for your own deployment needs the selected cloud's account/subscription/project reference; the local test suite uses example references without authenticating to those accounts.
+
+| Stage | Cloud account needed? |
+| --- | --- |
+| Generate example files and run local unit/provider validation | No cloud credentials; provider downloads need network access |
+| Opt-in target and VM metadata checks | Credentials for the selected cloud only |
+| Live deployment/access/cleanup testing | A dedicated account/project and permissions for each cloud being tested; these checks remain outstanding |
 
 Install Terraform using [HashiCorp's official installation instructions](https://developer.hashicorp.com/terraform/install). Install TFLint using [the official TFLint installation guide](https://github.com/terraform-linters/tflint#installation). Choose the binary for your operating system and CPU architecture.
 

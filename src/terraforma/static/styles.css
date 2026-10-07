@@ -472,6 +472,20 @@ main {
   margin-top: 4px;
   margin-bottom: 9px;
 }
+.recipe-input-section {
+  min-width: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 24px 0 0;
+  padding: 14px 0 0;
+}
+.recipe-input-section legend {
+  float: none;
+  width: auto;
+  font-size: 13px;
+  letter-spacing: 0;
+  padding-right: 10px;
+}
 .text-input {
   width: 100%;
   border: 1px solid var(--line);

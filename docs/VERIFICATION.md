@@ -1,5 +1,11 @@
 # Verification record
 
+## Grouped questionnaire checkpoint
+
+- Web/project regression checks pass 76 cases; JavaScript syntax and patch whitespace checks pass.
+- A temporary browser tab imported Windows examples for AWS, Azure and GCP. The form retained all 23, 24 and 20 respective questions in five labeled sections, displayed previews, rendered zero password fields and showed no horizontal document overflow at the tested desktop viewport. An example GCP Windows form also retained its generated Windows image preview after generation.
+- Sections remain expanded; required controls are not concealed behind collapsed panels. Conditional fields and saved specification semantics are unchanged. Mobile layout and additional catalog workflows retain their prior coverage and were not rechecked for this layout change.
+
 ## Azure disk caching development checkpoint
 
 A temporary browser tab verified cache defaults, hidden data cache questions before disk selection, and complete Azure Windows external-secret/state guidance before generation. It rendered zero password fields. The reference-only credential screenshot is published in the Windows guide; the user's existing tab was preserved.
