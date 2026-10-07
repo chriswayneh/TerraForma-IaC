@@ -85,6 +85,7 @@ class TerraformGenerator:
         maximum: int | None = None,
         choices: tuple[str, ...] | None = None,
         pattern: str | None = None,
+        network_policy: Literal["database_cidr", "database_address"] | None = None,
     ) -> None:
         attributes = {"description": description, "type": ref(type_name)}
         if default is not None:
@@ -118,11 +119,36 @@ class TerraformGenerator:
                     error_message="Use the required identifier format for this field.",
                 )
             )
+        if network_policy:
+            address = f"var.{name}"
+            if network_policy == "database_cidr":
+                prefix = f'tonumber(split("/", {address})[1])'
+                network = f"cidrhost({address}, 0)"
+                private_172 = value_hcl(r"^172\.(1[6-9]|2[0-9]|3[01])\.")
+                condition = (
+                    f"can(cidrnetmask({address})) && try("
+                    f"{prefix} >= 24 || "
+                    f'(startswith({network}, "10.") && {prefix} >= 8) || '
+                    f"(can(regex({private_172}, {network})) && {prefix} >= 12) || "
+                    f'(startswith({network}, "192.168.") && {prefix} >= 16), false)'
+                )
+                message = "Use an RFC1918 private network or an IPv4 /24 through /32 client network; prefer /32 for one client."
+            else:
+                octet = f'tonumber(split(".", {address})[0])'
+                condition = (
+                    f'can(cidrnetmask(format("%s/32", {address}))) && '
+                    f"try({octet} > 0 && {octet} < 224 && {octet} != 127, false)"
+                )
+                message = "Use a client IPv4 address outside 0/8, loopback, multicast, and reserved 224/3; 0.0.0.0 broad Azure-service access is unsupported."
+            description += " " + message
+            attributes["description"] = description
+            validations.append(block("validation", condition=ref(condition), error_message=message))
         self.input_constraints[name] = {
             "minimum": minimum,
             "maximum": maximum,
             "choices": list(choices) if choices else None,
             "pattern": pattern,
+            "network_policy": network_policy,
         }
         self.variables.append(block("variable", name, children=validations, **attributes))
 
@@ -423,7 +449,12 @@ class TerraformGenerator:
             "PostgreSQL administrator password; supply through TF_VAR_database_password.",
             sensitive=True,
         )
-        self.variable("allowed_cidr", "Network permitted to connect to PostgreSQL.", "10.0.0.0/16")
+        self.variable(
+            "allowed_cidr",
+            "Network permitted to connect to PostgreSQL.",
+            "10.0.0.0/16",
+            network_policy="database_cidr",
+        )
         self.resource(
             "aws_security_group",
             "database",
@@ -843,6 +874,7 @@ class TerraformGenerator:
             self.variable(
                 "database_client_ip",
                 "Single public IPv4 client permitted by the database firewall.",
+                network_policy="database_address",
             )
             self.resource(
                 "azurerm_postgresql_flexible_server_firewall_rule",
@@ -1172,7 +1204,11 @@ class TerraformGenerator:
         }
         allowed = []
         if self.config.is_public:
-            self.variable("allowed_cidr", "Public IPv4 CIDR permitted to connect to the database.")
+            self.variable(
+                "allowed_cidr",
+                "IPv4 client network permitted to connect to the database.",
+                network_policy="database_cidr",
+            )
             allowed.append(
                 block("authorized_networks", name="client", value=ref("var.allowed_cidr"))
             )

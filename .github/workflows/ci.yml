@@ -51,7 +51,7 @@ jobs:
         with:
           tflint_version: 'v0.61.0'
       - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest tests/test_generator.py -q
+      - run: python -m pytest tests/test_generator.py tests/test_network_inputs.py -q
         env:
           TERRAFORMA_NATIVE_TESTS: '1'
       - name: Prepare a cloud-free Action smoke configuration

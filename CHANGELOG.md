@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restrict database client networks through shared questionnaire and Terraform checks; exclude broad Azure-service firewall access.
+
 - Add a versioned project specification and a contract derived from every declared recipe variable.
 - Ask for non-secret recipe inputs in the browser and preserve them across preview, validation, and ZIP export.
 - Add `project-inputs` and `generate --spec` commands; reject unsupported/secret inputs and omit values from validation errors.

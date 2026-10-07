@@ -163,6 +163,20 @@ def validate_answer(definition: dict, value: str | int) -> None:
             raise ValueError("Input does not match the required identifier format.")
         if definition["choices"] and value not in definition["choices"]:
             raise ValueError("Input is not one of the supported choices.")
+        if definition.get("network_policy") == "database_cidr":
+            network = ipaddress.IPv4Network(value, strict=True)
+            private = any(
+                network.subnet_of(ipaddress.IPv4Network(cidr))
+                for cidr in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+            )
+            if network.prefixlen < 24 and not private:
+                raise ValueError("Use an RFC1918 private network or an IPv4 /24 through /32.")
+        elif definition.get("network_policy") == "database_address":
+            first = int(value.split(".")[0])
+            if first == 0 or first == 127 or first >= 224:
+                raise ValueError(
+                    "Use a supported client IPv4 address; broad Azure-service access is unsupported."
+                )
 
 
 def compile_project(specification: ProjectSpecification) -> dict:

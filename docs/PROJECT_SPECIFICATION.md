@@ -64,6 +64,12 @@ The label appears in compiled target metadata and the project guide. It does not
 
 ## Recipe capabilities
 
+### Database client access
+
+Database recipes constrain client networks in both questionnaires and generated Terraform. AWS database client CIDRs and public GCP database client CIDRs accept an RFC1918 private subnet (`10/8`, `172.16/12`, or `192.168/16`) or an IPv4 `/24`–`/32` network. Prefer `/32` for a single public client. Larger public ranges require a separately reviewed configuration; this is a TerraForma recipe policy, not a cloud provider limit. Public HTTP web-server ranges use their own policy and can still accept `0.0.0.0/0`.
+
+The public Azure database recipe accepts one client IPv4 address and rejects `0/8`, loopback, multicast, and reserved `224/3` addresses. In particular, it rejects `0.0.0.0`, which Azure interprets as [access from Azure services](https://learn.microsoft.com/en-ie/azure/postgresql/flexible-server/security-firewall-rules). Syntax and range checks do not establish that an address belongs to the user or is reachable. Private cloud networking and connection routing still need review.
+
 The Configure step includes an expandable **Recipe defaults and limits** section. It identifies fixed operating systems, initialization, network layouts, instance counts, and features outside the selected recipe. ZIP project guides include the same information.
 
 Use `terraforma catalog` for a readable catalog or `terraforma catalog --json-output` for structured metadata. The local API exposes the same catalog at `/api/catalog` and includes selected capabilities in input contracts and compiled project responses. Account and deployment checks remain explicitly unverified until a future account preflight workflow establishes them.
