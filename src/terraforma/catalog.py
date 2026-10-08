@@ -40,6 +40,10 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             ]
         )
     if compute:
+        if standalone:
+            fixed.append(
+                "Optional owner, application and cost-center labels use a portable lowercase format. AWS uses provider default tags, Azure tags its new supported resources, and GCP labels its new VM and optional managed data disk. Existing infrastructure is not retagged; billing policy and live labels remain unverified."
+            )
         image = {
             "aws": "Amazon Linux 2023 or Ubuntu 24.04 LTS from Amazon/Canonical",
             "azure": "Ubuntu 22.04 or 24.04 LTS Gen2 from Canonical",

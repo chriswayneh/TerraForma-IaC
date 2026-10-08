@@ -18,7 +18,7 @@ let contract = [];
 let templateVersion = "";
 
 const inputSections = [
-  ["Cloud target", ["environment", "aws_account_id", "subscription_id", "gcp_project_id", "region", "location", "zone", "availability_zone"]],
+  ["Cloud target", ["environment", "owner_label", "application_label", "cost_center_label", "aws_account_id", "subscription_id", "gcp_project_id", "region", "location", "zone", "availability_zone"]],
   ["Image and capacity", ["use_custom_image", "custom_image", "custom_image_owner_account_id", "custom_image_admin_username", "confirm_custom_image_compatibility", "os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_count", "computer_name", "license_type"]],
   ["Network and access", ["use_existing_network", "existing_subnetwork_resource", "existing_security_group_id", "existing_subnet_cidr", "confirm_existing_network_review", "network_cidr", "private_ip_address", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
   ["Storage", ["use_customer_managed_disk_key", "disk_kms_key", "enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],

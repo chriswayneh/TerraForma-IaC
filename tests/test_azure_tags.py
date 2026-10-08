@@ -1,6 +1,7 @@
 import pytest
 
 from terraforma.generator import TerraformGenerator, WizardConfig
+from terraforma.hcl import value_hcl
 
 TAGGABLE = {
     "azurerm_resource_group",
@@ -12,6 +13,7 @@ TAGGABLE = {
     "azurerm_linux_virtual_machine_scale_set",
     "azurerm_network_interface",
     "azurerm_linux_virtual_machine",
+    "azurerm_windows_virtual_machine",
     "azurerm_managed_disk",
     "azurerm_postgresql_flexible_server",
     "azurerm_storage_account",
@@ -24,6 +26,7 @@ TAGGABLE = {
     "workload",
     [
         "virtual_machine",
+        "windows_virtual_machine",
         "single_web_server",
         "load_balanced_tier",
         "secure_database",
@@ -50,7 +53,8 @@ def test_environment_tags_cover_supported_azure_resources(workload, public, encr
     )
     for resource in resources:
         if resource.labels[0] in TAGGABLE:
-            assert resource.attributes["tags"]["Environment"].value == "var.environment"
-            assert resource.attributes["tags"]["ManagedBy"] == "TerraForma-IaC"
+            tags = value_hcl(resource.attributes["tags"])
+            assert '"Environment" = var.environment' in tags
+            assert '"ManagedBy" = "TerraForma-IaC"' in tags
         else:
             assert "tags" not in resource.attributes

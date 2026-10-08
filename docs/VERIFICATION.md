@@ -1,5 +1,13 @@
 # Verification record
 
+## Optional VM labels — v0.4.0 development checkpoint
+
+- The full default suite passes 2,325 tests with 381 optional/native/platform cases skipped. Forty-two new regressions cover provider/OS import, field-level privacy and format validation, recipe scope and terminal collection. Existing Azure environment-label coverage now includes Windows VMs and checks retained environment/management keys.
+- Twelve provider/OS/public-private configurations with labels and data disks pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks. Three additional native console checks confirm blank and partial maps omit unused labels and preserve environment/management values; no cloud provider is configured in those checks.
+- Browser imports and generation succeed for all six provider/OS forms with cloud consent off. Invalid label input focuses its field; correction succeeds. The 390×844 check has no page horizontal overflow. Temporary viewport settings and synthetic entries were cleared; the screenshot uses synthetic values.
+- Existing infrastructure is not retagged. Actual labels, policy compliance, billing allocation and live deployment remain unverified. v0.4.0 acceptance gates remain open.
+- Ruff checks/formatting pass across 116 Python files, JavaScript syntax and local documentation links pass, and the rebuilt development wheel passes twenty offline fixture imports and bundled UI checks from an isolated package directory using existing dependencies. GitHub CI run 37859792726 passes for the preceding AWS checkpoint (`fdb5566`), including the corrected native private-address fixture.
+
 ## Existing AWS subnet — v0.4.0 development checkpoint
 
 - The default suite passes 2,279 tests with 366 optional/native/platform cases skipped. Twenty-four new regressions cover ownership, required subnet/security-group/range inputs, inactive-field conflicts, reserved IPs, safe errors, offline API round trips, terminal collection and browser address calculations.

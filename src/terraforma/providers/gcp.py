@@ -7,6 +7,7 @@ from terraforma.gcp_network_attachment import (
     add_network_address_moves,
 )
 from terraforma.hcl import block, ref
+from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
     from terraforma.generator import TerraformGenerator
@@ -297,7 +298,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
             zone=ref("var.zone"),
             size=ref("var.data_disk_size_gb"),
             type=ref("var.data_disk_type"),
-            labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
+            labels=resource_labels(
+                {"environment": ref("var.environment"), "managed_by": "terraforma"}
+            ),
             depends_on=[ref("google_project_service.compute")],
             children=[
                 block(
@@ -421,7 +424,11 @@ def build_gcp(builder: TerraformGenerator) -> None:
             "google_compute_instance",
             name=ref("var.project_name"),
             **{"deletion_protection": ref("var.protect_vm")} if standalone else {},
-            labels={"environment": ref("var.environment"), "managed_by": "terraforma"},
+            labels=resource_labels(
+                {"environment": ref("var.environment"), "managed_by": "terraforma"}
+            )
+            if standalone
+            else {"environment": ref("var.environment"), "managed_by": "terraforma"},
             machine_type=ref("var.machine_type"),
             zone=ref("var.zone"),
             **{"allow_stopping_for_update": False} if standalone else {},

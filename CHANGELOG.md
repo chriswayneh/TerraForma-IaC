@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added optional owner, application and cost-center labels to standalone Linux/Windows questionnaires on AWS, Azure and GCP. Portable value validation rejects unsupported input; blank labels are omitted and existing environment/management labels are preserved. Label scope and privacy are documented in [VM resource labels](docs/VM_RESOURCE_LABELS.md).
+
 - Added standalone AWS Linux/Windows attachment to one existing IPv4-only standard-zone subnet and one reviewed security group, with account/VPC/CIDR/zone guards. Existing mode leaves VPC, subnet, rules, routes and gateways separately managed. See [AWS subnet inputs](docs/AWS_EXISTING_SUBNET.md).
 - Added address moves for prior uncounted AWS network resources and offline mocked plan tests for ownership, mismatched CIDRs, shared subnets, incompatible security groups, IPv6, Outposts and nonstandard zones. Live attachment and state migration remain unverified.
 

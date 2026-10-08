@@ -10,6 +10,7 @@ from terraforma.azure_network_attachment import (
 from terraforma.configuration import AZURE_RESERVED_USERNAMES
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
+from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
     from terraforma.generator import TerraformGenerator
@@ -39,12 +40,18 @@ def build_azure(builder: TerraformGenerator) -> None:
         "azurerm_resource_group",
         name=ref("var.project_name"),
         location=ref("var.location"),
-        tags={"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
+        tags=resource_labels({"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"})
+        if standalone
+        else {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
     )
     common = {
         "resource_group_name": ref("azurerm_resource_group.this.name"),
         "location": ref("azurerm_resource_group.this.location"),
-        "tags": {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
+        "tags": resource_labels(
+            {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"}
+        )
+        if standalone
+        else {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
     }
     if builder.config.architecture_type == "static_site":
         build_static(builder, common)

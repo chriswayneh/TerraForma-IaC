@@ -73,6 +73,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "aws"
                     else "Existing Google Cloud subnet resource",
                     "existing_security_group_id": "Existing AWS security group ID",
+                    "owner_label": "Owner or team (optional)",
+                    "application_label": "Application or service (optional)",
+                    "cost_center_label": "Cost center (optional)",
                     "existing_subnet_cidr": "Existing subnet IPv4 range (CIDR)",
                     "confirm_existing_network_review": "Confirm your existing network review",
                     "private_ip_address": "Private IPv4 address (optional)",
@@ -252,6 +255,9 @@ def validate_input(name: str, value: str, kind: str):
             "workload_identity_resource_id",
             "existing_subnetwork_resource",
             "existing_security_group_id",
+            "owner_label",
+            "application_label",
+            "cost_center_label",
         }
         and value == ""
     ):
@@ -314,6 +320,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter the exact existing subnet resource in the documented provider format; URLs and credentials are unsupported."
         elif definition["name"] == "existing_security_group_id":
             message = "Enter one existing AWS security group ID in the documented sg- format."
+        elif definition["name"] in {"owner_label", "application_label", "cost_center_label"}:
+            message = "Use 1–63 lowercase letters, digits, underscores or hyphens, starting with a letter or digit, or leave this optional label blank."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:

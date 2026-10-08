@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 from terraforma.aws_network_attachment import add_aws_attachment_data
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
+from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
     from terraforma.generator import TerraformGenerator
 
 
 def build_aws(builder: TerraformGenerator) -> None:
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     builder.variable("region", "AWS region.", "us-east-1")
     builder.variable(
         "aws_account_id",
@@ -26,7 +28,11 @@ def build_aws(builder: TerraformGenerator) -> None:
             children=[
                 block(
                     "default_tags",
-                    tags={"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
+                    tags=resource_labels(
+                        {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"}
+                    )
+                    if standalone
+                    else {"Environment": ref("var.environment"), "ManagedBy": "TerraForma-IaC"},
                 )
             ],
         )

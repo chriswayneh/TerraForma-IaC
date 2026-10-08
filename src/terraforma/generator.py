@@ -19,6 +19,7 @@ from terraforma.network_inputs import private_ip_condition
 from terraforma.providers.aws import build_aws
 from terraforma.providers.azure import build_azure
 from terraforma.providers.gcp import build_gcp
+from terraforma.resource_labels import declare_resource_labels
 
 __all__ = [
     "AZURE_RESERVED_USERNAMES",
@@ -262,6 +263,7 @@ class TerraformGenerator:
                 declare_azure_network_attachment(self)
             elif self.config.provider == "aws":
                 declare_aws_network_attachment(self)
+            declare_resource_labels(self)
             self.variable(
                 "network_cidr",
                 (

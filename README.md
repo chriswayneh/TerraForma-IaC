@@ -39,6 +39,8 @@ The released **v0.3.0** provides guided configuration questions, saved project s
 
 **In development for v0.4.0:** guided [existing VM image inputs](docs/CUSTOM_IMAGES.md) for standalone Linux and Windows on all three clouds. The development branch also supports [existing Azure workload identity](docs/AZURE_WORKLOAD_IDENTITY.md) and existing subnet inputs for [AWS](docs/AWS_EXISTING_SUBNET.md), [Azure](docs/AZURE_EXISTING_SUBNET.md) and [GCP](docs/GCP_EXISTING_SUBNET.md). Compatibility, permissions and live deployment remain unverified.
 
+Standalone VM development also includes optional [owner, application and cost-center labels](docs/VM_RESOURCE_LABELS.md).
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.
