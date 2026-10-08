@@ -99,6 +99,8 @@ terraforma run --dir ./my-project --no-ai
 
 The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md). The current build still generates and validates files; it does not provision resources. An initial [local plan-review command](docs/PLAN_REVIEW.md) is available with `terraforma review-plan --file review.tfplan.json`. AI diagnostics require explicit opt-in.
 
+Development on `main` also checks a non-secret backend intent with `terraforma check-backend --file backend.json`. It validates supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
+
 Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
 
 Development on `main` adds `terraforma doctor` to check local dependency availability. Use `terraforma doctor --require web` before launching the UI or `terraforma doctor --require validation --json-output` for a machine-readable report. Exit `1` means the selected capability has missing dependencies. This command checks package metadata and PATH without executing tools, reading credentials, or contacting cloud accounts; it does not verify tool versions, trust, authentication, or deployment readiness.

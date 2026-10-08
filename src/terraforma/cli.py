@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
+from terraforma.backend import load_and_review_backend
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import (
     ArtifactCleanupError,
@@ -45,6 +46,26 @@ def ask(prompt):
     if answer is None:
         raise click.Abort()
     return answer
+
+
+@main.command("check-backend")
+@click.option("--file", "intent_path", required=True, type=click.Path(path_type=Path))
+@click.option("--json-output", is_flag=True, help="Print the value-free input check as JSON.")
+def check_backend_command(intent_path: Path, json_output: bool):
+    """Check a non-secret backend intent offline without configuring or accessing state."""
+    try:
+        report = load_and_review_backend(intent_path)
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "A supported non-secret backend intent file is required; input values are omitted."
+        ) from None
+    if json_output:
+        click.echo(json.dumps(report, indent=2))
+    else:
+        click.echo(f"{report['backend']}: inputs valid; cloud verification required.")
+        for requirement in report["required_reviews"]:
+            click.echo("- " + requirement)
+        click.echo("No backend was configured, state accessed or deployment approved.")
 
 
 @main.command("doctor")

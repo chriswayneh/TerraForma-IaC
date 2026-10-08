@@ -1,0 +1,152 @@
+import hashlib
+import ipaddress
+import re
+from pathlib import Path
+from typing import Annotated, Literal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
+
+from terraforma.file_input import read_regular_bytes
+from terraforma.json_input import strict_json
+
+MAX_BACKEND_BYTES = 16 * 1024
+
+
+class BackendIntent(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_version: Literal[1] = 1
+    owner: str = Field(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+    environment: str = Field(min_length=1, max_length=32, pattern=r"^[a-z][a-z0-9-]*$")
+
+    @field_validator("schema_version", mode="before")
+    @classmethod
+    def exact_version(cls, value):
+        if type(value) is not int or value != 1:
+            raise ValueError("Backend schema version must be the integer 1.")
+        return value
+
+
+def object_location(value: str) -> str:
+    if (
+        len(value) > 512
+        or not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", value)
+        or any(part in {".", ".."} for part in value.split("/"))
+    ):
+        raise ValueError("Use a bounded relative object location without traversal.")
+    return value
+
+
+def bucket_name(value: str) -> str:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", value) or any(
+        part in value for part in ("..", ".-", "-.")
+    ):
+        raise ValueError("Use a supported lowercase bucket name.")
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return value
+    raise ValueError("IP addresses are not supported bucket names.")
+
+
+class S3BackendIntent(BackendIntent):
+    backend: Literal["s3"]
+    account_id: str = Field(pattern=r"^[0-9]{12}$")
+    bucket: str
+    region: str = Field(pattern=r"^[a-z]{2}(?:-[a-z]+)+-[1-9][0-9]*$")
+    key: str
+    use_lockfile: bool
+
+    _bucket = field_validator("bucket")(bucket_name)
+    _key = field_validator("key")(object_location)
+
+    @field_validator("bucket")
+    @classmethod
+    def supported_s3_bucket(cls, value):
+        if value.startswith(("xn--", "sthree-", "amzn-s3-demo-")) or value.endswith(
+            ("-s3alias", "--ol-s3", ".mrap", "--x-s3", "--table-s3", "-an")
+        ):
+            raise ValueError("Use a supported general-purpose bucket name.")
+        return value
+
+    @field_validator("use_lockfile")
+    @classmethod
+    def locking_required(cls, value):
+        if value is not True:
+            raise ValueError("The declared S3 backend must enable lockfile use.")
+        return value
+
+
+class AzureBackendIntent(BackendIntent):
+    backend: Literal["azurerm"]
+    tenant_id: str
+    subscription_id: str
+    storage_account_name: str = Field(pattern=r"^[a-z0-9]{3,24}$")
+    container_name: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$")
+    key: str
+
+    _key = field_validator("key")(object_location)
+
+    @field_validator("tenant_id", "subscription_id")
+    @classmethod
+    def canonical_uuid(cls, value):
+        if str(UUID(value)) != value.lower():
+            raise ValueError("Use a canonical UUID reference.")
+        return value.lower()
+
+    @field_validator("container_name")
+    @classmethod
+    def no_consecutive_hyphens(cls, value):
+        if "--" in value:
+            raise ValueError("Consecutive container-name hyphens are unsupported.")
+        return value
+
+
+class GCSBackendIntent(BackendIntent):
+    backend: Literal["gcs"]
+    project_id: str = Field(pattern=r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
+    bucket: str
+    prefix: str
+
+    _bucket = field_validator("bucket")(bucket_name)
+    _prefix = field_validator("prefix")(object_location)
+
+    @field_validator("bucket")
+    @classmethod
+    def supported_gcs_bucket(cls, value):
+        if value.startswith("goog") or any(reserved in value for reserved in ("google", "g00gle")):
+            raise ValueError("Reserved bucket names are unsupported.")
+        return value
+
+
+BACKEND_ADAPTER = TypeAdapter(
+    Annotated[
+        S3BackendIntent | AzureBackendIntent | GCSBackendIntent, Field(discriminator="backend")
+    ]
+)
+
+
+def review_backend(raw: bytes) -> dict:
+    if len(raw) > MAX_BACKEND_BYTES:
+        raise ValueError("Backend intent exceeds the supported byte limit.")
+    intent = BACKEND_ADAPTER.validate_python(strict_json(raw))
+    return {
+        "schema_version": 1,
+        "backend": intent.backend,
+        "artifact_sha256": hashlib.sha256(raw).hexdigest(),
+        "status": "inputs_valid_verification_required",
+        "backend_configured": False,
+        "identity_verified": False,
+        "approval_granted": False,
+        "required_reviews": [
+            "Backend and workload authentication must be verified separately.",
+            "Confirm state ownership and a unique state location for this environment.",
+            "Verify storage access, encryption and encryption-key recovery.",
+            "Verify Terraform compatibility and actual lock contention behavior.",
+            "Test version retention, backup restoration and migration recovery.",
+        ],
+    }
+
+
+def load_and_review_backend(path: Path) -> dict:
+    return review_backend(read_regular_bytes(path, MAX_BACKEND_BYTES))

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added offline `check-backend` validation for strictly typed non-secret S3, Azure Blob and GCS intent files, with bounded regular-file reads, credential-field rejection and value-free reports. Shape validation does not configure a backend, verify access or grant deployment approval.
+
 - Documented future protected-state inputs and acceptance requirements for S3, Azure Blob and GCS, with separate identity, locking, recovery and migration boundaries. Backend integration and managed provisioning remain planned.
 
 - GCP disk-key review also blocks prior customer-supplied material retained in a plan after removal or migration to a Cloud KMS reference. The report omits values; removal does not make the original plan safe to publish.

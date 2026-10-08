@@ -12,6 +12,41 @@ Generated ignore rules and file permissions reduce accidental exposure; they do 
 
 ## Planned backend choices
 
+Development on `main` includes an offline input contract, separate from generated project specifications. Check a non-secret JSON file with:
+
+```text
+terraforma check-backend --file backend.json
+terraforma check-backend --file backend.json --json-output
+```
+
+For example, an S3 intent declares an existing location and explicit lockfile intent:
+
+```json
+{
+  "schema_version": 1,
+  "backend": "s3",
+  "owner": "platform-team",
+  "environment": "development",
+  "account_id": "123456789012",
+  "bucket": "example-existing-state-bucket",
+  "region": "us-east-1",
+  "key": "development/network/terraform.tfstate",
+  "use_lockfile": true
+}
+```
+
+Use your own existing backend references. This example does not create or establish access to a bucket. Every intent requires an owner identifier and lowercase environment label. Provider fields are:
+
+| Backend value | Additional required fields |
+| --- | --- |
+| `s3` | `account_id`, `bucket`, `region`, `key`, `use_lockfile: true` |
+| `azurerm` | `tenant_id`, `subscription_id`, `storage_account_name`, `container_name`, `key` |
+| `gcs` | `project_id`, `bucket`, `prefix` |
+
+The checker accepts regular UTF-8 JSON files up to 16 KiB, rejects unknown fields, duplicate keys, unsupported schema versions and non-finite numbers, and requires strict input types. Never put credential values in this file. Keys/prefixes are bounded relative ASCII locations without traversal or empty segments. Bucket names use a limited 3–63-character lowercase subset; GCS underscores/long dotted names and S3 account-regional names are outside this first contract. Shape checks do not establish complete cloud naming eligibility, bucket ownership, existence or regional availability.
+
+The report includes the backend type, input-byte digest and outstanding reviews, omitting declared owner/account/storage locations. Exit zero means only that the supported input shape is valid. `backend_configured`, `identity_verified` and `approval_granted` are always false. The command makes no network request, reads no credentials, writes no configuration and accesses no state. Users remain responsible for keeping permitted reference fields non-secret. Backend integration and browser configuration remain planned.
+
 Users should select an existing, separately administered backend and enter its non-secret location. Backend credentials must come from supported external authentication, with backend and provider identities verified separately. TerraForma must not silently create storage or grant permissions while initializing a workload.
 
 | Provider | Planned backend | Non-secret location inputs | Locking and recovery requirements |

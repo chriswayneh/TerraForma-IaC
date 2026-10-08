@@ -1,5 +1,11 @@
 # Verification record
 
+## Offline backend contract checkpoint
+
+- The full default suite passes 2,066 tests with 292 optional/native/platform cases skipped. All 73 backend regressions pass in a targeted run after the final reserved-name refinements, including two cases added after full-suite collection. Ruff checks and formatting pass across 102 Python files; whitespace and changed documentation link checks pass.
+- Coverage includes strict non-secret fields for all three backends, mandatory declared S3 locking, provider-specific names/identifiers, traversal and size rejection, malformed JSON, missing inputs, credential-field rejection, redacted CLI failures and matching CLI/library reports. Successful checks never grant approval or claim a configured backend.
+- Backend intents remain separate from generated project specifications. No backend HCL, state migration, cloud query, credentials read, state access, IAM grant or provisioning operation was performed. Authentication, actual locking, permissions and recovery remain unverified.
+
 ## Prior disk key material checkpoint
 
 - All 162 targeted disk-key and existing plan-review tests pass after extending the rule to prior values; Ruff checks and formatting pass across 100 Python files. Six additional regressions cover removed or migrated boot/persistent disk material without disclosing it. The preceding full-suite checkpoint remains recorded below.
