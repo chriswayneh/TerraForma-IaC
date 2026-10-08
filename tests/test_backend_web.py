@@ -106,6 +106,52 @@ def test_duplicate_backend_fields_are_rejected(client, route):
     assert "private-token" not in response.text
 
 
+@pytest.mark.parametrize("route", ["check", "download"])
+@pytest.mark.parametrize(
+    "backend,field,value",
+    [
+        ("s3", "account_id", "private-account"),
+        ("s3", "key", "../private-key"),
+        ("s3", "use_lockfile", False),
+        ("azurerm", "tenant_id", "private-tenant"),
+        ("azurerm", "container_name", "private--container"),
+        ("gcs", "project_id", "private project"),
+        ("gcs", "prefix", "/private-prefix"),
+    ],
+)
+def test_backend_field_errors_offer_safe_format_help(client, route, backend, field, value):
+    response = client.post(
+        f"/api/backends/{route}", headers=headers(client), json={**intent(backend), field: value}
+    )
+    assert response.status_code == 422
+    definition = next(item for item in backend_input_contract(backend) if item["name"] == field)
+    assert response.json() == {
+        "detail": definition["label"] + ": " + definition["hint"],
+        "field": field,
+    }
+    assert "private" not in response.text
+
+
+@pytest.mark.parametrize("route", ["check", "download"])
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"private-secret-name": "private-secret"},
+        {"schema_version": 9},
+        {"backend": "private-backend"},
+    ],
+)
+def test_unknown_or_schema_errors_do_not_expose_fields(client, route, changes):
+    response = client.post(
+        f"/api/backends/{route}",
+        headers=headers(client),
+        json={**intent("s3"), "account_id": "private-account", **changes},
+    )
+    assert response.status_code == 422
+    assert "field" not in response.json()
+    assert "private" not in response.text
+
+
 def test_unsupported_contract_is_redacted_and_ui_assets_are_served(client):
     response = client.post(
         "/api/backends/input-contract",

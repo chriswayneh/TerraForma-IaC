@@ -10,7 +10,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Review standalone VM boot-disk deletion and retention | [Boot disk lifecycle](BOOT_DISK_LIFECYCLE.md) |
 | Reference an existing GCP disk encryption key on main | [Google Cloud disk keys](GCP_DISK_KEYS.md) |
 | See the interface before installing | [Screenshots](../README.md#screenshots) |
-| Understand what the release includes | [v0.2.0 release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
+| Understand what the release includes | [v0.3.0 release notes](RELEASE_0.3.0.md) and [changelog](../CHANGELOG.md) |
 | See current progress and planned versions | [Roadmap](ROADMAP.md) |
 | Understand how the components work together | [Architecture](ARCHITECTURE.md) |
 | Review build dependencies and update rules | [Dependency trust](DEPENDENCIES.md) |
@@ -23,4 +23,4 @@ Start with the released guided workflow, then use the technical guides when you 
 | Review security boundaries or report a vulnerability | [Security policy](../SECURITY.md) |
 | Contribute a change | [Contribution guide](../CONTRIBUTING.md) |
 
-The current release generates and validates supported recipes. Full VM configuration and product-managed provisioning are planned milestones; they are not available in v0.2.0.
+The current v0.3.0 release generates, reuses and validates supported recipes. Complete VM acceptance and product-managed provisioning remain later milestones.

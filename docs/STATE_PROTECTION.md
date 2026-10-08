@@ -12,7 +12,7 @@ Generated ignore rules and file permissions reduce accidental exposure; they do 
 
 ## Planned backend choices
 
-Development on `main` includes an offline input contract, separate from generated project specifications.
+v0.3.0 includes an offline input contract, separate from generated project specifications. The shared browser and terminal questions include field-format hints. Browser check failures identify known fields without repeating submitted values; unknown fields and unsupported schemas receive generic errors.
 
 In the local web UI, choose **Enter storage references** under **Prepare your state storage inputs**. Select S3, Azure Blob or Google Cloud Storage, enter non-secret references, then choose **Check inputs**. A valid check enables **Download input file**. Editing any field requires another check; changing storage type starts a new form. Closing the dialog clears its entries and results.
 

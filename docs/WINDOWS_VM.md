@@ -6,7 +6,7 @@ GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](G
 
 GCP boot and optional data disks can reference one [existing Cloud KMS key](GCP_DISK_KEYS.md). Google-managed encryption remains the default; key location, service-agent access and recovery are reviewed separately. No key or IAM grant is created.
 
-Development on `main` includes initial **AWS, Azure and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
+v0.3.0 includes initial **AWS, Azure and Google Cloud Windows Server 2022** recipes in the local workspace and terminal wizard. This is Terraform generation with structural verification; cloud creation, password recovery, RDP access and teardown have not been tested.
 
 ## Azure
 

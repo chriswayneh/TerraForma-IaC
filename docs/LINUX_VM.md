@@ -6,7 +6,7 @@ GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](G
 
 Azure standalone VMs expose `boot_disk_caching` and conditional `data_disk_caching`: None, ReadOnly or ReadWrite. Defaults remain ReadWrite for the OS and None for data. [Azure documents cache and I/O behavior](https://learn.microsoft.com/en-us/azure/virtual-machines/disks-performance). Review guest/application durability and safe cache changes; generation does not flush writes, verify performance or protect data through backups.
 
-Available on `main` during development. The v0.2.0 release does not include the standalone VM recipe. Cloud creation, login, and teardown remain unverified.
+Included in v0.3.0. Cloud creation, login, and teardown remain unverified.
 
 Choose **A Linux virtual machine** in the browser or terminal wizard. This generates one VM in a new cloud network, with a selected supported Linux image, VM size, boot disk, and restricted SSH access. Application startup is left for your workload setup. Every configurable field is collected through the shared input contract.
 

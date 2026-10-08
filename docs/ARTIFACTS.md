@@ -1,6 +1,6 @@
 # Generated project artifacts
 
-Available on `main` during v0.3 development. The v0.2.0 release does not include generation receipts or the comparison command.
+Included in v0.3.0: generation receipts and local file comparison.
 
 Both terminal generation and browser exports preserve the non-secret questionnaire alongside its Terraform output.
 

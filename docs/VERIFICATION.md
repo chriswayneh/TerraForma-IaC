@@ -1,5 +1,14 @@
 # Verification record
 
+## v0.3.0 release verification
+
+- The default suite passes 2,150 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 104 Python files; backend JavaScript syntax, whitespace and local documentation links pass.
+- Twenty additional backend API cases verify known-field format guidance and generic unknown/schema errors without submitted values. Three project cases cover the release template default and accepted saved development specifications, preserving template labels and recording the current generator version in receipts.
+- A clean Python 3.14 virtual environment installed the built v0.3.0 wheel with freshly resolved dependencies, including Pydantic 2.14.0 and FastAPI 0.143.0. The installed package passed version, bundled UI assets, generation, ZIP/checksum presence, project import, backend contracts, safe field errors and absent plan/apply/destroy route checks.
+- The installed CLI generated the synthetic example project and `verify-project` reported matching files and specification. Receipt authentication and deployment approval remained false.
+- Browser checks verified invalid account-field focus/help, correction and successful input recheck, cleared entries after closing, and project import with no cloud consent or AI opt-in. A 390×844 viewport showed no horizontal overflow in the storage form; the override was reset. Workspace, configuration and storage screenshots use synthetic examples.
+- No live cloud metadata, credential/state access, backend initialization/migration, IAM grant, provisioning or live AI request was performed. Remaining boundaries are listed in the release notes, artifact guide and state protection design.
+
 ## Saved backend input import checkpoint
 
 - The default suite passes 2,127 tests with 292 optional/native/platform cases skipped. The targeted backend/browser suite passes 155 tests. Ruff checks and formatting pass across 104 Python files; JavaScript syntax and whitespace checks pass.

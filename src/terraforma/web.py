@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, StrictBool
+from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -23,6 +23,7 @@ from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_s
 from terraforma.artifacts import PROJECT_GITIGNORE, checksum_document, project_artifacts
 from terraforma.backend import (
     MAX_BACKEND_BYTES,
+    backend_error_detail,
     backend_input_contract,
     parse_backend,
     review_backend,
@@ -334,6 +335,8 @@ def create_app() -> FastAPI:
     async def backend_check(request: Request):
         try:
             return review_backend(await request.body())
+        except ValidationError as error:
+            return JSONResponse(status_code=422, content=backend_error_detail(error))
         except (ValueError, TypeError, RecursionError):
             raise HTTPException(
                 status_code=422,
@@ -344,6 +347,8 @@ def create_app() -> FastAPI:
     async def backend_download(request: Request):
         try:
             intent = parse_backend(await request.body())
+        except ValidationError as error:
+            return JSONResponse(status_code=422, content=backend_error_detail(error))
         except (ValueError, TypeError, RecursionError):
             raise HTTPException(
                 status_code=422,

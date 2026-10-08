@@ -4,17 +4,17 @@
 
 | Milestone | Details |
 | --- | --- |
-| **Now** | **Phase 1: Security and project foundation** |
-| **Status** | **In progress** |
-| **Latest release** | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) — guided generation and local review |
-| **Current target** | **v0.3.0** |
+| **Now** | **Phase 2: Complete VM configuration** |
+| **Status** | **Phase 1 release gates complete; Phase 2 in development** |
+| **Latest release** | [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) — reusable projects and local security review |
+| **Current target** | **v0.4.0** |
 | **Next user milestone** | Configure supported Linux and Windows VMs without editing Terraform in v0.4.0 |
 
 TerraForma-IaC already generates Terraform recipes through a local web UI and CLI. It explains the resources, exports the files, validates trusted configurations, and provides an initial local plan reviewer. [Start with the current release](GETTING_STARTED.md).
 
 The next stages turn that workflow into a guided provisioning platform. Users describe what they need to provision; the interface asks the operational questions and produces the configuration. Simple mode explains defaults, while advanced mode exposes supported provider-specific choices.
 
-### What remains in Phase 1
+### Foundation work continuing in later phases
 
 - Extend the initial shared project specification to account/environment identity and resource dependencies.
 - Extend the implemented recipe input contracts as the resource catalog grows.
@@ -31,8 +31,8 @@ Versions are targets, not date promises. A release ships only after its document
 | Status | Version | Phase | Outcome |
 | --- | --- | --- | --- |
 | **Released** | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) | Guided workspace | Generate, understand, export, validate, and locally review Terraform recipes |
-| **In progress** | v0.3.0 | [1 · Security and project foundation](#phase-1) | Shared project specification, complete input contracts, and execution safeguards |
-| Early development | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
+| **Released** | [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) | [1 · Security and project foundation](#phase-1) | Shared project specification, declared recipe input contracts, and local execution safeguards |
+| **In progress** | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
 | Planned | v0.5.0 | [3 · Networks, storage, and identity](#phase-3) | Compose connected resources with explicit access and identity decisions |
 | Planned | v0.6.0 | [4 · State and plan workflow](#phase-4) | Protected state, account preflight, saved plans, and change review |
 | Planned | v0.7.0 | [5 · Approved provisioning and lifecycle](#phase-5) | Approve and apply reviewed plans; manage updates and controlled teardown |
@@ -48,7 +48,7 @@ Versions are targets, not date promises. A release ships only after its document
 | See the interface | [Screenshots](../README.md#screenshots) |
 | Understand the system | [Architecture](ARCHITECTURE.md) |
 | Check what was verified | [Verification record](VERIFICATION.md) and [release checks](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37558709785) |
-| Understand the first release | [Release notes](RELEASE_0.2.0.md) and [changelog](../CHANGELOG.md) |
+| Understand the latest release | [v0.3.0 release notes](RELEASE_0.3.0.md) and [changelog](../CHANGELOG.md) |
 | Review the VM questionnaire design | [VM inputs](VM_INPUTS.md) |
 | Understand local policy checks | [Plan review](PLAN_REVIEW.md) |
 | Report a security concern | [Security policy](../SECURITY.md) |
@@ -63,7 +63,7 @@ The catalog will expand through documented, tested resource patterns. Unsupporte
 
 Target: **v0.3.0**.
 
-Status: in progress. Initial local plan review in both interfaces, bounded API requests, CLI AI opt-in, a shared project specification/input contract, and recipe capability metadata are implemented. Both questionnaires ask for declared recipe variables; the browser preserves answers through generation, validation, export, and project import. Target account references and environment labels are recorded but not authenticated. The local `doctor` command checks package/PATH availability; Explicit consent in the browser or CLI can check the target through AWS caller-account, Azure subscription, or GCP project metadata reads. Terraform credential equivalence, resource/account capabilities and the remaining execution safeguards are still planned.
+Status: release gates complete for v0.3.0. Local plan review in both interfaces, bounded API requests, explicit AI opt-in, a shared project specification/input contract, and recipe capability metadata are implemented. Both questionnaires ask for declared recipe variables; the browser preserves answers through generation, validation, export, and project import. Target account references and environment labels are recorded but not authenticated. The local `doctor` command checks package/PATH availability; explicit consent in the browser or CLI can check the target through AWS caller-account, Azure subscription, or GCP project metadata reads. Completion means the exit criteria below are met; it does not establish deployment readiness. Resource graphs, Terraform credential equivalence, broader account capability checks, atomic publication and protected execution/state controls continue in their later roadmap phases.
 
 - Define a versioned project specification shared by the CLI, UI, generator, and automation API.
 - Record provider, account identity, environment, resource selections, dependencies, and template versions without persisting credentials.
@@ -83,6 +83,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - An offline `check-backend` contract validates non-secret S3/Azure Blob/GCS intent files, requires declared S3 lockfile use and omits location values from its report. It never configures a backend or verifies cloud access; integration remains planned.
 - The terminal `backend-wizard` and local web UI now collect those inputs through guided questions and save/download a separate intent file. Generated backend configuration and verified authentication/locking/recovery remain planned.
 - The browser can reload saved backend intents with bounded schema validation and requires a new check before downloading. Failed imports preserve current entries; imports never configure storage or verify cloud access.
+- Both storage questionnaires provide format hints. Browser checks identify known invalid fields without repeating values; unknown or credential fields retain generic errors.
 - Terminal artifact generation has documented creation permissions and best-effort failure/interruption cleanup, including explicit leftover-file errors. Protected state and atomic/durable execution artifacts remain outstanding. See [artifact handling](ARTIFACTS.md).
 - Terminal output now flushes and synchronizes each generated file before reporting success. Synchronization failures follow existing cleanup/recovery rules; directory synchronization and atomic project publication remain outstanding.
 

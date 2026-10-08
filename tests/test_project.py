@@ -17,6 +17,21 @@ def recipe(provider="aws", workload="static_site"):
     return WizardConfig(provider=provider, project_name="project-test", architecture_type=workload)
 
 
+@pytest.mark.parametrize("version", ["0.3.0", "0.3.0.dev0"])
+def test_release_preserves_saved_development_specifications(version):
+    specification = ProjectSpecification(
+        recipe=recipe(), template_version=version, inputs={"aws_account_id": "123456789012"}
+    )
+    result = compile_project(specification)
+    assert result["specification"]["template_version"] == version
+    assert result["receipt"]["template_version"] == version
+    assert result["receipt"]["generator_version"] == "0.3.0"
+
+
+def test_new_specification_defaults_to_release_template():
+    assert ProjectSpecification(recipe=recipe()).template_version == "0.3.0"
+
+
 def test_browser_import_round_trip_preserves_answers_and_export():
     specification = ProjectSpecification(
         recipe=recipe("aws", "single_web_server"),

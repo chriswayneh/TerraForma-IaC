@@ -145,10 +145,26 @@ def backend_input_contract(backend: str) -> list[dict]:
         "project_id": "Google Cloud project ID for state storage",
         "prefix": "State storage prefix (for example, development/network)",
     }
+    hints = {
+        "owner": "Use 1–80 letters, digits, dots, underscores or hyphens; start with a letter or digit.",
+        "environment": "Use 1–32 lowercase letters, digits or hyphens; start with a letter.",
+        "account_id": "Enter the 12-digit AWS account ID, preserving leading zeros.",
+        "bucket": "Use a supported 3–63 character lowercase bucket name with letters, digits, dots or hyphens. Reserved names and IP addresses are unsupported.",
+        "region": "Enter a region code such as us-east-1. Availability requires separate cloud verification.",
+        "key": "Use a relative path up to 512 characters, such as development/network/terraform.tfstate. Use letters, digits, dots, underscores, hyphens and separating slashes; no empty, dot or parent segments.",
+        "use_lockfile": "Keep enabled to declare future S3 lockfile use. Actual locking still needs verification.",
+        "tenant_id": "Enter a hyphenated UUID, such as 00000000-0000-0000-0000-000000000001.",
+        "subscription_id": "Enter a hyphenated UUID, such as 00000000-0000-0000-0000-000000000002.",
+        "storage_account_name": "Use 3–24 lowercase letters or digits.",
+        "container_name": "Use 3–63 lowercase letters, digits or hyphens; start and end with a letter or digit. No consecutive hyphens.",
+        "project_id": "Use 6–30 lowercase letters, digits or hyphens; start with a letter and end with a letter or digit.",
+        "prefix": "Use a relative path up to 512 characters, such as development/network. Use letters, digits, dots, underscores, hyphens and separating slashes; no empty, dot or parent segments.",
+    }
     return [
         {
             "name": name,
             "label": labels[name],
+            "hint": hints[name],
             "kind": "boolean" if field.annotation is bool else "text",
             "default": True
             if field.annotation is bool
@@ -172,8 +188,28 @@ def validate_backend_answer(
         BACKEND_ADAPTER.validate_python({**answers, "backend": backend, field: value})
     except ValidationError as error:
         if any(item["loc"][-1] == field for item in error.errors()):
-            return "Enter a supported non-secret reference in the documented format."
+            return next(
+                item["hint"] for item in backend_input_contract(backend) if item["name"] == field
+            )
     return True
+
+
+def backend_error_detail(error: ValidationError) -> dict:
+    generic = {"detail": "Backend inputs are invalid or unsupported; values are omitted."}
+    errors = error.errors(include_input=False, include_context=False, include_url=False)
+    fields = []
+    for item in errors:
+        location = item["loc"]
+        if len(location) != 2 or location[0] not in {"s3", "azurerm", "gcs"}:
+            return generic
+        definitions = {entry["name"]: entry for entry in backend_input_contract(location[0])}
+        if location[1] not in definitions or item["type"] == "extra_forbidden":
+            return generic
+        fields.append(definitions[location[1]])
+    if not fields:
+        return generic
+    first = fields[0]
+    return {"detail": first["label"] + ": " + first["hint"], "field": first["name"]}
 
 
 def parse_backend(raw: bytes) -> S3BackendIntent | AzureBackendIntent | GCSBackendIntent:

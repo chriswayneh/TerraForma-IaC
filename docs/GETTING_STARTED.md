@@ -16,7 +16,7 @@ On macOS/Linux, replace `.venv/Scripts/` with `.venv/bin/`. Open `http://127.0.0
 
 ## 2. Create a first configuration
 
-Development on `main` groups configuration inputs by cloud target, image/capacity, network/access, storage and operations/identity. Enter the supported variables in each section; conditional disk and identity questions appear when enabled. External secrets are shown as references rather than password fields.
+Configuration inputs are grouped by cloud target, image/capacity, network/access, storage and operations/identity. Enter the supported variables in each section; conditional disk and identity questions appear when enabled. External secrets are shown as references rather than password fields.
 
 ![Configuration inputs grouped by purpose](images/grouped-inputs.png)
 

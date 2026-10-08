@@ -1,6 +1,6 @@
 # Project specifications
 
-Available on `main` during v0.3 development. The v0.2.0 release does not include this workflow.
+Included in v0.3.0. Saved `0.3.0.dev0` specifications remain accepted with their original template label; new specifications use `0.3.0`. Import regenerates outputs using the installed generator, so compare the regenerated files before use. Receipts record the actual generator version and output hashes.
 
 A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.
 
@@ -9,7 +9,7 @@ If an answer fails a field check, the interfaces identify the declared field and
 ```json
 {
   "schema_version": 1,
-  "template_version": "0.3.0.dev0",
+  "template_version": "0.3.0",
   "recipe": {
     "provider": "aws",
     "project_name": "first-site",
@@ -49,7 +49,7 @@ Generation also rejects common state files, variable-value files, `.terraform`, 
 
 Replace the example account ID with your intended AWS account. Every AWS recipe now requires a 12-digit `aws_account_id` and writes the provider's [account allowlist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/html) to guard later provider operations against an unintended authenticated account. Azure recipes require a subscription ID; GCP recipes require a project ID. The compiled result records that target and explicitly marks identity unverified. These fields are account references, not credentials; generation does not sign in or prove access. Earlier development AWS manifests need this new input added before they can compile or import.
 
-To reopen a project, extract `terraforma.project.json` from its ZIP and select **Load project** in the browser. The file is validated locally before its answers and preview are restored. Imports never start validation or deployment, and do not enable AI or save additional answers in browser storage. Unsupported schema/template versions, duplicate JSON keys, missing answers, and files larger than 64 KiB are rejected. The development [AWS web-server example](../examples/aws-web.project.json) can be loaded the same way.
+To reopen a project, extract `terraforma.project.json` from its ZIP and select **Load project** in the browser. The file is validated locally before its answers and preview are restored. Imports never start validation or deployment, and do not enable AI or save additional answers in browser storage. Unsupported schema/template versions, duplicate JSON keys, missing answers, and files larger than 64 KiB are rejected. The [AWS web-server example](../examples/aws-web.project.json) can be loaded the same way.
 
 ## Optional cloud target preflight
 
@@ -57,7 +57,7 @@ To reopen a project, extract `terraforma.project.json` from its ZIP and select *
 
 The browser shows **Check your cloud target** after generation or import. Enable the consent checkbox and select **Check cloud target** to request the same bounded cloud read. Consent resets after each attempt. Editing any questionnaire answer removes the previous result; generate again before checking the new target. The button stays disabled until you give fresh consent.
 
-On development `main`, `terraforma preflight --spec terraforma.project.json` validates the saved project and reports `not_checked` without discovering or running cloud tools. To request a cloud read using the installed CLI's existing credentials:
+`terraforma preflight --spec terraforma.project.json` validates the saved project and reports `not_checked` without discovering or running cloud tools. To request a cloud read using the installed CLI's existing credentials:
 
 ```text
 terraforma preflight --spec terraforma.project.json --verify-target
@@ -153,7 +153,7 @@ Existing compute recipes now expose VM size, boot-disk size, and supported disk 
 
 Standalone Linux VMs also expose `enable_data_disk`, default `false`. Its dependent `data_disk_size_gb` and `data_disk_type` questions appear only when enabled, using contract `visible_when` metadata. Sizes are 32–2048 GiB; available types depend on the provider. The CLI skips inactive questions; browser exports omit inactive answers and use recipe defaults for their unused Terraform variables. All supplied manifest values are still validated, including inactive fields. The configuration summary omits inactive disk size/type choices. See [data disk behavior and limits](LINUX_VM.md#optional-data-disk).
 
-Generation is offline. Provider permissions, account identity, live image/SKU availability, quotas, and deployment are not established by the input checks. Schema/template versions are recorded; the current development workflow does not yet promise cross-version migration or reproducible generation across changing development commits.
+Generation is offline. Provider permissions, account identity, live image/SKU availability, quotas, and deployment are not established by the input checks. Schema/template versions are recorded; accepting a saved development specification does not establish reproducible output or a migration of existing infrastructure. Review regenerated files and compare receipts before use.
 
 ## Environment labels
 

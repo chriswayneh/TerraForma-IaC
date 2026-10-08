@@ -9,9 +9,9 @@ TerraForma creates Terraform configuration files from scratch based on answers t
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE)
-[![Status](https://img.shields.io/badge/release-v0.2.0-7ce2fe)](docs/ROADMAP.md)
+[![Status](https://img.shields.io/badge/release-v0.3.0-7ce2fe)](docs/ROADMAP.md)
 
-**Available release:** [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0). Create, understand, and check setup files locally. Building cloud resources is planned.
+**Available release:** [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0). Create, reuse, and check Terraform projects locally. Building cloud resources is planned.
 
 [Quick Start](#install-and-use) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Documentation](docs/README.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
@@ -35,7 +35,7 @@ TerraForma creates Terraform configuration files from scratch based on answers t
 
 The setup files use **Terraform**, a tool that describes infrastructure in text files so a setup can be reviewed, reused, and tracked over time. TerraForma exports `main.tf`, `variables.tf`, and `outputs.tf` for AWS, Microsoft Azure, and Google Cloud. The terminal interface is a command-line interface (CLI); installed Terraform and TFLint tools provide local validation. An existing Terraform plan JSON can also be reviewed, but TerraForma does not run plan, apply, or destroy.
 
-The released **v0.2.0** provides guided generation and local review. Development on `main` adds richer configuration questions, saved project specifications, import, export receipts, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows configuration and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
+The released **v0.3.0** provides guided configuration questions, saved project specifications, import, export receipts, local plan review, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows acceptance and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
 
 ## Screenshots
 
@@ -43,11 +43,11 @@ The local workspace guides cloud, workload, and configuration choices, then prev
 
 ![TerraForma-IaC local workspace](docs/images/workspace.png)
 
-Development on `main` adds a questionnaire for declared recipe inputs, including VM size and boot-disk choices. These controls are being developed for v0.3.0.
+The questionnaire covers declared recipe inputs, including VM size and boot-disk choices.
 
 ![Configure recipe inputs and preview Terraform](docs/images/configuration.png)
 
-Development on `main` also provides guided state storage references, checked locally and downloaded as a separate input file. The example below uses synthetic references; backend setup and cloud access remain unverified.
+Guided state storage references are checked locally and downloaded as a separate input file. The example below uses synthetic references; backend setup and cloud access remain unverified.
 
 ![Guided state storage inputs](docs/images/backend-inputs.png)
 
@@ -55,18 +55,18 @@ Development on `main` also provides guided state storage references, checked loc
 
 | Milestone | Status |
 | --- | --- |
-| Latest release | [v0.2.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.2.0) — guided generation and local review |
-| Current phase | [Phase 1: Security and project foundation](docs/ROADMAP.md#phase-1) |
-| Current target | v0.3.0 — project specification and input contracts |
+| Latest release | [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) — reusable projects and local security review |
+| Completed phase | [Phase 1: Security and project foundation](docs/ROADMAP.md#phase-1) |
+| Current target | v0.4.0 — complete supported VM configuration |
 | Next user milestone | v0.4.0 — complete supported Linux/Windows VM configuration |
 
-[Release notes](docs/RELEASE_0.2.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
+[Release notes](docs/RELEASE_0.3.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
 
 ## What you get
 
-**New on main:** the Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export. This is development work toward v0.3.0; it is not included in the v0.2.0 download.
+The Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export.
 
-Development also adds project import, a recipe capability catalog, and [local plan review in the browser](docs/PLAN_REVIEW.md).
+Project import, a recipe capability catalog, and [local plan review in the browser](docs/PLAN_REVIEW.md) help you reuse and inspect your work.
 
 New project exports also include the saved questionnaire, [generation receipt and checksums](docs/ARTIFACTS.md) for reuse and file comparison.
 
@@ -103,11 +103,11 @@ terraforma run --dir ./my-project --no-ai
 
 The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md). The current build still generates and validates files; it does not provision resources. An initial [local plan-review command](docs/PLAN_REVIEW.md) is available with `terraforma review-plan --file review.tfplan.json`. AI diagnostics require explicit opt-in.
 
-Development on `main` includes `terraforma backend-wizard --dir ./state-inputs` to collect non-secret backend references through a questionnaire, and `terraforma check-backend --file backend.json` to check an existing file. These validate supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
+Use `terraforma backend-wizard --dir ./state-inputs` to collect non-secret backend references through a questionnaire, and `terraforma check-backend --file backend.json` to check an existing file. These validate supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
 
 Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
 
-Development on `main` adds `terraforma doctor` to check local dependency availability. Use `terraforma doctor --require web` before launching the UI or `terraforma doctor --require validation --json-output` for a machine-readable report. Exit `1` means the selected capability has missing dependencies. This command checks package metadata and PATH without executing tools, reading credentials, or contacting cloud accounts; it does not verify tool versions, trust, authentication, or deployment readiness.
+Use `terraforma doctor` to check local dependency availability. Use `terraforma doctor --require web` before launching the UI or `terraforma doctor --require validation --json-output` for a machine-readable report. Exit `1` means the selected capability has missing dependencies. This command checks package metadata and PATH without executing tools, reading credentials, or contacting cloud accounts; it does not verify tool versions, trust, authentication, or deployment readiness.
 
 The wizard creates `main.tf`, `variables.tf`, and `outputs.tf` in a new project directory. Use `--dir` to choose the destination. It refuses to add generated files to an existing Terraform configuration. Cancellation writes nothing.
 
@@ -115,7 +115,7 @@ To enable optional AI explanations, set `OPENAI_API_KEY` in your environment bef
 
 ## Architecture
 
-The browser and CLI share generation, validation, and local plan-review cores. Development on main adds shared specifications and artifact receipts.
+The browser and CLI share generation, validation, local plan review, project specifications and artifact receipts.
 
 ```mermaid
 flowchart LR
@@ -134,10 +134,11 @@ Generation and local review do not apply infrastructure. [Architecture and bound
 
 ## Generated infrastructure
 
-The table below describes **v0.2.0**. Development on `main` adds [standalone Linux VMs](docs/LINUX_VM.md), supported Linux image choices, VM size and boot-disk inputs, and configurable load-balanced tier capacity. See the [project specification guide](docs/PROJECT_SPECIFICATION.md) for current choices and limits.
+The table below describes **v0.3.0**. See the [project specification guide](docs/PROJECT_SPECIFICATION.md) for supported choices and limits.
 
 | Workload | AWS | Azure | Google Cloud |
 | --- | --- | --- | --- |
+| Standalone Linux/Windows VM | EC2 | Azure VM | Compute Engine VM |
 | Single web server | EC2, nginx, VPC | Ubuntu VM, nginx, VNet | Debian VM, nginx, VPC |
 | Load-balanced tier | Two EC2 instances, ALB | Two-instance VM scale set, load balancer | Two-instance managed group, HTTP or internal TCP load balancer |
 | Managed PostgreSQL | Multi-AZ RDS | Flexible Server with same-zone HA | Regional Cloud SQL |
@@ -164,7 +165,7 @@ This is filesystem isolation, not a security boundary. Terraform/providers, modu
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - uses: chriswayneh/TerraForma-IaC@v0.2.0
+  - uses: chriswayneh/TerraForma-IaC@v0.3.0
     with:
       target_dir: infrastructure
       openai_api_key: ${{ secrets.OPENAI_API_KEY }}

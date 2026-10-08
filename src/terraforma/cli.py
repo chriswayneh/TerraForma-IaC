@@ -103,6 +103,7 @@ def backend_wizard_command(target_dir: Path):
     answers = {"backend": backend}
     for definition in backend_input_contract(backend):
         name = definition["name"]
+        click.echo("\n" + definition["hint"])
         if definition["kind"] == "boolean":
             value = ask(questionary.confirm(definition["label"] + "?", default=True))
             if value is not True:

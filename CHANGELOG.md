@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 — October 8, 2026
+
+Reusable project specifications, guided recipe inputs, local security review and state-storage input preparation. [Release notes](docs/RELEASE_0.3.0.md) · [Verification](docs/VERIFICATION.md)
+
+- Added shared backend field-format hints and safe field-specific browser correction messages, with focus and accessible help associations. Unsupported schemas and unknown/credential fields remain value-free generic errors.
+- New project specifications use template version `0.3.0`; saved `0.3.0.dev0` specifications remain accepted. Imports regenerate outputs with the installed generator and preserve the original template label for comparison.
 
 - Added saved backend input-file import in the web UI, with strict 16 KiB validation, provider-specific form restoration and fresh checks before download. Invalid files preserve current entries; no backend or cloud operation is performed.
 

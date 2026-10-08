@@ -19,7 +19,7 @@ from terraforma.network_inputs import usable_vm_address
 class ProjectSpecification(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     schema_version: Literal[1] = 1
-    template_version: Literal["0.3.0.dev0"] = "0.3.0.dev0"
+    template_version: Literal["0.3.0", "0.3.0.dev0"] = "0.3.0"
     recipe: WizardConfig
     inputs: dict[str, str | int | bool] = Field(default_factory=dict, max_length=32)
     secret_references: dict[str, str] = Field(default_factory=dict, max_length=16)

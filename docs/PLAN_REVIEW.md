@@ -2,7 +2,7 @@
 
 The first security-foundation component reviews an existing Terraform plan JSON export locally. It does not create a plan, use cloud credentials, call AI, or run apply.
 
-On `main` during v0.3 development, the browser also provides **Review an existing plan**. Select **Choose plan JSON**, open your export, and read action counts, blocking findings, review gaps, and the artifact digest. The file is sent only to the local server, processed in memory, and is not stored by this route or sent to AI. Invalid files return a generic error without plan values. One review runs at a time; the generator remains available when review finishes. This browser feature is not included in the v0.2.0 release.
+In v0.3.0, the browser also provides **Review an existing plan**. Select **Choose plan JSON**, open your export, and read action counts, blocking findings, review gaps, and the artifact digest. The file is sent only to the local server, processed in memory, and is not stored by this route or sent to AI. Invalid files return a generic error without plan values. One review runs at a time; the generator remains available when review finishes.
 
 ![Local report for a test plan with public SSH access](images/plan-review.png)
 

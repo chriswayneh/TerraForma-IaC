@@ -19,6 +19,15 @@
 
   function invalidate() {
     checkedPayload = null;
+    for (const definition of definitions) {
+      const input = byId(`backend-${definition.name}`);
+      if (input) input.removeAttribute("aria-invalid");
+      const message = byId(`backend-${definition.name}-error`);
+      if (message) {
+        message.textContent = "";
+        message.hidden = true;
+      }
+    }
     byId("backend-download").disabled = true;
     byId("backend-results").replaceChildren();
     byId("backend-results").hidden = true;
@@ -48,6 +57,15 @@
       input.spellcheck = false;
       label.className = "input-label";
       label.htmlFor = input.id;
+      const hint = document.createElement("p");
+      hint.id = `${input.id}-hint`;
+      hint.className = "input-help";
+      hint.textContent = definition.hint;
+      const message = document.createElement("p");
+      message.id = `${input.id}-error`;
+      message.className = "input-help";
+      message.hidden = true;
+      input.setAttribute("aria-describedby", `${hint.id} ${message.id}`);
       const value = values[definition.name] ?? definition.default;
       if (definition.kind === "boolean") {
         input.checked = value;
@@ -60,6 +78,7 @@
         label.textContent = definition.label;
         byId("backend-fields").append(label, input);
       }
+      byId("backend-fields").append(hint, message);
     }
   }
 
@@ -155,9 +174,20 @@
       byId("backend-results").replaceChildren(list);
       byId("backend-results").hidden = false;
     } catch (error) {
-      if (current === version) byId("backend-status").textContent = error.message;
+      if (current === version && dialog.open) {
+        byId("backend-status").textContent = error.message;
+        if (definitions.some((definition) => definition.name === error.field)) {
+          const input = byId(`backend-${error.field}`);
+          input.setAttribute("aria-invalid", "true");
+          byId(`${input.id}-error`).textContent = error.message;
+          byId(`${input.id}-error`).hidden = false;
+        }
+      }
     } finally {
-      if (current === version) setPending(false);
+      if (current === version) {
+        setPending(false);
+        if (dialog.open) byId("backend-fields").querySelector('[aria-invalid="true"]')?.focus();
+      }
     }
   });
 
