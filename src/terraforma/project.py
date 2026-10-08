@@ -69,7 +69,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "use_existing_network": "Use an existing subnet",
                     "existing_subnetwork_resource": "Existing Azure subnet resource ID"
                     if config.provider == "azure"
+                    else "Existing AWS subnet ID"
+                    if config.provider == "aws"
                     else "Existing Google Cloud subnet resource",
+                    "existing_security_group_id": "Existing AWS security group ID",
                     "existing_subnet_cidr": "Existing subnet IPv4 range (CIDR)",
                     "confirm_existing_network_review": "Confirm your existing network review",
                     "private_ip_address": "Private IPv4 address (optional)",
@@ -248,6 +251,7 @@ def validate_input(name: str, value: str, kind: str):
             "custom_image_admin_username",
             "workload_identity_resource_id",
             "existing_subnetwork_resource",
+            "existing_security_group_id",
         }
         and value == ""
     ):
@@ -308,6 +312,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter the existing non-root Linux administrator username using lowercase letters, digits, underscores or hyphens."
         elif definition["name"] == "existing_subnetwork_resource":
             message = "Enter the exact existing subnet resource in the documented provider format; URLs and credentials are unsupported."
+        elif definition["name"] == "existing_security_group_id":
+            message = "Enter one existing AWS security group ID in the documented sg- format."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -421,7 +427,7 @@ def compile_project(specification: ProjectSpecification) -> dict:
                 )
             cidr_field = (
                 "existing_subnet_cidr"
-                if specification.recipe.provider == "azure"
+                if specification.recipe.provider in {"aws", "azure"}
                 else "network_cidr"
             )
             if cidr_field not in specification.inputs:
@@ -442,22 +448,26 @@ def compile_project(specification: ProjectSpecification) -> dict:
                     "existing_subnetwork_resource",
                     "Choose a subnet in the selected project and region; shared or cross-project attachment is unsupported.",
                 )
-            if specification.recipe.provider == "azure":
-                if (
-                    resource
-                    and resource.split("/")[2].lower() != effective["subscription_id"].lower()
-                ):
-                    raise ProjectInputError(
-                        "existing_subnetwork_resource",
-                        "Choose an existing subnet in the selected subscription; cross-subscription attachment is unsupported.",
-                    )
-                if effective["network_cidr"] != definitions["network_cidr"]["default"]:
-                    raise ProjectInputError(
-                        "use_existing_network",
-                        "Clear the inactive new-network range before selecting an existing subnet.",
-                    )
+            if (
+                specification.recipe.provider == "azure"
+                and resource
+                and resource.split("/")[2].lower() != effective["subscription_id"].lower()
+            ):
+                raise ProjectInputError(
+                    "existing_subnetwork_resource",
+                    "Choose an existing subnet in the selected subscription; cross-subscription attachment is unsupported.",
+                )
+            if (
+                specification.recipe.provider in {"aws", "azure"}
+                and effective["network_cidr"] != definitions["network_cidr"]["default"]
+            ):
+                raise ProjectInputError(
+                    "use_existing_network",
+                    "Clear the inactive new-network range before selecting an existing subnet.",
+                )
         elif (
             effective["existing_subnetwork_resource"]
+            or effective.get("existing_security_group_id", "")
             or effective["confirm_existing_network_review"]
             or effective.get("existing_subnet_cidr", "10.0.0.0/24") != "10.0.0.0/24"
         ):

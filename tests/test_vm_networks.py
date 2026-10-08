@@ -36,7 +36,7 @@ def test_private_vm_network_preserves_selected_range(provider, cidr):
     if provider == "azure":
         assert "cidrsubnet(var.network_cidr, 8, 1)" in main
     if provider == "aws":
-        assert "cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)" in main
+        assert "cidrsubnet(aws_vpc.this[0].cidr_block, 8, count.index + 10)" in main
     summary = {item["name"]: item["value"] for item in compiled["choice_summary"]}
     assert summary["network_cidr"] == cidr
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:

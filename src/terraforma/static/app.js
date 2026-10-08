@@ -20,7 +20,7 @@ let templateVersion = "";
 const inputSections = [
   ["Cloud target", ["environment", "aws_account_id", "subscription_id", "gcp_project_id", "region", "location", "zone", "availability_zone"]],
   ["Image and capacity", ["use_custom_image", "custom_image", "custom_image_owner_account_id", "custom_image_admin_username", "confirm_custom_image_compatibility", "os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_count", "computer_name", "license_type"]],
-  ["Network and access", ["use_existing_network", "existing_subnetwork_resource", "existing_subnet_cidr", "confirm_existing_network_review", "network_cidr", "private_ip_address", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
+  ["Network and access", ["use_existing_network", "existing_subnetwork_resource", "existing_security_group_id", "existing_subnet_cidr", "confirm_existing_network_review", "network_cidr", "private_ip_address", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
   ["Storage", ["use_customer_managed_disk_key", "disk_kms_key", "enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
   ["Operations and identity", ["enable_workload_identity", "workload_identity", "workload_identity_type", "workload_identity_resource_id", "detailed_monitoring", "cpu_credit_mode", "metadata_hop_limit", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
   ["Workload inputs", []],
@@ -170,7 +170,7 @@ function updatePrivateAddressHint() {
   const help = byId("recipe-help-private_ip_address");
   if (!help) return;
   const config = configuration();
-  const existingSubnet = config.provider === "azure" && Boolean(byId("recipe-use_existing_network")?.checked);
+  const existingSubnet = ["aws", "azure"].includes(config.provider) && Boolean(byId("recipe-use_existing_network")?.checked);
   const range = vmPrivateAddressRange(config.provider, config.is_public, byId(existingSubnet ? "recipe-existing_subnet_cidr" : "recipe-network_cidr")?.value, existingSubnet);
   help.textContent = help.dataset.baseHelp + (range
     ? ` Usable addresses: ${range.first} through ${range.last} in subnet ${range.subnet}. Availability is not checked.`

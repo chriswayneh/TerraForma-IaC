@@ -59,7 +59,9 @@ def test_placement_reorders_matching_subnets_and_survives_api_import(windows, pu
     assert public_subnet["availability_zone"] == private_subnet["availability_zone"]
     assert "concat([var.availability_zone]" in public_subnet["availability_zone"]
     assert "zone != var.availability_zone" in public_subnet["availability_zone"]
-    assert public_subnet["count"] == private_subnet["count"] == 2
+    assert (
+        public_subnet["count"] == private_subnet["count"] == "${var.use_existing_network ? 0 : 2}"
+    )
     for subnet in (public_subnet, private_subnet):
         checks = subnet["lifecycle"][0]["precondition"]
         assert "length(data.aws_availability_zones.available.names) >= 2" in checks[0]["condition"]

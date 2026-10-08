@@ -2,6 +2,10 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
+from terraforma.aws_network_attachment import (
+    aws_attachment_precondition,
+    declare_aws_network_attachment,
+)
 from terraforma.azure_identity import declare_azure_identity_inputs
 from terraforma.azure_network_attachment import declare_azure_network_attachment
 from terraforma.configuration import AZURE_RESERVED_USERNAMES, LINUX_IMAGE_CHOICES, WizardConfig
@@ -256,6 +260,8 @@ class TerraformGenerator:
                 declare_gcp_network_attachment(self)
             elif self.config.provider == "azure":
                 declare_azure_network_attachment(self)
+            elif self.config.provider == "aws":
+                declare_aws_network_attachment(self)
             self.variable(
                 "network_cidr",
                 (
@@ -273,7 +279,7 @@ class TerraformGenerator:
                 prefix_minimum=16,
                 prefix_maximum=28 if self.config.provider == "gcp" else 20,
                 visible_when={"use_existing_network": False}
-                if self.config.provider == "azure"
+                if self.config.provider in {"aws", "azure"}
                 else None,
             )
             self._data_disk_inputs()
@@ -293,7 +299,7 @@ class TerraformGenerator:
             octet = r"(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])"
             self.variable(
                 "private_ip_address",
-                "Optional fixed private IPv4 address for this VM. Leave blank for cloud allocation. The address must be usable in the selected workload subnet; provider-reserved addresses are rejected. AWS public VMs use the first public subnet, private VMs use the first private subnet; Azure uses its derived workload subnet or the declared existing subnet range, and GCP uses the entered subnet directly. The address is not reserved independently and availability is not checked. Changing it can interrupt access or replace resources; review the plan.",
+                "Optional fixed private IPv4 address for this VM. Leave blank for cloud allocation. The address must be usable in the selected workload subnet; provider-reserved addresses are rejected. In new-network mode AWS public VMs use the first public subnet and private VMs use the first private subnet; Azure uses its derived workload subnet. Existing AWS/Azure subnet mode uses the declared existing range, and GCP uses the entered subnet directly. The address is not reserved independently and availability is not checked. Changing it can interrupt access or replace resources; review the plan.",
                 "",
                 pattern=rf"^($|{octet}\.{octet}\.{octet}\.{octet})$",
             )
@@ -382,6 +388,7 @@ class TerraformGenerator:
                     self.config.provider, self.config.architecture_type == "windows_virtual_machine"
                 ),
                 *([gcp_attachment_precondition()] if self.config.provider == "gcp" else []),
+                *([aws_attachment_precondition()] if self.config.provider == "aws" else []),
                 *(
                     [self._gp3_precondition("boot_disk"), self._cpu_credit_precondition()]
                     if self.config.provider == "aws"
@@ -403,7 +410,7 @@ class TerraformGenerator:
         return block(
             "precondition",
             condition=ref(private_ip_condition(self.config.provider, self.config.is_public)),
-            error_message="Choose a usable private IPv4 address in the generated VM subnet, excluding provider-reserved addresses, or leave it blank for cloud allocation.",
+            error_message="Choose a usable private IPv4 address in the selected VM subnet, excluding provider-reserved addresses, or leave it blank for cloud allocation.",
         )
 
     def _data_disk_inputs(self) -> None:

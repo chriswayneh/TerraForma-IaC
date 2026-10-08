@@ -1,6 +1,6 @@
 # VM input contract design
 
-This is the required design inventory for the expanded VM wizard in roadmap v0.4. It is not a statement that the released templates implement every setting. The goal is a provisioning workflow that requires infrastructure knowledge, not Terraform syntax. Current development coverage is tracked in the [roadmap](ROADMAP.md), including guided [Azure](AZURE_EXISTING_SUBNET.md) and [Google Cloud](GCP_EXISTING_SUBNET.md) existing-subnet inputs.
+This is the required design inventory for the expanded VM wizard in roadmap v0.4. It is not a statement that the released templates implement every setting. The goal is a provisioning workflow that requires infrastructure knowledge, not Terraform syntax. Current development coverage is tracked in the [roadmap](ROADMAP.md), including guided [AWS](AWS_EXISTING_SUBNET.md), [Azure](AZURE_EXISTING_SUBNET.md) and [Google Cloud](GCP_EXISTING_SUBNET.md) existing-subnet inputs.
 
 Each resource adapter must declare questions, types, defaults, validation, visibility conditions, whether the value is a secret/reference, and how it maps to Terraform. The UI and CLI consume that contract. Required-variable completeness is checked after generation; the list must not be maintained independently from the adapter. Choices that require live account data are checked during preflight, with offline verification status shown clearly.
 

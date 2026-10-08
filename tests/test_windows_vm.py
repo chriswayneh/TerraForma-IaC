@@ -46,7 +46,11 @@ def test_windows_access_image_and_no_secret_collection(public, encryption, data_
     assert group["ingress"][0]["from_port"] == 3389
     assert group["ingress"][0]["to_port"] == 3389
     assert group["ingress"][0]["cidr_blocks"] == ["${var.allowed_cidr}"]
-    ami = main["data"][1]['"aws_ami"']['"windows"']
+    ami = next(
+        entry['"aws_ami"']['"windows"']
+        for entry in main["data"]
+        if '"aws_ami"' in entry and '"windows"' in entry['"aws_ami"']
+    )
     assert [item.strip('"') for item in ami["owners"]] == ["amazon"]
     assert "Windows_Server-2022-English-Full-Base-*" in ami["filter"][0]["values"][0]
     assert "var.os_image" in ami["filter"][0]["values"][0]

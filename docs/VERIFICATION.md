@@ -1,5 +1,14 @@
 # Verification record
 
+## Existing AWS subnet — v0.4.0 development checkpoint
+
+- The default suite passes 2,279 tests with 366 optional/native/platform cases skipped. Twenty-four new regressions cover ownership, required subnet/security-group/range inputs, inactive-field conflicts, reserved IPs, safe errors, offline API round trips, terminal collection and browser address calculations.
+- Eight Linux/Windows, public/private and catalog/custom existing-subnet combinations and all 24 baseline AWS recipe combinations pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks. Two additional mocked tests (sixteen plan runs) confirm zero managed network resources in existing mode and reject mismatched CIDRs, shared-account subnets, incompatible security-group accounts/VPCs, IPv6, Outposts and nonstandard zones. All AWS provider operations in these plans are mocked; no live provider or cloud credentials are used.
+- Browser imports restore both OS variants, show the declared existing subnet's usable addresses and generate with cloud consent off. Missing review focuses its field; correction succeeds. The 390×844 check shows no horizontal page overflow; temporary viewport settings and synthetic entries were cleared. The screenshot uses synthetic references.
+- This checkpoint does not establish effective rule/ACL safety, live attachment, available IP capacity, guest login, state upgrade, recovery or teardown. v0.4.0 remains development; live acceptance gates remain open.
+- Azure checkpoint CI (`f7f87ac`, run 37859004930) passed all default/platform and package jobs, but its isolated native private-address fixture omitted newly referenced network-mode variables. The fixture now declares those variables and all 24 native private-address cases pass. Native provider validation of generated configurations was unaffected.
+- Ruff checks and formatting pass across 114 Python files, JavaScript syntax and local documentation links pass, and the rebuilt development wheel passes fourteen offline fixture imports plus bundled UI checks from an isolated package directory using existing local dependencies. This is not a released artifact or a fresh dependency-resolution claim.
+
 ## Existing Azure subnet — v0.4.0 development checkpoint
 
 - The full default suite passes 2,255 tests with 356 optional/native/platform cases skipped. Twenty-one new regressions cover ownership, subscription/CIDR guards, provider-reserved addresses, explicit range input, terminal questions, safe errors, offline API round trips and browser address calculations.

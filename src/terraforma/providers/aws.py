@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from terraforma.aws_network_attachment import add_aws_attachment_data
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 
@@ -34,12 +35,18 @@ def build_aws(builder: TerraformGenerator) -> None:
         build_static(builder)
         return
     standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+    owned_network = {"count": ref("var.use_existing_network ? 0 : 1")} if standalone else {}
+    subnet_count = ref("var.use_existing_network ? 0 : 2") if standalone else 2
+    vpc_id = ref("aws_vpc.this[0].id" if standalone else "aws_vpc.this.id")
+    gateway_id = ref(
+        "aws_internet_gateway.this[0].id" if standalone else "aws_internet_gateway.this.id"
+    )
     zone_expression = "data.aws_availability_zones.available.names[count.index]"
     zone_checks = []
     if standalone:
         builder.variable(
             "availability_zone",
-            "AWS availability zone name, such as us-east-1b. Leave blank to use the first available standard zone reported for the account. Names are account-specific; zone IDs, Local Zones and Wavelength Zones are unsupported. The recipe still creates public/private subnets in two standard zones, with the selected zone first. Changing placement replaces subnets and can replace the VM, delete disks and change addresses. Review backups and the plan. Optional VM metadata preflight checks the selected zone's reported instance-type offering; capacity and the second usable zone remain unverified. Offline generation does not check cloud availability.",
+            "AWS availability zone name, such as us-east-1b. For a new network, leave blank to use the first available standard zone reported for the account; the recipe creates public/private subnets in two standard zones, with the selected zone first. Existing-subnet mode inherits its zone; an entered zone must match subnet metadata. Names are account-specific; zone IDs, Local Zones and Wavelength Zones are unsupported. Changing placement can replace resources and delete disks. Optional VM metadata preflight checks a supplied zone's reported instance-type offering; capacity remains unverified. Offline generation does not check cloud availability.",
             "",
             pattern="^$|^[a-z]{2,4}(?:-[a-z0-9]+)+-[0-9]+[a-z]$",
         )
@@ -79,6 +86,7 @@ def build_aws(builder: TerraformGenerator) -> None:
     )
     builder.resource(
         "aws_vpc",
+        **owned_network,
         cidr_block=ref("var.network_cidr")
         if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else "10.0.0.0/16",
@@ -89,9 +97,13 @@ def build_aws(builder: TerraformGenerator) -> None:
     builder.resource(
         "aws_subnet",
         "public",
-        count=2,
-        vpc_id=ref("aws_vpc.this.id"),
-        cidr_block=ref("cidrsubnet(aws_vpc.this.cidr_block, 8, count.index)"),
+        count=subnet_count,
+        vpc_id=vpc_id,
+        cidr_block=ref(
+            "cidrsubnet(aws_vpc.this[0].cidr_block, 8, count.index)"
+            if standalone
+            else "cidrsubnet(aws_vpc.this.cidr_block, 8, count.index)"
+        ),
         availability_zone=ref(zone_expression),
         map_public_ip_on_launch=True,
         children=zone_checks,
@@ -99,27 +111,32 @@ def build_aws(builder: TerraformGenerator) -> None:
     builder.resource(
         "aws_subnet",
         "private",
-        count=2,
-        vpc_id=ref("aws_vpc.this.id"),
-        cidr_block=ref("cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)"),
+        count=subnet_count,
+        vpc_id=vpc_id,
+        cidr_block=ref(
+            "cidrsubnet(aws_vpc.this[0].cidr_block, 8, count.index + 10)"
+            if standalone
+            else "cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)"
+        ),
         availability_zone=ref(zone_expression),
         children=zone_checks,
     )
-    builder.resource("aws_internet_gateway", vpc_id=ref("aws_vpc.this.id"))
+    builder.resource("aws_internet_gateway", **owned_network, vpc_id=vpc_id)
     builder.resource(
         "aws_route_table",
         "public",
-        vpc_id=ref("aws_vpc.this.id"),
-        children=[
-            block("route", cidr_block="0.0.0.0/0", gateway_id=ref("aws_internet_gateway.this.id"))
-        ],
+        **owned_network,
+        vpc_id=vpc_id,
+        children=[block("route", cidr_block="0.0.0.0/0", gateway_id=gateway_id)],
     )
     builder.resource(
         "aws_route_table_association",
         "public",
-        count=2,
+        count=subnet_count,
         subnet_id=ref("aws_subnet.public[count.index].id"),
-        route_table_id=ref("aws_route_table.public.id"),
+        route_table_id=ref(
+            "aws_route_table.public[0].id" if standalone else "aws_route_table.public.id"
+        ),
     )
     if builder.config.enable_encryption:
         builder.resource(
@@ -142,29 +159,37 @@ def build_aws(builder: TerraformGenerator) -> None:
     balanced = builder.config.architecture_type == "load_balanced_tier"
     private = balanced or not builder.config.is_public
     if private:
-        builder.resource("aws_eip", "nat", domain="vpc")
+        builder.resource("aws_eip", "nat", **owned_network, domain="vpc")
         builder.resource(
             "aws_nat_gateway",
-            allocation_id=ref("aws_eip.nat.id"),
+            **owned_network,
+            allocation_id=ref("aws_eip.nat[0].id" if standalone else "aws_eip.nat.id"),
             subnet_id=ref("aws_subnet.public[0].id"),
             depends_on=[ref("aws_internet_gateway.this")],
         )
         builder.resource(
             "aws_route_table",
             "private",
-            vpc_id=ref("aws_vpc.this.id"),
+            **owned_network,
+            vpc_id=vpc_id,
             children=[
                 block(
-                    "route", cidr_block="0.0.0.0/0", nat_gateway_id=ref("aws_nat_gateway.this.id")
+                    "route",
+                    cidr_block="0.0.0.0/0",
+                    nat_gateway_id=ref(
+                        "aws_nat_gateway.this[0].id" if standalone else "aws_nat_gateway.this.id"
+                    ),
                 )
             ],
         )
         builder.resource(
             "aws_route_table_association",
             "private",
-            count=2,
+            count=subnet_count,
             subnet_id=ref("aws_subnet.private[count.index].id"),
-            route_table_id=ref("aws_route_table.private.id"),
+            route_table_id=ref(
+                "aws_route_table.private[0].id" if standalone else "aws_route_table.private.id"
+            ),
         )
     egress = block("egress", from_port=0, to_port=0, protocol="-1", cidr_blocks=["0.0.0.0/0"])
     ingress = block(
@@ -179,10 +204,13 @@ def build_aws(builder: TerraformGenerator) -> None:
     builder.resource(
         "aws_security_group",
         "web",
+        **owned_network,
         name_prefix=ref('"${var.project_name}-web-"'),
-        vpc_id=ref("aws_vpc.this.id"),
+        vpc_id=vpc_id,
         children=[ingress, egress],
     )
+    if standalone:
+        add_aws_attachment_data(builder)
     builder.variable(
         "image_version",
         "Use latest to resolve the selected AWS image at planning time, or an exact AMI ID in the chosen region. The AMI must match the selected OS name, trusted owner, x86_64 architecture and HVM filters; custom publishers are unsupported. Verify availability, access and compatibility before planning. Changing an image can replace the VM and destroy boot-disk data. Pinning does not automatically patch the VM.",
@@ -343,12 +371,20 @@ def build_aws(builder: TerraformGenerator) -> None:
         if standalone
         else {},
         **{"disable_api_termination": ref("var.protect_vm")} if standalone else {},
-        subnet_id=ref(f"aws_subnet.{('private' if private else 'public')}[count.index % 2].id"),
+        subnet_id=ref(
+            f"var.use_existing_network ? data.aws_subnet.existing[0].id : aws_subnet.{('private' if private else 'public')}[count.index % 2].id"
+            if standalone
+            else f"aws_subnet.{('private' if private else 'public')}[count.index % 2].id"
+        ),
         associate_public_ip_address=not private,
         **{"private_ip": ref('var.private_ip_address == "" ? null : var.private_ip_address')}
         if standalone
         else {},
-        vpc_security_group_ids=[ref("aws_security_group.web.id")],
+        vpc_security_group_ids=ref(
+            "var.use_existing_network ? [data.aws_security_group.existing[0].id] : [aws_security_group.web[0].id]"
+        )
+        if standalone
+        else [ref("aws_security_group.web.id")],
         **{"key_name": ref("aws_key_pair.this.key_name")}
         if standalone
         else {

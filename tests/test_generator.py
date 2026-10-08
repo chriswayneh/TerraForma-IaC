@@ -468,7 +468,8 @@ def test_native_private_ip_precondition(tmp_path, provider, public, network, sub
     variables = [
         item.render()
         for item in generator.variables
-        if item.labels[0] in {"network_cidr", "private_ip_address"}
+        if item.labels[0]
+        in {"network_cidr", "private_ip_address", "use_existing_network", "existing_subnet_cidr"}
     ]
     resource = block(
         "resource",

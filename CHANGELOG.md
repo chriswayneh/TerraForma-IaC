@@ -2,6 +2,9 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added standalone AWS Linux/Windows attachment to one existing IPv4-only standard-zone subnet and one reviewed security group, with account/VPC/CIDR/zone guards. Existing mode leaves VPC, subnet, rules, routes and gateways separately managed. See [AWS subnet inputs](docs/AWS_EXISTING_SUBNET.md).
+- Added address moves for prior uncounted AWS network resources and offline mocked plan tests for ownership, mismatched CIDRs, shared subnets, incompatible security groups, IPv6, Outposts and nonstandard zones. Live attachment and state migration remain unverified.
+
 - Added standalone Azure Linux/Windows attachment to one reviewed existing IPv4-only subnet with a subnet NSG in the selected subscription and VM region. Existing mode leaves VNet, subnet, NSG association and NAT ownership separate, checks declared subnet metadata, and validates private addresses against the actual declared range. See [Azure subnet inputs](docs/AZURE_EXISTING_SUBNET.md).
 - Added counted-address moves for eight prior Azure network resources and offline mocked plan ownership/metadata checks. Switching deployed projects can still delete owned infrastructure; live migration is unverified.
 - Corrected the browser private-address hint after project import to use restored inputs instead of initial defaults.

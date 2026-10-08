@@ -38,7 +38,7 @@ def private_ip_condition(provider: str, public: bool) -> str:
         if provider == "gcp"
         else f"cidrsubnet(var.network_cidr, 8, {1 if provider == 'azure' else 0 if public else 10})"
     )
-    if provider == "azure":
+    if provider in {"aws", "azure"}:
         subnet = f"(var.use_existing_network ? var.existing_subnet_cidr : {subnet})"
     first, last = (2, -3) if provider == "gcp" else (4, -2)
 

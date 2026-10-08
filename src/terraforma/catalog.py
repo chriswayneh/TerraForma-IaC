@@ -25,14 +25,16 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         "Automatic provisioning",
         "Custom resource composition",
     ]
-    if not (standalone and config.provider in {"gcp", "azure"}):
+    if not standalone:
         unsupported.append("Existing-network attachment")
     else:
         unsupported.extend(
             [
                 "GCP Shared VPC or cross-project subnets"
                 if config.provider == "gcp"
-                else "Azure cross-subscription, delegated or unprotected existing subnets",
+                else "Azure cross-subscription, delegated or unprotected existing subnets"
+                if config.provider == "azure"
+                else "AWS shared VPC, cross-account, Outposts, Local Zone or Wavelength subnets",
                 "Existing IPv6/dual-stack networks",
                 "Managing existing-network access rules or NAT",
             ]
@@ -76,7 +78,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 else "Startup installs nginx and serves HTTP on port 80.",
                 "Creates a new network with a configurable private IPv4 range, or optionally attaches to one reviewed existing IPv4-only subnet in the selected GCP project/region. Existing mode creates no network, access rules, routes, NAT or API enablement; inherited policies and connectivity remain unverified."
                 if standalone and config.provider == "gcp"
-                else "Creates a new network with a configurable private IPv4 range; subnet count and derivation are fixed by this recipe. Connected-network overlap requires manual preflight."
+                else "Creates a new network with a configurable private IPv4 range, or optionally attaches to one reviewed existing IPv4-only subnet. Existing rules, routing and egress remain separately managed; connected-network overlap and effective access require independent review."
                 if standalone
                 else "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."
@@ -158,7 +160,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         if standalone and config.provider == "aws":
             fixed.append(
-                "The VM and optional data disk use the first generated subnet's zone. An optional standard availability zone name sets that first zone; a second standard zone is still required. AWS zone names are account-specific, and live availability/capacity remain unverified."
+                "In new-network mode the VM and optional data disk use the first generated subnet's zone; an optional standard zone name sets that first zone and a second standard zone is required. Existing-subnet mode inherits its zone and rejects a conflicting supplied zone. AWS zone names are account-specific, and live availability/capacity remain unverified."
             )
             unsupported.extend(
                 ["AWS Local Zones", "AWS Wavelength Zones", "AWS availability zone IDs"]
