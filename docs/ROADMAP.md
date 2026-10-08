@@ -79,6 +79,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.
 - Specify artifact permissions, log redaction, state ownership, dependency trust, and recovery behavior before adding apply.
+- The [state protection design](STATE_PROTECTION.md) records planned backend inputs, separate backend/workload identity, locking, retention, migration and recovery acceptance requirements. Backend integration and live verification remain planned.
 - Terminal artifact generation has documented creation permissions and best-effort failure/interruption cleanup, including explicit leftover-file errors. Protected state and atomic/durable execution artifacts remain outstanding. See [artifact handling](ARTIFACTS.md).
 - Terminal output now flushes and synchronizes each generated file before reporting success. Synchronization failures follow existing cleanup/recovery rules; directory synchronization and atomic project publication remain outstanding.
 

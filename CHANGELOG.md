@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Documented future protected-state inputs and acceptance requirements for S3, Azure Blob and GCS, with separate identity, locking, recovery and migration boundaries. Backend integration and managed provisioning remain planned.
+
 - GCP disk-key review also blocks prior customer-supplied material retained in a plan after removal or migration to a Cloud KMS reference. The report omits values; removal does not make the original plan safe to publish.
 
 - Plan review policy 0.11.0 adds GCP boot/persistent disk key-access review, blocks changes to existing key references and inline customer-supplied key material, and handles unresolved or malformed controls without exposing values. Effective encryption, key permissions and recovery remain unverified.

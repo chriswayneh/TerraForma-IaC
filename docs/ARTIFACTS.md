@@ -56,6 +56,8 @@ Receipts are unsigned local records. Anyone able to replace both files and recei
 
 Receipts supplement source review and [local plan review](PLAN_REVIEW.md). The protected state, plan-integrity, signing/provenance, and approval workflows remain future roadmap work.
 
+The [state protection design](STATE_PROTECTION.md) records the backend ownership, authentication, locking and recovery requirements before managed provisioning can be added. Backend configuration and state migration remain unimplemented.
+
 ## Local validation copies
 
 Validation works in a temporary copy of a trusted configuration. Common state, variable-value, saved plan (`.tfplan`/`.plan`) and plan JSON filenames are omitted, along with `.tfbackend`, `.terraformrc`/`terraform.rc`, crash logs and `.env` files. Filename matching is case-insensitive, including the existing excluded cache and credential directories. Provider locks, linter configuration, local modules and other assets remain available. These exclusions are naming rules, not a secret scanner; inspect other assets before validation.
