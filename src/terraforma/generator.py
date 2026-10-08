@@ -458,6 +458,7 @@ GENERATED_FILENAMES = frozenset(
         "variables.tf",
         "outputs.tf",
         "terraforma.project.json",
+        "terraforma.backend.json",
         "terraforma.receipt.json",
         "SHA256SUMS.txt",
     }

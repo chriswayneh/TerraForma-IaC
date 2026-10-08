@@ -12,7 +12,13 @@ from pydantic import ValidationError
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
-from terraforma.backend import load_and_review_backend
+from terraforma.backend import (
+    BACKEND_ADAPTER,
+    backend_input_contract,
+    load_and_review_backend,
+    review_backend,
+    validate_backend_answer,
+)
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.generator import (
     ArtifactCleanupError,
@@ -66,6 +72,71 @@ def check_backend_command(intent_path: Path, json_output: bool):
         for requirement in report["required_reviews"]:
             click.echo("- " + requirement)
         click.echo("No backend was configured, state accessed or deployment approved.")
+
+
+@main.command("backend-wizard")
+@click.option(
+    "--dir", "target_dir", required=True, type=click.Path(file_okay=False, path_type=Path)
+)
+def backend_wizard_command(target_dir: Path):
+    """Save non-secret backend inputs through an offline guided questionnaire."""
+    try:
+        project_destination(target_dir)
+    except (OSError, ValueError):
+        raise click.ClickException(
+            "Choose a fresh writable directory for backend inputs."
+        ) from None
+    click.echo(
+        "Enter existing backend references only. Keep credentials outside this questionnaire."
+    )
+    click.echo("This saves inputs; it does not configure storage, verify access or migrate state.")
+    backend = ask(
+        questionary.select(
+            "Select existing state storage:",
+            choices=[
+                questionary.Choice("AWS S3", value="s3"),
+                questionary.Choice("Azure Blob Storage", value="azurerm"),
+                questionary.Choice("Google Cloud Storage", value="gcs"),
+            ],
+        )
+    )
+    answers = {"backend": backend}
+    for definition in backend_input_contract(backend):
+        name = definition["name"]
+        if definition["kind"] == "boolean":
+            value = ask(questionary.confirm(definition["label"] + "?", default=True))
+            if value is not True:
+                raise click.ClickException("S3 lockfile intent is required; no file was saved.")
+        else:
+            value = ask(
+                questionary.text(
+                    definition["label"] + ":",
+                    default=definition["default"],
+                    validate=lambda value, field=name: validate_backend_answer(
+                        backend, answers, field, value
+                    ),
+                )
+            )
+        answers[name] = value
+    try:
+        intent = BACKEND_ADAPTER.validate_python(answers)
+        raw = json.dumps(intent.model_dump(), indent=2) + "\n"
+        review_backend(raw.encode("utf-8"))
+    except (ValueError, TypeError):
+        raise click.ClickException(
+            "Valid non-secret backend references are required; values omitted."
+        ) from None
+    try:
+        destination = write_configuration({"terraforma.backend.json": raw}, target_dir)
+    except ArtifactCleanupError as error:
+        raise click.ClickException(str(error)) from None
+    except (OSError, ValueError):
+        raise click.ClickException(
+            "Unable to save backend inputs in a fresh writable directory."
+        ) from None
+    click.echo(f"Saved backend inputs in {destination / 'terraforma.backend.json'}")
+    click.echo("Run check-backend on this file to review the remaining verification requirements.")
+    click.echo("No backend was configured, state accessed or deployment approved.")
 
 
 @main.command("doctor")

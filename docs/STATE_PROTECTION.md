@@ -12,7 +12,20 @@ Generated ignore rules and file permissions reduce accidental exposure; they do 
 
 ## Planned backend choices
 
-Development on `main` includes an offline input contract, separate from generated project specifications. Check a non-secret JSON file with:
+Development on `main` includes an offline input contract, separate from generated project specifications.
+
+Create the file through a terminal questionnaire when you prefer guided inputs:
+
+```text
+terraforma backend-wizard --dir ./state-inputs
+terraforma check-backend --file ./state-inputs/terraforma.backend.json
+```
+
+Select existing state storage, then enter the state owner, environment and storage references. The questionnaire uses the same strict validation as the checker. S3 requires an explicit lockfile declaration; declining it or canceling a question saves nothing. This declares future configuration intent, not verified lock operation.
+
+The wizard saves only `terraforma.backend.json` in a fresh directory. It refuses existing Terraform/state/generated artifacts, uses the terminal writer's creation permissions and file synchronization, and applies its best-effort cleanup on write failure. Existing notes are preserved. Directory durability, atomic publication and Windows ACL auditing remain outside this guarantee; see [artifact handling](ARTIFACTS.md). Backend inputs are not automatically merged into a generated project or browser ZIP, and no backend HCL is emitted.
+
+To check a JSON file you prepared separately:
 
 ```text
 terraforma check-backend --file backend.json

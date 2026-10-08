@@ -1,5 +1,11 @@
 # Verification record
 
+## Guided backend inputs checkpoint
+
+- The default suite passes 2,091 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 103 Python files; whitespace and changed documentation link checks pass.
+- Twenty-three new regressions cover guided S3/Azure Blob/GCS file creation and checker round trips, cancellation at different stages, occupied destinations, declined S3 lockfile intent, invalid inputs, concurrent file creation, sync-error cleanup and shared prompt validation. The targeted backend/CLI/artifact suite passes 134 tests with two platform cases skipped.
+- The wizard saves only a standalone non-secret intent using the existing terminal writer. No backend HCL, credential read, cloud request, state access, migration, IAM grant or provisioning operation was performed. Backend integration and authentication/locking/recovery verification remain planned.
+
 ## Offline backend contract checkpoint
 
 - The full default suite passes 2,066 tests with 292 optional/native/platform cases skipped. All 73 backend regressions pass in a targeted run after the final reserved-name refinements, including two cases added after full-suite collection. Ruff checks and formatting pass across 102 Python files; whitespace and changed documentation link checks pass.

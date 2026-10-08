@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, field_validator
 
 from terraforma.file_input import read_regular_bytes
 from terraforma.json_input import strict_json
@@ -124,6 +124,56 @@ BACKEND_ADAPTER = TypeAdapter(
         S3BackendIntent | AzureBackendIntent | GCSBackendIntent, Field(discriminator="backend")
     ]
 )
+
+
+def backend_input_contract(backend: str) -> list[dict]:
+    models = {"s3": S3BackendIntent, "azurerm": AzureBackendIntent, "gcs": GCSBackendIntent}
+    if backend not in models:
+        raise ValueError("Select a supported backend type.")
+    labels = {
+        "owner": "State owner identifier (team or operator)",
+        "environment": "Environment label (lowercase)",
+        "account_id": "AWS account ID for the existing state bucket",
+        "bucket": "Existing state bucket name",
+        "region": "Region of the existing state bucket",
+        "key": "State file path within storage (for example, development/network/terraform.tfstate)",
+        "use_lockfile": "Declare S3 lockfile use for future backend configuration",
+        "tenant_id": "Azure tenant ID for state storage",
+        "subscription_id": "Azure subscription ID for state storage",
+        "storage_account_name": "Existing Azure storage account name",
+        "container_name": "Existing Azure blob container name",
+        "project_id": "Google Cloud project ID for state storage",
+        "prefix": "State storage prefix (for example, development/network)",
+    }
+    return [
+        {
+            "name": name,
+            "label": labels[name],
+            "kind": "boolean" if field.annotation is bool else "text",
+            "default": True
+            if field.annotation is bool
+            else "development"
+            if name == "environment"
+            else "",
+            "sensitive": False,
+            "required": True,
+        }
+        for name, field in models[backend].model_fields.items()
+        if name not in {"schema_version", "backend"}
+    ]
+
+
+def validate_backend_answer(
+    backend: str, answers: dict, field: str, value: str | bool
+) -> bool | str:
+    if field not in {item["name"] for item in backend_input_contract(backend)}:
+        return "Choose a supported backend input."
+    try:
+        BACKEND_ADAPTER.validate_python({**answers, "backend": backend, field: value})
+    except ValidationError as error:
+        if any(item["loc"][-1] == field for item in error.errors()):
+            return "Enter a supported non-secret reference in the documented format."
+    return True
 
 
 def review_backend(raw: bytes) -> dict:

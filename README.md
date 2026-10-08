@@ -99,7 +99,7 @@ terraforma run --dir ./my-project --no-ai
 
 The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md). The current build still generates and validates files; it does not provision resources. An initial [local plan-review command](docs/PLAN_REVIEW.md) is available with `terraforma review-plan --file review.tfplan.json`. AI diagnostics require explicit opt-in.
 
-Development on `main` also checks a non-secret backend intent with `terraforma check-backend --file backend.json`. It validates supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
+Development on `main` includes `terraforma backend-wizard --dir ./state-inputs` to collect non-secret backend references through a questionnaire, and `terraforma check-backend --file backend.json` to check an existing file. These validate supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
 
 Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
 
