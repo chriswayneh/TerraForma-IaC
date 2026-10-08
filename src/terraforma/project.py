@@ -21,7 +21,7 @@ class ProjectSpecification(BaseModel):
     schema_version: Literal[1] = 1
     template_version: Literal["0.4.0.dev0", "0.3.0", "0.3.0.dev0"] = "0.4.0.dev0"
     recipe: WizardConfig
-    inputs: dict[str, str | int | bool] = Field(default_factory=dict, max_length=32)
+    inputs: dict[str, str | int | bool] = Field(default_factory=dict, max_length=48)
     secret_references: dict[str, str] = Field(default_factory=dict, max_length=16)
 
     @field_validator("schema_version", mode="before")
@@ -62,7 +62,12 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "name": name,
                 "label": {
                     "allowed_cidr": "Allowed client network (CIDR)",
-                    "network_cidr": "New network address range (CIDR)",
+                    "network_cidr": "VM subnet address range (CIDR)"
+                    if config.provider == "gcp"
+                    else "New network address range (CIDR)",
+                    "use_existing_network": "Use an existing subnet",
+                    "existing_subnetwork_resource": "Existing Google Cloud subnet resource",
+                    "confirm_existing_network_review": "Confirm your existing network review",
                     "private_ip_address": "Private IPv4 address (optional)",
                     "instance_type": "VM size",
                     "cpu_credit_mode": "CPU credit mode",
@@ -238,6 +243,7 @@ def validate_input(name: str, value: str, kind: str):
             "custom_image_owner_account_id",
             "custom_image_admin_username",
             "workload_identity_resource_id",
+            "existing_subnetwork_resource",
         }
         and value == ""
     ):
@@ -296,6 +302,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter the 12-digit AWS account ID that owns the custom AMI."
         elif definition["name"] == "custom_image_admin_username":
             message = "Enter the existing non-root Linux administrator username using lowercase letters, digits, underscores or hyphens."
+        elif definition["name"] == "existing_subnetwork_resource":
+            message = "Enter an exact Google Cloud subnet resource in projects/PROJECT/regions/REGION/subnetworks/NAME format; URLs and credentials are unsupported."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -400,6 +408,35 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if "use_existing_network" in effective:
+        if effective["use_existing_network"]:
+            if not effective["confirm_existing_network_review"]:
+                raise ProjectInputError(
+                    "confirm_existing_network_review",
+                    "Review the existing subnet, inherited policies, administrator access and egress before recording your declaration.",
+                )
+            if "network_cidr" not in specification.inputs:
+                raise ProjectInputError(
+                    "network_cidr",
+                    "Enter the actual primary IPv4 CIDR of the existing subnet; the new-network default cannot establish its range.",
+                )
+            resource = effective["existing_subnetwork_resource"]
+            if resource and (
+                resource.split("/")[1] != effective["gcp_project_id"]
+                or resource.split("/")[3] != effective["region"]
+            ):
+                raise ProjectInputError(
+                    "existing_subnetwork_resource",
+                    "Choose a subnet in the selected project and region; shared or cross-project attachment is unsupported.",
+                )
+        elif (
+            effective["existing_subnetwork_resource"]
+            or effective["confirm_existing_network_review"]
+        ):
+            raise ProjectInputError(
+                "use_existing_network",
+                "Enable existing subnet mode before supplying its reference or review declaration.",
+            )
     if "workload_identity_type" in effective:
         existing_identity = effective["workload_identity_type"] == "existing_user_assigned"
         identity_id = effective["workload_identity_resource_id"]

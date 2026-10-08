@@ -154,7 +154,7 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         if item["name"] not in payload.inputs
         and not (iap_access and item["name"] == "allowed_cidr")
     ]
-    if iap_access:
+    if iap_access and not payload.inputs.get("use_existing_network", False):
         project["guide"]["route"][0] = "Authorized Google IAP tunnel"
         project["guide"]["components"][-1]["explanation"] = (
             "The administrator firewall accepts one TCP port from Google's IAP IPv4 proxy range. "
@@ -166,6 +166,35 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             "The targeted proxy firewall rule requires manual plan review; no access is approved."
         )
     project["notes"].append(compiled["verification"])
+    if payload.inputs.get("use_custom_image", False):
+        for component in project["guide"]["components"]:
+            if component["name"] in {
+                "Amazon EC2",
+                "Azure virtual machines",
+                "Google Compute Engine",
+            }:
+                component["explanation"] = (
+                    "One VM uses the declared existing custom image, selected machine size and boot disk. Image provenance, guest agents, OS family, licensing, boot compatibility and administrator access remain unverified. Application initialization is not configured."
+                )
+    if payload.inputs.get("use_existing_network", False):
+        project["guide"]["components"][0] = {
+            "name": "Existing Google Cloud subnet",
+            "explanation": "The VM attaches to the declared existing subnet. No VPC, subnet, firewall, route, router, NAT or Compute API enablement is managed in this mode. Existing policies, routing and egress remain independently managed and unverified.",
+        }
+        for component in project["guide"]["components"]:
+            if component["name"] == "Administrator access":
+                component["explanation"] = (
+                    "Administrator access depends on existing firewall policies, routing and guest authentication. The selected CIDR or IAP path is a declaration only; this mode creates no access rule, target network tag, IAM grant or connection. Windows activation must also be provided by the existing network."
+                )
+        project["guide"]["route"][1] = "Existing access rules (separate review)"
+        project["guide"]["route"][0] = (
+            "Existing IAP setup (unverified)"
+            if iap_access
+            else "Existing administrator routing (unverified)"
+        )
+        project["notes"].append(
+            "Existing subnet mode leaves network infrastructure and Compute API enablement separately managed. Review inherited rules, egress, administrator access and Windows activation. No existing network tag is attached automatically; generation does not verify effective access."
+        )
     if payload.recipe.architecture_type in {
         "virtual_machine",
         "windows_virtual_machine",

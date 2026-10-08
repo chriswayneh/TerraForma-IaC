@@ -5,6 +5,10 @@ from typing import Any, Literal
 from terraforma.azure_identity import declare_azure_identity_inputs
 from terraforma.configuration import AZURE_RESERVED_USERNAMES, LINUX_IMAGE_CHOICES, WizardConfig
 from terraforma.custom_images import custom_image_preconditions, declare_custom_image_inputs
+from terraforma.gcp_network_attachment import (
+    declare_gcp_network_attachment,
+    gcp_attachment_precondition,
+)
 from terraforma.hcl import Block, Expression, block, ref, value_hcl
 from terraforma.network_inputs import private_ip_condition
 from terraforma.providers.aws import build_aws
@@ -247,13 +251,19 @@ class TerraformGenerator:
                 else LINUX_IMAGE_CHOICES[self.config.provider],
             )
         if self.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
+            if self.config.provider == "gcp":
+                declare_gcp_network_attachment(self)
             self.variable(
                 "network_cidr",
-                "Address range for the new VM network. Check for overlap with networks you will connect; existing-network attachment is not configured. "
+                (
+                    "VM subnet address range. "
+                    if self.config.provider == "gcp"
+                    else "Address range for the new VM network. Check for overlap with networks you will connect; existing-network attachment is not configured. "
+                )
                 + {
                     "aws": "The recipe creates two public and two private subnets with eight additional prefix bits, in two available zones.",
                     "azure": "The recipe derives one workload subnet with eight additional prefix bits.",
-                    "gcp": "This range is used directly for one regional subnet; GCP VPC networks have no single enclosing address range.",
+                    "gcp": "For a new network this range creates one regional subnet. In existing-network mode, enter the actual primary CIDR of the selected subnet; Terraform later checks it against subnet metadata. The existing range is not modified. GCP VPC networks have no enclosing address range.",
                 }[self.config.provider],
                 "10.0.1.0/24" if self.config.provider == "gcp" else "10.0.0.0/16",
                 network_policy="vm_network",
@@ -365,6 +375,7 @@ class TerraformGenerator:
                 *custom_image_preconditions(
                     self.config.provider, self.config.architecture_type == "windows_virtual_machine"
                 ),
+                *([gcp_attachment_precondition()] if self.config.provider == "gcp" else []),
                 *(
                     [self._gp3_precondition("boot_disk"), self._cpu_credit_precondition()]
                     if self.config.provider == "aws"

@@ -1,5 +1,7 @@
 # Windows virtual machines
 
+v0.4.0 development adds optional [existing GCP subnet attachment](GCP_EXISTING_SUBNET.md). Existing network access, egress and Windows activation connectivity remain separately managed and unverified.
+
 v0.4.0 development adds guided [existing custom-image inputs](CUSTOM_IMAGES.md). This optional path requires an image compatibility declaration; image trust, provisioning agents, password recovery and access remain unverified.
 
 AWS and GCP standalone VMs offer [boot-disk deletion or retention](BOOT_DISK_LIFECYCLE.md). The existing deletion default is preserved. Retention requires separate recovery, key preservation and cleanup; live lifecycle behavior remains unverified.

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from terraforma.gcp_network_attachment import (
+    add_existing_subnetwork_data,
+    add_network_address_moves,
+)
 from terraforma.hcl import block, ref
 
 if TYPE_CHECKING:
@@ -9,6 +13,23 @@ if TYPE_CHECKING:
 
 
 def build_gcp(builder: TerraformGenerator) -> None:
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+    owned_network = {"count": ref("var.use_existing_network ? 0 : 1")} if standalone else {}
+    network_id = (
+        ref(
+            "var.use_existing_network ? data.google_compute_subnetwork.existing[0].network : google_compute_network.this[0].id"
+        )
+        if standalone
+        else ref("google_compute_network.this.id")
+    )
+    network_name = network_id if standalone else ref("google_compute_network.this.name")
+    subnet_id = (
+        ref(
+            "var.use_existing_network ? data.google_compute_subnetwork.existing[0].self_link : google_compute_subnetwork.this[0].id"
+        )
+        if standalone
+        else ref("google_compute_subnetwork.this.id")
+    )
     builder.variable("gcp_project_id", "Existing Google Cloud project ID with billing enabled.")
     builder.variable("region", "Google Cloud region.", "us-central1")
     builder.main.append(
@@ -20,31 +41,38 @@ def build_gcp(builder: TerraformGenerator) -> None:
     builder.resource(
         "google_project_service",
         "compute",
+        **owned_network,
         service="compute.googleapis.com",
         disable_on_destroy=False,
     )
     builder.resource(
         "google_compute_network",
+        **owned_network,
         name=ref("var.project_name"),
         auto_create_subnetworks=False,
         depends_on=[ref("google_project_service.compute")],
     )
     builder.resource(
         "google_compute_subnetwork",
+        **owned_network,
         name=ref("var.project_name"),
         ip_cidr_range=ref("var.network_cidr")
         if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else "10.0.1.0/24",
         region=ref("var.region"),
-        network=ref("google_compute_network.this.id"),
+        network=ref("google_compute_network.this[0].id")
+        if standalone
+        else ref("google_compute_network.this.id"),
         private_ip_google_access=True,
     )
+    if standalone:
+        add_existing_subnetwork_data(builder)
+        add_network_address_moves(builder)
     if builder.config.architecture_type == "secure_database":
         build_database(builder)
         return
     builder.variable("zone", "Compute zone in the chosen region.", "us-central1-a")
     windows = builder.config.architecture_type == "windows_virtual_machine"
-    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     if standalone:
         builder.variable(
             "host_maintenance_policy",
@@ -72,6 +100,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
         )
     builder.resource(
         "google_compute_firewall",
+        **owned_network,
         name=ref(
             '"${var.project_name}-rdp"'
             if windows
@@ -79,7 +108,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
             if standalone
             else '"${var.project_name}-http"'
         ),
-        network=ref("google_compute_network.this.name"),
+        network=network_name,
         direction="INGRESS",
         disabled=False,
         source_ranges=ref(
@@ -98,8 +127,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
         builder.resource(
             "google_compute_route",
             "windows_activation",
+            **owned_network,
             name=ref('"${var.project_name}-windows-activation"'),
-            network=ref("google_compute_network.this.id"),
+            network=network_id,
             dest_range="35.190.247.13/32",
             next_hop_gateway="default-internet-gateway",
             priority=1000,
@@ -108,8 +138,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
         builder.resource(
             "google_compute_firewall",
             "windows_activation",
+            **owned_network,
             name=ref('"${var.project_name}-windows-activation"'),
-            network=ref("google_compute_network.this.name"),
+            network=network_name,
             direction="EGRESS",
             destination_ranges=["35.190.247.13/32"],
             target_tags=["terraforma-web"],
@@ -125,14 +156,18 @@ def build_gcp(builder: TerraformGenerator) -> None:
         )
     builder.resource(
         "google_compute_router",
+        **owned_network,
         name=ref("var.project_name"),
         region=ref("var.region"),
-        network=ref("google_compute_network.this.id"),
+        network=network_id,
     )
     builder.resource(
         "google_compute_router_nat",
+        **owned_network,
         name=ref("var.project_name"),
-        router=ref("google_compute_router.this.name"),
+        router=ref("google_compute_router.this[0].name")
+        if standalone
+        else ref("google_compute_router.this.name"),
         region=ref("var.region"),
         nat_ip_allocate_option="AUTO_ONLY",
         source_subnetwork_ip_ranges_to_nat="ALL_SUBNETWORKS_ALL_IP_RANGES",
@@ -141,7 +176,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
     balanced = builder.config.architecture_type == "load_balanced_tier"
     network = block(
         "network_interface",
-        subnetwork=ref("google_compute_subnetwork.this.id"),
+        subnetwork=subnet_id,
         **{"network_ip": ref('var.private_ip_address == "" ? null : var.private_ip_address')}
         if standalone
         else {},
@@ -390,7 +425,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
             machine_type=ref("var.machine_type"),
             zone=ref("var.zone"),
             **{"allow_stopping_for_update": False} if standalone else {},
-            tags=["terraforma-web"],
+            tags=ref('var.use_existing_network ? [] : ["terraforma-web"]')
+            if standalone
+            else ["terraforma-web"],
             **{
                 "metadata": {"serial-port-enable": "FALSE"}
                 if windows

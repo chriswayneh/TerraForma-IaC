@@ -37,7 +37,7 @@ The setup files use **Terraform**, a tool that describes infrastructure in text 
 
 The released **v0.3.0** provides guided configuration questions, saved project specifications, import, export receipts, local plan review, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows acceptance and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
 
-**In development for v0.4.0:** guided [existing VM image inputs](docs/CUSTOM_IMAGES.md) for standalone Linux and Windows on all three clouds. Image compatibility and live deployment remain unverified.
+**In development for v0.4.0:** guided [existing VM image inputs](docs/CUSTOM_IMAGES.md) for standalone Linux and Windows on all three clouds. The development branch also supports [existing Azure workload identity](docs/AZURE_WORKLOAD_IDENTITY.md) and [existing GCP subnet inputs](docs/GCP_EXISTING_SUBNET.md). Compatibility, permissions and live deployment remain unverified.
 
 ## Screenshots
 

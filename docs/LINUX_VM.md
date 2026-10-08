@@ -1,5 +1,7 @@
 # Linux virtual machines
 
+v0.4.0 development adds optional [existing GCP subnet attachment](GCP_EXISTING_SUBNET.md), leaving inherited rules, routing, NAT and API enablement separately managed. Live attachment and access remain unverified.
+
 v0.4.0 development adds guided [existing custom-image inputs](CUSTOM_IMAGES.md). This optional path requires an image compatibility declaration; image trust, boot and access remain unverified.
 
 AWS and GCP standalone VMs offer [boot-disk deletion or retention](BOOT_DISK_LIFECYCLE.md). The existing deletion default is preserved. Retention requires separate recovery, key preservation and cleanup; live lifecycle behavior remains unverified.

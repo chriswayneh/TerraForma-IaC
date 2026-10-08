@@ -1,5 +1,7 @@
 # Google IAP administrator access
 
+In v0.4.0 development, [existing-subnet mode](GCP_EXISTING_SUBNET.md) creates no IAP firewall rule or network tag. The selected tunnel path is a declaration; existing rules, routing, tunnel IAM and guest authentication must be reviewed separately.
+
 On development `main`, standalone GCP Linux and Windows recipes offer **Administrator connection path**. Choose `iap_tunnel` to generate one targeted TCP firewall rule for Google's IPv4 IAP proxy range. The direct administrator network question is hidden because that value is unused by the tunnel rule. The default `administrator_network` choice preserves direct access and its existing restrictions.
 
 IAP can connect to a VM without an external IP. Keep **Public internet access** off for a private VM; choosing IAP does not change that separate setting. Linux uses SSH port 22 with OS Login; Windows uses RDP port 3389 with separately configured guest credentials. The recipe creates no tunnel IAM binding, guest account or connection. Existing cloud setup and access permissions remain required. Review [Google's IAP TCP forwarding setup](https://docs.cloud.google.com/iap/docs/using-tcp-forwarding) before provisioning.

@@ -97,7 +97,17 @@ Target: **v0.4.0**.
 
 Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](WINDOWS_VM.md) are in development alongside the foundation. [Standalone Linux VM recipes](LINUX_VM.md) collect region, supported Linux image, VM size, boot-disk size/type, one optional empty data disk, a new private network address range, optional workload identity, and restricted administrator access. Compute recipes now accept provider-specific exact image pins or latest; Azure standalone VMs expose optional managed boot diagnostics. AWS exposes detailed monitoring; AWS/GCP expose VM deletion protection. Azure and GCP expose Secure Boot with vTPM enabled; GCP also enables integrity monitoring. Optional data disk size/type questions appear only when enabled. Web tiers also expose their initial count. Guided existing-image references are available in v0.4.0 development for standalone Linux/Windows VMs. Broader VM configuration, network, identity policy, and lifecycle adapters remain planned; cloud creation/access/teardown has not been verified.
 
+| VM input area | Development status | Remaining work |
+| --- | --- | --- |
+| Operating system and images | Catalog choices and guided existing-image references on AWS, Azure and GCP | Account/image compatibility and guest boot evidence |
+| Capacity and disks | Machine size, boot disk, one optional data disk and documented provider choices | Broader disk/backup choices and live behavior |
+| Workload identity | Existing AWS profile/GCP service account; Azure system or one existing user-assigned identity | Effective permissions and attachment evidence |
+| Networks | New networks on all clouds; one existing GCP IPv4-only subnet | Existing AWS/Azure network inputs, broader composition and live access |
+| Tags and initialization | Environment labels and fixed recipe tags; standalone application setup remains external | Additional guided labels and trusted initialization inputs |
+| Release acceptance | Structural, lint and local mocked checks | Dedicated account creation, Linux/Windows login, teardown and recovery evidence |
+
 - Guided Linux and Windows VMs for EC2, Azure Virtual Machines, and Google Compute Engine.
+- GCP standalone VMs support [one existing IPv4-only subnet](GCP_EXISTING_SUBNET.md) in the selected project/region, with explicit CIDR/review guards and no management of inherited rules, routing, NAT or API enablement. Shared VPC and live attachment/access/cleanup remain outstanding.
 - Azure standalone Linux/Windows VMs support a system-assigned identity or [one existing user-assigned managed identity](AZURE_WORKLOAD_IDENTITY.md) in the selected subscription. Inactive and cross-subscription references fail closed; effective permissions, attachment and cleanup remain unverified.
 - Guided [existing VM images](CUSTOM_IMAGES.md) support private AWS AMIs with owner and Linux administrator references, exact Azure Compute Gallery image-version resource IDs and exact GCP image references. Catalog conflicts and missing compatibility declarations fail closed. Image provenance, guest compatibility and live deployment remain unverified.
 - Azure Windows generation uses the refreshed windowsserver2022 offer following legacy-offer deprecation. Existing-project image migration, regional version availability and application dependencies require separate review.

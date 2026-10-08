@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added standalone GCP Linux/Windows attachment to one reviewed existing IPv4-only subnet in the selected project/region. Existing mode leaves network infrastructure, access rules, Windows activation connectivity and API enablement separately managed; no existing network tag is adopted automatically. Exact CIDR and network review guards fail closed. See [existing subnet inputs](docs/GCP_EXISTING_SUBNET.md).
+- Added counted-address moves for prior standalone GCP network resources and mocked plan ownership tests. Switching an already managed project to existing mode can still delete its old owned infrastructure; no state ownership transfer is performed.
+- Expanded the bounded project input budget to 48 fields as the guided contracts grow. Unsupported and credential inputs remain rejected.
+
 - Corrected Azure custom images to require exact Compute Gallery image versions compatible with Trusted Launch. Managed images are rejected, version components are bounded, and boot protections remain configured. Earlier development managed-image references must be replaced before regeneration.
 
 - Added guided attachment of one existing Azure user-assigned managed identity in the selected subscription, with system-assigned behavior preserved by default. Missing, inactive and cross-subscription references fail closed; no identity creation or role assignment is added. Live access remains unverified. See [Azure workload identity](docs/AZURE_WORKLOAD_IDENTITY.md).

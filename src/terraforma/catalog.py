@@ -23,9 +23,18 @@ def recipe_capabilities(config: WizardConfig) -> dict:
     fixed = []
     unsupported = [
         "Automatic provisioning",
-        "Existing-network attachment",
         "Custom resource composition",
     ]
+    if not (standalone and config.provider == "gcp"):
+        unsupported.append("Existing-network attachment")
+    else:
+        unsupported.extend(
+            [
+                "GCP Shared VPC or cross-project subnets",
+                "GCP existing IPv6/dual-stack or legacy networks",
+                "Managing existing-network access rules or NAT",
+            ]
+        )
     if compute:
         image = {
             "aws": "Amazon Linux 2023 or Ubuntu 24.04 LTS from Amazon/Canonical",
@@ -63,7 +72,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 )
                 if standalone
                 else "Startup installs nginx and serves HTTP on port 80.",
-                "Creates a new network with a configurable private IPv4 range; subnet count and derivation are fixed by this recipe. Connected-network overlap requires manual preflight."
+                "Creates a new network with a configurable private IPv4 range, or optionally attaches to one reviewed existing IPv4-only subnet in the selected GCP project/region. Existing mode creates no network, access rules, routes, NAT or API enablement; inherited policies and connectivity remain unverified."
+                if standalone and config.provider == "gcp"
+                else "Creates a new network with a configurable private IPv4 range; subnet count and derivation are fixed by this recipe. Connected-network overlap requires manual preflight."
                 if standalone
                 else "Creates a new network and subnets with fixed address ranges.",
                 "Creates one server."

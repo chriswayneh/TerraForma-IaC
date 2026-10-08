@@ -1,5 +1,14 @@
 # Verification record
 
+## Existing GCP subnet — v0.4.0 development checkpoint
+
+- The full default suite passes 2,234 tests with 346 optional/native/platform cases skipped. Ruff checks and formatting pass across 110 Python files; JavaScript syntax and whitespace checks pass. Sixteen new regressions cover ownership guards, project/region/CIDR validation, safe errors, API round trips and the Linux/Windows terminal questionnaires.
+- All 24 existing/new-network, Linux/Windows, public/private, catalog/custom and direct/IAP combinations selected for this change pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks. Two additional Terraform mocked tests (six plan runs) confirm zero managed network, subnet, administrator firewall, router, NAT and API enablement resources and no adopted VM network tags in existing mode, and reject mismatched actual CIDRs and non-IPv4-only subnet metadata. All Google provider operations in these plan tests are mocked; no cloud credentials or live providers are used.
+- Browser imports restore both OS variants, declared CIDR and existing-mode choices with cloud consent off. Missing review focuses the declaration field; correction generates successfully. A 390×844 check shows no page horizontal overflow and the fieldset fits its form. The viewport was reset and test entries cleared. The screenshot uses synthetic references.
+- The latest development wheel installs into an isolated package directory and passes ten custom-image, Azure identity and GCP attachment fixture imports plus bundled UI checks using existing local dependencies. This is not a released package or a fresh dependency-resolution claim.
+- GitHub CI for the preceding exact Azure gallery correction (`9d714d6`) passes all six jobs, including native validation. New existing-subnet native and mocked tests are included in CI. Current results remain visible in GitHub Actions.
+- No live cloud metadata, credential/state access, backend setup, role grant, provisioning or live AI request was performed. Address moves are generated for prior counted-resource transitions, but live upgrades, existing network access and cleanup remain unverified. v0.4.0 release gates remain open.
+
 ## Azure image boot compatibility correction
 
 - Azure custom references now require exact Compute Gallery image versions. Microsoft's Trusted Launch guidance identifies managed images as unsupported; the original development managed-image format was corrected without disabling vTPM or Secure Boot defaults. Image security type and guest compatibility still require independent verification.
