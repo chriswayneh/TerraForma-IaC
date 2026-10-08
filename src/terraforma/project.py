@@ -109,6 +109,8 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "data_disk_type": "Data disk type",
                     "data_disk_caching": "Data disk host caching",
                     "enable_workload_identity": "Enable workload identity",
+                    "workload_identity_type": "Azure workload identity type",
+                    "workload_identity_resource_id": "Existing managed identity resource ID",
                     "workload_identity": "Existing IAM instance profile name"
                     if config.provider == "aws"
                     else "Existing service account email",
@@ -161,6 +163,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "admin_access_method": {
                         "administrator_network": "Direct administrator network",
                         "iap_tunnel": "Google IAP tunnel",
+                    },
+                    "workload_identity_type": {
+                        "system_assigned": "System-assigned (tied to this VM)",
+                        "existing_user_assigned": "Existing user-assigned identity",
                     },
                     "cpu_credit_mode": {
                         "provider_default": "Provider default (unmanaged)",
@@ -226,7 +232,13 @@ def validate_ssh_public_key(value: str) -> None:
 
 def validate_input(name: str, value: str, kind: str):
     if (
-        name in {"custom_image", "custom_image_owner_account_id", "custom_image_admin_username"}
+        name
+        in {
+            "custom_image",
+            "custom_image_owner_account_id",
+            "custom_image_admin_username",
+            "workload_identity_resource_id",
+        }
         and value == ""
     ):
         return
@@ -388,6 +400,28 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if "workload_identity_type" in effective:
+        existing_identity = effective["workload_identity_type"] == "existing_user_assigned"
+        identity_id = effective["workload_identity_resource_id"]
+        if not effective["enable_workload_identity"] and (existing_identity or identity_id):
+            raise ProjectInputError(
+                "enable_workload_identity",
+                "Enable workload identity before supplying an existing identity mode or reference.",
+            )
+        if not existing_identity and identity_id:
+            raise ProjectInputError(
+                "workload_identity_resource_id",
+                "Choose existing user-assigned identity mode before supplying a resource ID.",
+            )
+        if (
+            existing_identity
+            and identity_id
+            and identity_id.split("/")[2].lower() != effective["subscription_id"].lower()
+        ):
+            raise ProjectInputError(
+                "workload_identity_resource_id",
+                "Use an existing identity in the selected subscription; cross-subscription attachment is unsupported.",
+            )
     if "use_custom_image" in effective:
         if effective["use_custom_image"]:
             if not effective["confirm_custom_image_compatibility"]:

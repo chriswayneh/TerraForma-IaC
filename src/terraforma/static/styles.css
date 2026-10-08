@@ -325,6 +325,7 @@ main {
   border-color: var(--line);
 }
 .form-step {
+  min-width: 0;
   border: 0;
   margin: 0;
   padding: 7px 24px 0;

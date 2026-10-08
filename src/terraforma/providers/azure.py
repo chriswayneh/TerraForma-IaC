@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from terraforma.azure_identity import azure_identity_precondition
 from terraforma.configuration import AZURE_RESERVED_USERNAMES
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
@@ -434,6 +435,7 @@ def build_azure(builder: TerraformGenerator) -> None:
                         "lifecycle",
                         children=[
                             builder._private_ip_precondition(),
+                            azure_identity_precondition(),
                             *custom_image_preconditions("azure", windows),
                         ],
                     )
@@ -459,7 +461,17 @@ def build_azure(builder: TerraformGenerator) -> None:
                         "dynamic",
                         "identity",
                         for_each=ref("var.enable_workload_identity ? [1] : []"),
-                        children=[block("content", type="SystemAssigned")],
+                        children=[
+                            block(
+                                "content",
+                                type=ref(
+                                    'var.workload_identity_type == "existing_user_assigned" ? "UserAssigned" : "SystemAssigned"'
+                                ),
+                                identity_ids=ref(
+                                    'var.workload_identity_type == "existing_user_assigned" ? [var.workload_identity_resource_id] : null'
+                                ),
+                            )
+                        ],
                     )
                 ]
                 if standalone
@@ -475,8 +487,13 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         builder.output(
             "managed_identity_principal_id",
-            f"var.enable_workload_identity ? {vm_resource}.this.identity[0].principal_id : null",
+            f'var.enable_workload_identity && var.workload_identity_type == "system_assigned" ? {vm_resource}.this.identity[0].principal_id : null',
             "Optional system-assigned identity principal. No role assignments are created; the identity is removed with the VM.",
+        )
+        builder.output(
+            "user_assigned_identity_resource_id",
+            'var.enable_workload_identity && var.workload_identity_type == "existing_user_assigned" ? var.workload_identity_resource_id : null',
+            "Declared existing user-assigned identity resource ID. Existence, principal, permissions and attachment remain unverified; no identity or role grant is created by this reference.",
         )
         builder.resource(
             "azurerm_managed_disk",

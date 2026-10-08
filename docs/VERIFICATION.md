@@ -1,5 +1,12 @@
 # Verification record
 
+## Existing Azure VM identity — v0.4.0 development checkpoint
+
+- The default suite passes 2,200 tests with 328 optional/native/platform cases skipped. Ruff checks and formatting pass across 108 Python files. Sixteen new regressions cover identity modes, references, safe errors, cross-subscription rejection, offline API import and the Linux/Windows terminal questionnaires.
+- All 12 Linux/Windows, public/private and disabled/system-assigned/existing-user-assigned combinations pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks. Native CI includes the new matrix.
+- Browser imports restore both Linux and Windows existing identity choices with cloud consent off. Switching to system-assigned hides the inactive reference; corrected existing identity generation succeeds. A fieldset width fix prevents long select options from expanding past the form. Desktop bounds and a 390×844 viewport show the form stays within its container with no page horizontal overflow; the viewport was reset and test entries cleared.
+- No cloud query, credential/state access, role grant, identity creation, provisioning or live AI request was performed. Identity attachment, token access, effective permissions and cleanup remain unverified. This checkpoint does not complete v0.4.0 release gates.
+
 ## Existing VM images — v0.4.0 development checkpoint
 
 - The default suite passes 2,184 tests with 316 optional/native/platform cases skipped. Ruff checks and formatting pass across 106 Python files; JavaScript syntax, whitespace and changed documentation local links pass.

@@ -2,6 +2,9 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added guided attachment of one existing Azure user-assigned managed identity in the selected subscription, with system-assigned behavior preserved by default. Missing, inactive and cross-subscription references fail closed; no identity creation or role assignment is added. Live access remains unverified. See [Azure workload identity](docs/AZURE_WORKLOAD_IDENTITY.md).
+- Fixed configuration fieldset sizing so long input choices remain within the form on desktop and narrow screens.
+
 - Added guided existing-image inputs for standalone AWS, Azure and GCP Linux/Windows VMs, shared by the browser, terminal and project import/export. AWS requires a private AMI and owner account; Linux requires an existing guest administrator reference. Azure supports managed-image resource IDs; GCP supports exact image references.
 - Added fail-closed image-mode, compatibility declaration and catalog conflict guards, provider selection tests and native validation coverage. Image trust, live provisioning, guest access and cleanup remain unverified. See [existing images](docs/CUSTOM_IMAGES.md).
 - New specifications use `0.4.0.dev0`; saved `0.3.0` and `0.3.0.dev0` specifications remain accepted. v0.3.0 remains the latest release.

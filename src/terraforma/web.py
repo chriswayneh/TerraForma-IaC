@@ -175,7 +175,9 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
                 "name": "Workload identity",
                 "explanation": {
                     "aws": "The VM uses the supplied existing IAM instance profile. Review its role permissions, EC2 trust and pass-role authorization; the recipe creates no IAM role or policy grant.",
-                    "azure": "A system-assigned managed identity is created with the VM. Its principal ID is exported, but no role assignments are granted; deletion of the VM removes this identity.",
+                    "azure": "The VM attaches the supplied existing user-assigned managed identity. Its lifecycle remains independent of the VM; effective privileges and attachment authorization require separate review. No identity or role assignment is created."
+                    if payload.inputs.get("workload_identity_type") == "existing_user_assigned"
+                    else "A system-assigned managed identity is created with the VM. Its principal ID is exported, but no role assignments are granted; deletion of the VM removes this identity.",
                     "gcp": "The VM uses the supplied user-managed service account and cloud-platform OAuth scope. Actual access depends on existing IAM roles; this recipe creates no key or IAM grant. Service account changes require a stopped VM, and automatic stopping is disabled.",
                 }[payload.recipe.provider],
             }

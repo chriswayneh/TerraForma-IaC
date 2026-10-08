@@ -61,7 +61,10 @@ def test_identity_output_export_import_and_guide(provider, enabled):
         assert 'scopes = ["cloud-platform"]' in main
         assert "allow_stopping_for_update = false" in main
     if provider == "azure":
-        assert 'type = "SystemAssigned"' in main
+        assert (
+            'type = var.workload_identity_type == "existing_user_assigned" ? "UserAssigned" : "SystemAssigned"'
+            in main
+        )
         assert 'output "managed_identity_principal_id"' in compiled["files"]["outputs.tf"]
     summary = {item["name"] for item in compiled["choice_summary"]}
     assert ("workload_identity" in summary) is (enabled and provider != "azure")

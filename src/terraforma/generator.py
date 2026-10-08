@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
+from terraforma.azure_identity import declare_azure_identity_inputs
 from terraforma.configuration import AZURE_RESERVED_USERNAMES, LINUX_IMAGE_CHOICES, WizardConfig
 from terraforma.custom_images import custom_image_preconditions, declare_custom_image_inputs
 from terraforma.hcl import Block, Expression, block, ref, value_hcl
@@ -329,13 +330,15 @@ class TerraformGenerator:
             "enable_workload_identity",
             {
                 "aws": "Attach an existing IAM instance profile for workload API access. Review its role policies and trust relationship; provisioning requires permission to pass its role. This recipe creates no IAM role or policy grant.",
-                "azure": "Create a system-assigned managed identity for this VM. It receives no role assignments from this recipe; grant only reviewed access separately. The identity's lifecycle is tied to the VM.",
+                "azure": "Use a system-assigned identity or attach one existing user-assigned managed identity for workload API access. Review effective permissions and attachment authorization separately. This recipe creates no role assignment or credential.",
                 "gcp": "Attach an existing user-managed service account for workload API access, using the cloud-platform OAuth scope with access controlled by its IAM roles. Review those roles and attachment permissions separately. This recipe creates no service account, key or IAM grant; changing the account requires a stopped VM.",
             }[self.config.provider],
             False,
             type_name="bool",
         )
-        if self.config.provider != "azure":
+        if self.config.provider == "azure":
+            declare_azure_identity_inputs(self)
+        else:
             self.variable(
                 "workload_identity",
                 "Existing IAM instance profile name, not a role name or ARN. Its permissions, account and trust configuration remain unverified."

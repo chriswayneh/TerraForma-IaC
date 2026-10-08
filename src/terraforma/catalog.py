@@ -126,7 +126,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             fixed.append(
                 {
                     "aws": "Optional workload identity attaches an existing IAM instance profile; no roles or policy grants are created. Pass-role permission and existing policies require preflight.",
-                    "azure": "Optional system-assigned managed identity is tied to this VM; no role assignments are created.",
+                    "azure": "Optional workload identity uses a system-assigned identity tied to this VM or one existing user-assigned identity in the selected subscription. Existing identity access and attachment permissions require separate review; no role assignments are created.",
                     "gcp": "Optional workload identity attaches an existing user-managed service account with cloud-platform scope; IAM roles and attachment permissions require preflight. Account changes require a stopped VM; automatic stopping is disabled.",
                 }[config.provider]
             )

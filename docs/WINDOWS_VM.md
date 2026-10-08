@@ -12,6 +12,8 @@ v0.3.0 includes initial **AWS, Azure and Google Cloud Windows Server 2022** reci
 
 ## Azure
 
+v0.4.0 development supports optional [existing user-assigned workload identity](AZURE_WORKLOAD_IDENTITY.md) attachment. System-assigned remains the default when enabled; no role assignments are created and live access remains unverified.
+
 Development generation now uses the refreshed `windowsserver2022` offer. [Microsoft's migration announcement](https://techcommunity.microsoft.com/blog/azurecompute/incoming-changes-for-window-server-2022-marketplace-image-users/4262423) identifies the legacy `windowsserver` offer's Windows Server 2022 SKUs as deprecated from June 2026; the refreshed offer excludes .NET 6. Regenerating an older project changes its image reference and can replace the VM and delete boot data. Confirm the selected version exists under the new offer, review application dependencies and backups, then review the Terraform plan. Existing exact pins are not automatically translated. Generation does not migrate an existing guest or prove regional image availability.
 
 ![Azure Windows external password reference and state guidance](images/azure-windows-credentials.png)
