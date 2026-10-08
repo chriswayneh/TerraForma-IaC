@@ -185,6 +185,8 @@ def build_gcp(builder: TerraformGenerator) -> None:
             'var.image_version == "latest" ? (var.os_image == "debian-12" ? "debian-cloud/debian-12" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64") : (var.os_image == "debian-12" ? "debian-cloud/${var.image_version}" : "ubuntu-os-cloud/${var.image_version}")'
         )
     )
+    if standalone:
+        image_source = ref(f"var.use_custom_image ? var.custom_image : ({image_source.value})")
     image_lifecycle = block(
         "lifecycle",
         children=[

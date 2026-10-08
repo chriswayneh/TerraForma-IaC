@@ -1,5 +1,14 @@
 # Verification record
 
+## Existing VM images — v0.4.0 development checkpoint
+
+- The default suite passes 2,184 tests with 316 optional/native/platform cases skipped. Ruff checks and formatting pass across 106 Python files; JavaScript syntax, whitespace and changed documentation local links pass.
+- All 24 provider/OS/catalog-or-custom/public-or-private combinations pass Terraform 1.14.0 validation and TFLint 0.61.0 using existing initialized provider locks. A separate fresh initialization attempt timed out while downloading the Google provider; it did not complete. Native CI includes the new image matrix.
+- Thirty-four new regressions cover contracts, exact reference formats, owner and administrator inputs, absent declarations, stale catalog values, secret-free API import/export and the terminal questionnaire. Azure catalog-image regressions retain publisher, credentials, patch and boot assertions with the conditional image block.
+- Browser checks import all six provider/OS custom-image fixtures, show custom inputs and hide inactive catalog inputs. AWS mode switching restores catalog questions; an absent review declaration focuses its field. Generation succeeds after correction. Cloud target consent remains off. The new screenshot uses a synthetic GCP image reference.
+- A built `0.4.0.dev0` wheel installed into an isolated package directory passes all six image imports and bundled UI checks using the existing local dependencies. This is a development package check, not a public release or fresh dependency-resolution claim.
+- No live cloud query, credential/state access, backend operation, provisioning, IAM grant or live AI request was performed. Image trust, guest compatibility, Linux/Windows creation, login and teardown remain unverified. v0.3.0 remains the latest release; v0.4.0 acceptance gates remain open.
+
 ## v0.3.0 release verification
 
 - The default suite passes 2,150 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 104 Python files; backend JavaScript syntax, whitespace and local documentation links pass.

@@ -29,7 +29,10 @@ def test_core_selection_preserves_credentials_patch_and_boot_controls(public, ve
         for item in main["resource"]
         if '"azurerm_windows_virtual_machine"' in item
     )
-    image = vm["source_image_reference"][0]
+    image_block = vm["dynamic"][0]['"source_image_reference"']
+    assert image_block["for_each"] == "${var.use_custom_image ? [] : [1]}"
+    assert vm["source_image_id"] == "${var.use_custom_image ? var.custom_image : null}"
+    image = image_block["content"][0]
     assert image["publisher"] == '"MicrosoftWindowsServer"'
     assert image["offer"] == '"windowsserver2022"'
     assert '"2022-datacenter-core-g2"' in image["sku"]

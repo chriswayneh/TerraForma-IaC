@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — v0.4.0 development
+
+- Added guided existing-image inputs for standalone AWS, Azure and GCP Linux/Windows VMs, shared by the browser, terminal and project import/export. AWS requires a private AMI and owner account; Linux requires an existing guest administrator reference. Azure supports managed-image resource IDs; GCP supports exact image references.
+- Added fail-closed image-mode, compatibility declaration and catalog conflict guards, provider selection tests and native validation coverage. Image trust, live provisioning, guest access and cleanup remain unverified. See [existing images](docs/CUSTOM_IMAGES.md).
+- New specifications use `0.4.0.dev0`; saved `0.3.0` and `0.3.0.dev0` specifications remain accepted. v0.3.0 remains the latest release.
+
 ## v0.3.0 — October 8, 2026
 
 Reusable project specifications, guided recipe inputs, local security review and state-storage input preparation. [Release notes](docs/RELEASE_0.3.0.md) · [Verification](docs/VERIFICATION.md)

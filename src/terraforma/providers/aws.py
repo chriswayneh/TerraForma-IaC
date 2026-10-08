@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 
 if TYPE_CHECKING:
@@ -194,6 +195,7 @@ def build_aws(builder: TerraformGenerator) -> None:
             "aws_ami",
             "windows" if windows else "linux",
             most_recent=True,
+            **{"count": ref("var.use_custom_image ? 0 : 1")} if standalone else {},
             owners=["amazon"]
             if windows
             else ref('var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]'),
@@ -220,6 +222,44 @@ def build_aws(builder: TerraformGenerator) -> None:
             ],
         )
     )
+    if standalone:
+        builder.main.append(
+            block(
+                "data",
+                "aws_ami",
+                "custom",
+                count=ref("var.use_custom_image ? 1 : 0"),
+                owners=[ref("var.custom_image_owner_account_id")],
+                most_recent=False,
+                children=[
+                    block("filter", name="image-id", values=[ref("var.custom_image")]),
+                    block("filter", name="architecture", values=["x86_64"]),
+                    block("filter", name="virtualization-type", values=["hvm"]),
+                    block("filter", name="root-device-type", values=["ebs"]),
+                    block("filter", name="is-public", values=["false"]),
+                    block(
+                        "lifecycle",
+                        children=[
+                            *custom_image_preconditions("aws", windows),
+                            block(
+                                "postcondition",
+                                condition=ref(
+                                    'self.platform == "windows"'
+                                    if windows
+                                    else 'self.platform == ""'
+                                ),
+                                error_message="Choose a custom AMI matching this Linux or Windows recipe.",
+                            ),
+                            block(
+                                "postcondition",
+                                condition=ref("length(self.product_codes) == 0"),
+                                error_message="Marketplace and product-code custom images are unsupported.",
+                            ),
+                        ],
+                    ),
+                ],
+            )
+        )
     builder.variable(
         "instance_type",
         "EC2 instance size. Verify Windows licensing, memory and image requirements before planning."
@@ -286,7 +326,13 @@ def build_aws(builder: TerraformGenerator) -> None:
         "aws_instance",
         "web",
         count=ref("var.instance_count") if balanced else 1,
-        ami=ref("data.aws_ami.windows.id" if windows else "data.aws_ami.linux.id"),
+        ami=ref(
+            f"var.use_custom_image ? data.aws_ami.custom[0].id : data.aws_ami.{'windows' if windows else 'linux'}[0].id"
+            if standalone
+            else "data.aws_ami.windows.id"
+            if windows
+            else "data.aws_ami.linux.id"
+        ),
         instance_type=ref("var.instance_type"),
         monitoring=ref("var.detailed_monitoring"),
         **{
@@ -470,8 +516,8 @@ def build_aws(builder: TerraformGenerator) -> None:
                 "administrator_username" if windows else "ssh_username",
                 '"Administrator"'
                 if windows
-                else 'var.os_image == "amazon-linux-2023" ? "ec2-user" : "ubuntu"',
-                "Default administrator username for the selected publisher image.",
+                else 'var.use_custom_image ? var.custom_image_admin_username : (var.os_image == "amazon-linux-2023" ? "ec2-user" : "ubuntu")',
+                "Administrator username from the catalog or the declared existing custom-image account. Guest access remains unverified.",
             )
             return
         builder.output(

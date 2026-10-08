@@ -19,7 +19,7 @@ from terraforma.network_inputs import usable_vm_address
 class ProjectSpecification(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     schema_version: Literal[1] = 1
-    template_version: Literal["0.3.0", "0.3.0.dev0"] = "0.3.0"
+    template_version: Literal["0.4.0.dev0", "0.3.0", "0.3.0.dev0"] = "0.4.0.dev0"
     recipe: WizardConfig
     inputs: dict[str, str | int | bool] = Field(default_factory=dict, max_length=32)
     secret_references: dict[str, str] = Field(default_factory=dict, max_length=16)
@@ -73,6 +73,15 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "os_image": "Windows operating system"
                     if config.architecture_type == "windows_virtual_machine"
                     else "Linux operating system",
+                    "use_custom_image": "Use an existing custom image",
+                    "custom_image": "Existing private AMI ID"
+                    if config.provider == "aws"
+                    else "Existing managed-image resource ID"
+                    if config.provider == "azure"
+                    else "Existing Compute Engine image reference",
+                    "custom_image_owner_account_id": "AMI owner AWS account ID",
+                    "custom_image_admin_username": "Existing image SSH administrator username",
+                    "confirm_custom_image_compatibility": "Confirm your image compatibility review",
                     "image_version": "Azure image version (latest or exact version)"
                     if config.provider == "azure"
                     else "AWS image version (latest or AMI ID)"
@@ -216,6 +225,11 @@ def validate_ssh_public_key(value: str) -> None:
 
 
 def validate_input(name: str, value: str, kind: str):
+    if (
+        name in {"custom_image", "custom_image_owner_account_id", "custom_image_admin_username"}
+        and value == ""
+    ):
+        return
     if kind in {"optional_ipv4_address", "optional_zone"} and value == "":
         return
     if not value or len(value.encode("utf-8")) > 16384:
@@ -264,6 +278,12 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter one client IPv4 address outside 0/8, loopback, and 224/3; Azure-wide service access is unsupported."
         elif definition["name"] == "disk_kms_key":
             message = "Enter a Cloud KMS CryptoKey resource name in the documented format; raw keys and credentials are unsupported."
+        elif definition["name"] == "custom_image":
+            message = "Enter an exact existing image reference in the documented provider format; credentials, arbitrary URLs and image families are unsupported."
+        elif definition["name"] == "custom_image_owner_account_id":
+            message = "Enter the 12-digit AWS account ID that owns the custom AMI."
+        elif definition["name"] == "custom_image_admin_username":
+            message = "Enter the existing non-root Linux administrator username using lowercase letters, digits, underscores or hyphens."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -368,6 +388,33 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if "use_custom_image" in effective:
+        if effective["use_custom_image"]:
+            if not effective["confirm_custom_image_compatibility"]:
+                raise ProjectInputError(
+                    "confirm_custom_image_compatibility",
+                    "Review the custom image prerequisites and explicitly record your compatibility declaration. Deployment remains unverified.",
+                )
+            if (
+                effective["image_version"] != "latest"
+                or effective["os_image"] != definitions["os_image"]["default"]
+            ):
+                raise ProjectInputError(
+                    "use_custom_image",
+                    "Clear catalog operating-system and image-version choices before enabling a custom image.",
+                )
+        else:
+            for field in (
+                "custom_image",
+                "custom_image_owner_account_id",
+                "custom_image_admin_username",
+                "confirm_custom_image_compatibility",
+            ):
+                if effective.get(field):
+                    raise ProjectInputError(
+                        field,
+                        "Enable custom-image mode before supplying custom-image references or declarations.",
+                    )
     if effective.get("disk_kms_key") and not effective.get("use_customer_managed_disk_key"):
         raise ProjectInputError(
             "disk_kms_key",

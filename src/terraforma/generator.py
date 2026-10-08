@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from terraforma.configuration import AZURE_RESERVED_USERNAMES, LINUX_IMAGE_CHOICES, WizardConfig
+from terraforma.custom_images import custom_image_preconditions, declare_custom_image_inputs
 from terraforma.hcl import Block, Expression, block, ref, value_hcl
 from terraforma.network_inputs import private_ip_condition
 from terraforma.providers.aws import build_aws
@@ -208,6 +209,8 @@ class TerraformGenerator:
                 minimum=2,
                 maximum=20,
             )
+        if self.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
+            declare_custom_image_inputs(self)
         if self.config.architecture_type in {
             "virtual_machine",
             "windows_virtual_machine",
@@ -228,7 +231,13 @@ class TerraformGenerator:
                     else "Linux image from the supported publisher catalog, using x86_64/AMD64. "
                 )
                 + "The image version can be pinned separately; latest resolves at planning time. "
-                + "Region, VM-size compatibility and account policy need preflight. Custom images and ARM64 are not supported.",
+                + "Region, VM-size compatibility and account policy need preflight. ARM64 is unsupported. "
+                + (
+                    "This catalog choice is inactive when custom-image mode is enabled."
+                    if self.config.architecture_type
+                    in {"virtual_machine", "windows_virtual_machine"}
+                    else "Custom images are unsupported for this recipe."
+                ),
                 "windows-server-2022"
                 if self.config.architecture_type == "windows_virtual_machine"
                 else LINUX_IMAGE_CHOICES[self.config.provider][0],
@@ -306,6 +315,9 @@ class TerraformGenerator:
                     else None,
                 )
         getattr(self, f"_{self.config.provider}")()
+        if self.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
+            for name in ("os_image", "image_version"):
+                self.input_constraints[name]["visible_when"] = {"use_custom_image": False}
         return {
             "main.tf": "\n\n".join(item.render() for item in self.main) + "\n",
             "variables.tf": "\n\n".join(item.render() for item in self.variables) + "\n",
@@ -347,6 +359,9 @@ class TerraformGenerator:
                     error_message="Supply the existing workload identity reference when workload identity is enabled.",
                 ),
                 self._private_ip_precondition(),
+                *custom_image_preconditions(
+                    self.config.provider, self.config.architecture_type == "windows_virtual_machine"
+                ),
                 *(
                     [self._gp3_precondition("boot_disk"), self._cpu_credit_precondition()]
                     if self.config.provider == "aws"

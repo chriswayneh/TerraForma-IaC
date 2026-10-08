@@ -56,7 +56,10 @@ def test_windows_resource_uses_external_password_and_restricted_rdp(public, encr
     assert '"azurerm_virtual_machine_data_disk_attachment"' in resources
     assert ('"web"' in resources['"azurerm_public_ip"']) is public
     assert '"egress"' in resources['"azurerm_public_ip"']
-    image = vm["source_image_reference"][0]
+    image_block = vm["dynamic"][0]['"source_image_reference"']
+    assert image_block["for_each"] == "${var.use_custom_image ? [] : [1]}"
+    assert vm["source_image_id"] == "${var.use_custom_image ? var.custom_image : null}"
+    image = image_block["content"][0]
     assert image["publisher"] == '"MicrosoftWindowsServer"'
     assert image["offer"] == '"windowsserver2022"'
     assert "2022-datacenter-g2" in image["sku"]

@@ -1,5 +1,7 @@
 # Windows virtual machines
 
+v0.4.0 development adds guided [existing custom-image inputs](CUSTOM_IMAGES.md). This optional path requires an image compatibility declaration; image trust, provisioning agents, password recovery and access remain unverified.
+
 AWS and GCP standalone VMs offer [boot-disk deletion or retention](BOOT_DISK_LIFECYCLE.md). The existing deletion default is preserved. Retention requires separate recovery, key preservation and cleanup; live lifecycle behavior remains unverified.
 
 GCP standalone VMs offer a direct administrator network or [Google IAP tunnel](GCP_IAP_ACCESS.md). IAP generation targets RDP port 3389; tunnel IAM and Windows guest credentials are configured separately. Live connectivity remains unverified.

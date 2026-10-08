@@ -37,6 +37,8 @@ The setup files use **Terraform**, a tool that describes infrastructure in text 
 
 The released **v0.3.0** provides guided configuration questions, saved project specifications, import, export receipts, local plan review, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows acceptance and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
 
+**In development for v0.4.0:** guided [existing VM image inputs](docs/CUSTOM_IMAGES.md) for standalone Linux and Windows on all three clouds. Image compatibility and live deployment remain unverified.
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.

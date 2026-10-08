@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 from fastapi.testclient import TestClient
 
+from terraforma import __version__
 from terraforma.cli import main
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
@@ -25,11 +26,11 @@ def test_release_preserves_saved_development_specifications(version):
     result = compile_project(specification)
     assert result["specification"]["template_version"] == version
     assert result["receipt"]["template_version"] == version
-    assert result["receipt"]["generator_version"] == "0.3.0"
+    assert result["receipt"]["generator_version"] == __version__
 
 
 def test_new_specification_defaults_to_release_template():
-    assert ProjectSpecification(recipe=recipe()).template_version == "0.3.0"
+    assert ProjectSpecification(recipe=recipe()).template_version == __version__
 
 
 def test_browser_import_round_trip_preserves_answers_and_export():

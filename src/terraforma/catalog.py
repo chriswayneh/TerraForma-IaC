@@ -42,7 +42,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         fixed.extend(
             [
-                f"Operating system choices: {image}; x86_64/AMD64 only. "
+                f"Publisher catalog choices: {image}; x86_64/AMD64 only. "
                 + (
                     "Image version is configurable: latest selected windows-2022/windows-2022-core family or a matching exact Windows Server 2022 Datacenter image name from windows-cloud. Availability and deprecation remain unverified."
                     if windows and config.provider == "gcp"
@@ -111,13 +111,18 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             [
                 "Other Windows versions or publishers" if windows else "Windows VMs",
                 "ARM64 VMs",
-                "Custom images",
+                "Custom image families, specialized images and Marketplace plans"
+                if standalone
+                else "Custom images",
                 "Multiple data disks" if standalone else "Data disks",
                 "Custom initialization",
                 "TLS setup",
             ]
         )
         if standalone:
+            fixed.append(
+                "Custom-image mode accepts an exact existing organizational image reference and an explicit user compatibility declaration. Generation never authenticates image provenance, inspects guest contents or verifies access. Review licensing, guest agents, boot features and replacement recovery separately."
+            )
             fixed.append(
                 {
                     "aws": "Optional workload identity attaches an existing IAM instance profile; no roles or policy grants are created. Pass-role permission and existing policies require preflight.",
@@ -214,6 +219,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         "unsupported": unsupported,
         "account_checks": "unverified",
         "deployment_checks": "unverified",
+        "custom_image_generation": "supported_unverified" if standalone else "unsupported",
         "preflight_required": [
             "Cloud account identity and permissions",
             "Region, image, machine and disk availability",

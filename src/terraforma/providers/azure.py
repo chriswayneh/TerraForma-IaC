@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from terraforma.configuration import AZURE_RESERVED_USERNAMES
+from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 
 if TYPE_CHECKING:
@@ -313,6 +314,13 @@ def build_azure(builder: TerraformGenerator) -> None:
     if standalone:
         compute.pop("custom_data")
         compute["zone"] = zone
+        compute["source_image_id"] = ref("var.use_custom_image ? var.custom_image : null")
+        image = block(
+            "dynamic",
+            "source_image_reference",
+            for_each=ref("var.use_custom_image ? [] : [1]"),
+            children=[block("content", **image.attributes)],
+        )
     if windows:
         compute.pop("disable_password_authentication")
         compute.update(
@@ -421,7 +429,15 @@ def build_azure(builder: TerraformGenerator) -> None:
             children=[disk, image]
             + ([] if windows else [key])
             + (
-                [block("lifecycle", children=[builder._private_ip_precondition()])]
+                [
+                    block(
+                        "lifecycle",
+                        children=[
+                            builder._private_ip_precondition(),
+                            *custom_image_preconditions("azure", windows),
+                        ],
+                    )
+                ]
                 if standalone
                 else []
             )
