@@ -1,5 +1,11 @@
 # Verification record
 
+## Azure image boot compatibility correction
+
+- Azure custom references now require exact Compute Gallery image versions. Microsoft's Trusted Launch guidance identifies managed images as unsupported; the original development managed-image format was corrected without disabling vTPM or Secure Boot defaults. Image security type and guest compatibility still require independent verification.
+- Eighteen additional regressions cover Linux/Windows rejection of managed images, unversioned/latest aliases, leading zeros and version overflow, plus accepted numeric boundaries with retained boot settings. All eight Azure catalog/gallery and public/private combinations pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks.
+- The full default suite passes 2,218 tests with 328 optional/native/platform cases skipped. Browser imports generate both Linux and Windows gallery configurations with cloud consent off. The screenshot uses a synthetic exact version; no image query or cloud operation was performed.
+
 ## Existing Azure VM identity — v0.4.0 development checkpoint
 
 - The default suite passes 2,200 tests with 328 optional/native/platform cases skipped. Ruff checks and formatting pass across 108 Python files. Sixteen new regressions cover identity modes, references, safe errors, cross-subscription rejection, offline API import and the Linux/Windows terminal questionnaires.

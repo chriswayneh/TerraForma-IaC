@@ -26,6 +26,7 @@
 }
 .recipe-input-group {
   margin: 22px 0;
+  overflow-wrap: anywhere;
 }
 #choice-summary-list > div {
   display: grid;

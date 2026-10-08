@@ -23,7 +23,7 @@ pytest_plugins = ["tests.test_generator"]
 
 IMAGES = {
     "aws": "ami-0123456789abcdef0",
-    "azure": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/image-library/providers/Microsoft.Compute/images/approved-image",
+    "azure": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/image-library/providers/Microsoft.Compute/galleries/image_library/images/approved-image/versions/1.0.0",
     "gcp": "projects/image-library/global/images/approved-image",
 }
 
@@ -120,6 +120,37 @@ def test_aws_requires_exact_owner_and_nonroot_connection_reference(field, value)
         compile_project(specification("aws", **{field: value}))
     assert error.value.field == field
     assert "private-owner" not in str(error.value)
+
+
+@pytest.mark.parametrize("windows", [False, True])
+@pytest.mark.parametrize(
+    "reference",
+    [
+        "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/image-library/providers/Microsoft.Compute/images/approved-image",
+        IMAGES["azure"].replace("/versions/1.0.0", ""),
+        IMAGES["azure"].replace("1.0.0", "latest"),
+        IMAGES["azure"].replace("1.0.0", "01.0.0"),
+        IMAGES["azure"].replace("1.0.0", "2147483648.0.0"),
+        IMAGES["azure"].replace("1.0.0", "0.2147483648.0"),
+        IMAGES["azure"].replace("1.0.0", "0.0.2147483648"),
+    ],
+)
+def test_azure_rejects_managed_images_aliases_and_invalid_gallery_versions(windows, reference):
+    with pytest.raises(ProjectInputError) as error:
+        compile_project(specification("azure", windows, custom_image=reference))
+    assert error.value.field == "custom_image"
+    assert reference not in str(error.value)
+
+
+@pytest.mark.parametrize("windows", [False, True])
+@pytest.mark.parametrize("version", ["0.0.0", "2147483647.2147483647.2147483647"])
+def test_azure_exact_gallery_version_bounds_are_accepted_without_weakening_boot(windows, version):
+    result = compile_project(
+        specification("azure", windows, custom_image=IMAGES["azure"].replace("1.0.0", version))
+    )
+    assert "vtpm_enabled = true" in result["files"]["main.tf"]
+    assert "secure_boot_enabled = var.enable_secure_boot" in result["files"]["main.tf"]
+    assert "tonumber(part) <= 2147483647" in result["files"]["main.tf"]
 
 
 @pytest.mark.parametrize("provider", list(IMAGES))

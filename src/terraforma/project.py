@@ -76,7 +76,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     "use_custom_image": "Use an existing custom image",
                     "custom_image": "Existing private AMI ID"
                     if config.provider == "aws"
-                    else "Existing managed-image resource ID"
+                    else "Existing Azure gallery image-version ID"
                     if config.provider == "azure"
                     else "Existing Compute Engine image reference",
                     "custom_image_owner_account_id": "AMI owner AWS account ID",
@@ -424,6 +424,13 @@ def compile_project(specification: ProjectSpecification) -> dict:
             )
     if "use_custom_image" in effective:
         if effective["use_custom_image"]:
+            if specification.recipe.provider == "azure" and effective["custom_image"]:
+                version = effective["custom_image"].rsplit("/", 1)[-1]
+                if any(int(part) > 2147483647 for part in version.split(".")):
+                    raise ProjectInputError(
+                        "custom_image",
+                        "Use an exact Azure gallery image version with each numeric component no greater than 2147483647.",
+                    )
             if not effective["confirm_custom_image_compatibility"]:
                 raise ProjectInputError(
                     "confirm_custom_image_compatibility",

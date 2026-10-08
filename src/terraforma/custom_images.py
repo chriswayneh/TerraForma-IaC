@@ -3,7 +3,7 @@ from terraforma.hcl import block, ref
 
 CUSTOM_IMAGE_PATTERNS = {
     "aws": r"ami-([0-9a-f]{8}|[0-9a-f]{17})",
-    "azure": r"/subscriptions/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/resourceGroups/[A-Za-z0-9](?:[A-Za-z0-9_.()-]{0,88}[A-Za-z0-9_])?/providers/Microsoft.Compute/images/[A-Za-z0-9](?:[A-Za-z0-9_-]{0,78}[A-Za-z0-9_])?",
+    "azure": r"/subscriptions/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/resourceGroups/[A-Za-z0-9](?:[A-Za-z0-9_.()-]{0,88}[A-Za-z0-9_])?/providers/Microsoft.Compute/galleries/[A-Za-z0-9][A-Za-z0-9_.]{0,79}/images/[A-Za-z0-9][A-Za-z0-9_.-]{0,79}/versions/(?:0|[1-9][0-9]{0,9})\.(?:0|[1-9][0-9]{0,9})\.(?:0|[1-9][0-9]{0,9})",
     "gcp": r"projects/[a-z][a-z0-9-]{4,28}[a-z0-9]/global/images/[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?",
 }
 
@@ -19,7 +19,7 @@ def declare_custom_image_inputs(builder):
         "custom_image",
         {
             "aws": "Exact existing private EBS-backed HVM x86_64 AMI ID in the selected region. Enter its owner account separately. Public and Marketplace/product-code images are unsupported. Terraform later checks the ID, owner and declared platform; guest configuration and launch permissions still require verification.",
-            "azure": "Full existing managed-image resource ID: /subscriptions/UUID/resourceGroups/GROUP/providers/Microsoft.Compute/images/IMAGE. Use a generalized x86_64 Gen2 image compatible with the selected Linux/Windows recipe, guest agent and boot settings. Gallery versions, specialized images and Marketplace plan images are unsupported. Location, access and guest compatibility remain unverified.",
+            "azure": "Exact existing Azure Compute Gallery image-version resource ID: /subscriptions/UUID/resourceGroups/GROUP/providers/Microsoft.Compute/galleries/GALLERY/images/IMAGE/versions/MAJOR.MINOR.PATCH. Use a generalized x86_64 Gen2 TrustedLaunchSupported image compatible with the selected Linux/Windows recipe and guest agents. Managed images, latest aliases, specialized images and Marketplace plans are unsupported. Location, access, image security type and guest compatibility remain unverified.",
             "gcp": "Exact existing image reference: projects/PROJECT/global/images/IMAGE. Use an approved x86_64 image matching the selected Linux/Windows recipe and guest provisioning agents. Families, snapshots and arbitrary URLs are unsupported. Image access, licenses, boot features and guest compatibility remain unverified.",
         }[builder.config.provider],
         "",
@@ -68,6 +68,16 @@ def custom_image_preconditions(provider, windows=False):
             error_message="Custom images require an exact reference, an explicit compatibility declaration and no catalog image pin. Disable custom-image mode before returning to catalog selection.",
         )
     ]
+    if provider == "azure":
+        conditions.append(
+            block(
+                "precondition",
+                condition=ref(
+                    '!var.use_custom_image ? true : try(alltrue([for part in split(".", element(reverse(split("/", var.custom_image)), 0)) : tonumber(part) <= 2147483647]), false)'
+                ),
+                error_message="Azure gallery image references require an exact Major.Minor.Patch version with each component no greater than 2147483647.",
+            )
+        )
     if provider == "aws":
         conditions.append(
             block(
