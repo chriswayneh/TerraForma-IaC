@@ -174,8 +174,31 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
                 "Google Compute Engine",
             }:
                 component["explanation"] = (
-                    "One VM uses the declared existing custom image, selected machine size and boot disk. Image provenance, guest agents, OS family, licensing, boot compatibility and administrator access remain unverified. Application initialization is not configured."
+                    "One VM uses the declared existing custom image, selected machine size and boot disk. Image provenance, guest agents, OS family, licensing, boot compatibility and administrator access remain unverified."
                 )
+    if payload.inputs.get("enable_initialization", False):
+        project["notes"] = [
+            note.replace("The VM has no application startup script. ", "")
+            for note in project["notes"]
+        ]
+        for component in project["guide"]["components"]:
+            component["explanation"] = (
+                component["explanation"]
+                .replace("Application initialization is optional; ", "")
+                .replace(
+                    "Application initialization is left for your workload setup.",
+                    "A reviewed initialization script is included; guest execution remains unverified.",
+                )
+            )
+        project["guide"]["components"].append(
+            {
+                "name": "Reviewed initialization script",
+                "explanation": "The supplied script is included for elevated guest execution on a future deployment. Generation never runs it locally. Guest-agent support, script safety, dependencies and successful execution remain unverified. Review repeat execution and replacement behavior before deployment.",
+            }
+        )
+        project["notes"].append(
+            "Initialization content is stored in exports and generated configuration, and can reach Terraform state and guest metadata/extension settings. Base64 is not encryption. Keep secrets external and review the exact script before deployment."
+        )
     if payload.inputs.get("use_existing_network", False):
         azure_attachment = payload.recipe.provider == "azure"
         aws_attachment = payload.recipe.provider == "aws"

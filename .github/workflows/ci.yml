@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/terraform-plugin-cache"
           printf 'TF_PLUGIN_CACHE_DIR=%s/terraform-plugin-cache\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - run: python -m pytest tests/test_generator.py tests/test_network_inputs.py tests/test_images.py tests/test_admin_username.py tests/test_aws_placement.py tests/test_custom_images.py tests/test_azure_managed_identity.py tests/test_gcp_existing_subnet.py tests/test_azure_existing_subnet.py tests/test_aws_existing_subnet.py tests/test_resource_labels.py -q
+      - run: python -m pytest tests/test_generator.py tests/test_network_inputs.py tests/test_images.py tests/test_admin_username.py tests/test_aws_placement.py tests/test_custom_images.py tests/test_azure_managed_identity.py tests/test_gcp_existing_subnet.py tests/test_azure_existing_subnet.py tests/test_aws_existing_subnet.py tests/test_resource_labels.py tests/test_initialization.py -q
         env:
           TERRAFORMA_NATIVE_TESTS: '1'
       - name: Prepare a cloud-free Action smoke configuration

@@ -2,6 +2,9 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added optional reviewed local shell/PowerShell initialization to standalone Linux/Windows VMs across AWS, Azure and GCP. Bounded file loading, format checks, explicit review and inactive-content guards preserve offline generation. Browser script changes clear prior review; readable summaries omit content. See [VM initialization](docs/VM_INITIALIZATION.md) for elevated execution, export/state exposure, repeat and replacement behavior. Live guest execution remains unverified.
+- Corrected the browser input contract so optional resource labels can remain blank during generation.
+
 - Added optional owner, application and cost-center labels to standalone Linux/Windows questionnaires on AWS, Azure and GCP. Portable value validation rejects unsupported input; blank labels are omitted and existing environment/management labels are preserved. Label scope and privacy are documented in [VM resource labels](docs/VM_RESOURCE_LABELS.md).
 
 - Added standalone AWS Linux/Windows attachment to one existing IPv4-only standard-zone subnet and one reviewed security group, with account/VPC/CIDR/zone guards. Existing mode leaves VPC, subnet, rules, routes and gateways separately managed. See [AWS subnet inputs](docs/AWS_EXISTING_SUBNET.md).

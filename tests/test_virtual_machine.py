@@ -39,20 +39,20 @@ def test_standalone_vm_exports_explicit_access_without_web_application(provider,
         assert "public_key = var.ssh_public_key" in main
         assert "key_name = aws_key_pair.this.key_name" in main
         assert "from_port = 22" in main and "from_port = 80" not in main
-        assert "user_data" not in main
+        assert "user_data_base64 = var.enable_initialization ?" in main
         assert "ec2-user" in outputs and "ubuntu" in outputs
     elif provider == "azure":
         assert 'destination_port_range = "22"' in main
         assert "DenyOtherInbound" in main
         assert "disable_password_authentication = true" in main
-        assert "custom_data" not in main
+        assert "custom_data = var.enable_initialization ?" in main
         assert "var.admin_username" in outputs
     else:
         assert 'ports = ["22"]' in main and 'ports = ["80"]' not in main
         assert '"enable-oslogin" = "TRUE"' in main
         assert '"block-project-ssh-keys" = "TRUE"' in main
         assert "35.191.0.0" not in main
-        assert "metadata_startup_script" not in main
+        assert "metadata_startup_script = var.enable_initialization ?" in main
         assert "ssh_public_key" not in project["specification"]["inputs"]
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
         token = client.get("/api/session").json()["token"]

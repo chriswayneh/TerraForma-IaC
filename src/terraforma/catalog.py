@@ -72,11 +72,11 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                     else "Image version is configurable: latest (default) or an exact AMI ID matching the trusted owner and selected x86 OS filters. Regional availability remains unverified."
                 ),
                 (
-                    "No application initialization is configured; GCP administrator access uses a selected direct network or IAP tunnel, with separate IAM and guest authentication."
+                    "Application initialization is optional; GCP administrator access uses a selected direct network or IAP tunnel, with separate IAM and guest authentication."
                     if config.provider == "gcp"
-                    else "No application initialization is configured; RDP is restricted to the supplied administrator CIDR."
+                    else "Application initialization is optional; RDP is restricted to the supplied administrator CIDR."
                     if windows
-                    else "No application initialization is configured; SSH is restricted to the supplied administrator CIDR."
+                    else "Application initialization is optional; SSH is restricted to the supplied administrator CIDR."
                 )
                 if standalone
                 else "Startup installs nginx and serves HTTP on port 80.",
@@ -134,11 +134,16 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 if standalone
                 else "Custom images",
                 "Multiple data disks" if standalone else "Data disks",
-                "Custom initialization",
+                "Remote, cloud-config or multipart initialization"
+                if standalone
+                else "Custom initialization",
                 "TLS setup",
             ]
         )
         if standalone:
+            fixed.append(
+                "Optional reviewed UTF-8 shell/PowerShell initialization is limited to 4 KiB. Future guest execution uses elevated privileges; generation does not execute scripts or verify their safety, dependencies or completion."
+            )
             fixed.append(
                 "Custom-image mode accepts an exact existing organizational image reference and an explicit user compatibility declaration. Generation never authenticates image provenance, inspects guest contents or verifies access. Review licensing, guest agents, boot features and replacement recovery separately."
             )

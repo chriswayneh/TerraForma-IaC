@@ -41,6 +41,8 @@ The released **v0.3.0** provides guided configuration questions, saved project s
 
 Standalone VM development also includes optional [owner, application and cost-center labels](docs/VM_RESOURCE_LABELS.md).
 
+Optional [reviewed initialization scripts](docs/VM_INITIALIZATION.md) are available in development for Linux and Windows VMs. Enter your script content or load a local file; generation never executes it. Guest execution and live deployment remain unverified.
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.

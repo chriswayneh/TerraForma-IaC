@@ -1,5 +1,16 @@
 # Verification record
 
+## Reviewed VM initialization — v0.4.0 development checkpoint
+
+- The full default suite passes 2,381 tests with 424 optional/native/platform cases skipped. Ruff checks/formatting pass across 118 Python files; JavaScript syntax and whitespace checks pass.
+
+- Fifty-five initialization regressions cover all six provider/OS input and API round trips, safe summaries, missing review, inactive content, format/byte limits, BOM/invalid text, regular-file loading and terminal collection without script execution. An additional regression confirms blank labels remain optional in the browser contract.
+- Twenty-four enabled/disabled, Linux/Windows and public/private configurations pass Terraform 1.14.0 validation and TFLint 0.61.0 using existing initialized provider locks. Nineteen isolated native checks verify literal AWS payload decoding, Azure Windows protected command encoding/size and review/format/content guards. These isolated plans use only Terraform's built-in terraform_data resource; no cloud provider is configured or called.
+- All six synthetic provider/OS browser imports restore initialization and generated previews. Local script loading clears the previous review, missing review blocks generation and focuses its declaration, and an oversized file preserves current content. Blank labels generate successfully. The screenshot contains only a synthetic script; cloud consent remains off.
+- The final development wheel is 150,265 bytes, SHA-256 2c7e35f36c1e98e9c7518d63dc0e3ea61381e3af99abb41efd949755812106a5. Installation into an isolated directory passes 26 offline fixture imports and bundled UI checks with existing dependencies; this is not a release or a fresh dependency-resolution claim.
+- The preceding labels checkpoint d700f39 passes all six GitHub CI jobs (run 37860445759). Initialization native tests are included in CI; check GitHub Actions for the new checkpoint result.
+- No live credentials/state reads, cloud operations, backend setup, role grants, provisioning, script execution or live AI calls were performed. Guest execution and v0.4.0 Linux/Windows creation, login and cleanup gates remain open. v0.3.0 remains the latest release.
+
 ## Optional VM labels — v0.4.0 development checkpoint
 
 - The full default suite passes 2,325 tests with 381 optional/native/platform cases skipped. Forty-two new regressions cover provider/OS import, field-level privacy and format validation, recipe scope and terminal collection. Existing Azure environment-label coverage now includes Windows VMs and checks retained environment/management keys.

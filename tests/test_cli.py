@@ -88,7 +88,7 @@ def test_vm_wizard_explains_access_without_claiming_it_installs_a_web_server(
     result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
     assert result.exit_code == 0, result.output
     assert "Private access requires a routed path" in result.output
-    assert "no application startup script" in result.output
+    assert "Initialization scripts are optional" in result.output
     assert "serves HTTP" not in result.output
     assert "Add TLS" not in result.output
 

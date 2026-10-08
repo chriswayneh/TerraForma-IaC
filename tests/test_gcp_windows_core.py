@@ -40,7 +40,7 @@ def test_core_selection_preserves_access_boot_and_publisher(public, access, vers
     assert 'default = "windows-server-2022-core"' in result["files"]["variables.tf"]
     assert f'default = "{version}"' in result["files"]["variables.tf"]
     assert vm["shielded_instance_config"][0]["enable_vtpm"] is True
-    assert vm["metadata"]['"serial-port-enable"'] == '"FALSE"'
+    assert '"serial-port-enable" = "FALSE"' in vm["metadata"]
     assert "windows_activation" in result["files"]["main.tf"]
 
 

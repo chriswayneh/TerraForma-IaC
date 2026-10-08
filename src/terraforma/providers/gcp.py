@@ -436,7 +436,9 @@ def build_gcp(builder: TerraformGenerator) -> None:
             if standalone
             else ["terraforma-web"],
             **{
-                "metadata": {"serial-port-enable": "FALSE"}
+                "metadata": ref(
+                    'merge({"serial-port-enable" = "FALSE"}, var.enable_initialization ? {"windows-startup-script-ps1" = var.initialization_script} : {})'
+                )
                 if windows
                 else {
                     "enable-oslogin": "TRUE",
@@ -446,6 +448,13 @@ def build_gcp(builder: TerraformGenerator) -> None:
             }
             if standalone
             else {"metadata_startup_script": startup, "metadata": {"serial-port-enable": "FALSE"}},
+            **{
+                "metadata_startup_script": ref(
+                    "var.enable_initialization ? var.initialization_script : null"
+                )
+            }
+            if standalone and not windows
+            else {},
             children=[disk, network, image_lifecycle]
             + (
                 [

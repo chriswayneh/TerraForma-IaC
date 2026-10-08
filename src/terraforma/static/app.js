@@ -24,6 +24,7 @@ const inputSections = [
   ["Storage", ["use_customer_managed_disk_key", "disk_kms_key", "enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
   ["Operations and identity", ["enable_workload_identity", "workload_identity", "workload_identity_type", "workload_identity_resource_id", "detailed_monitoring", "cpu_credit_mode", "metadata_hop_limit", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
   ["Workload inputs", []],
+  ["Initialization", ["enable_initialization", "initialization_script", "confirm_initialization_review"]],
 ];
 
 function projectSpecification() {
@@ -123,7 +124,7 @@ async function loadRecipeInputs() {
         input.max = definition.maximum;
         input.step = 1;
       }
-      input.required = !["boolean", "optional_ipv4_address", "optional_zone"].includes(definition.kind);
+      input.required = !["boolean", "optional_ipv4_address", "optional_zone", "optional_label"].includes(definition.kind);
       input.maxLength = 16384;
       if (definition.pattern) input.pattern = definition.pattern;
       if (definition.kind === "boolean") {
@@ -146,6 +147,36 @@ async function loadRecipeInputs() {
           : " Required for this recipe.");
       if (definition.kind === "optional_ipv4_address") help.dataset.baseHelp = help.textContent;
       group.append(label, input, help);
+      if (definition.name === "initialization_script") {
+        input.maxLength = 4096;
+        const picker = document.createElement("input");
+        picker.type = "file";
+        picker.accept = ".sh,.ps1,text/plain";
+        picker.hidden = true;
+        const load = document.createElement("button");
+        load.type = "button";
+        load.className = "button button-secondary";
+        load.textContent = "Load initialization file";
+        load.addEventListener("click", () => { if (!busy) picker.click(); });
+        picker.addEventListener("change", async () => {
+          const file = picker.files[0];
+          if (!file || busy) return;
+          try {
+            if (file.size > 4096) throw new Error("Script too large");
+            const content = new TextDecoder("utf-8", {fatal: true}).decode(await file.arrayBuffer());
+            if (content.includes("\uFFFD")) throw new Error("Invalid text");
+            if (busy || !input.isConnected) return;
+            input.value = content;
+            input.dispatchEvent(new Event("input", {bubbles: true}));
+            notify("Script loaded locally. Review its exact content before confirming initialization.");
+          } catch {
+            notify("Choose a readable UTF-8 script file no larger than 4 KiB. Current content was preserved.", true);
+          } finally {
+            picker.value = "";
+          }
+        });
+        group.append(load, picker);
+      }
     }
     const sectionName = inputSections.find(([, names]) => names.includes(definition.name))?.[0] ?? "Workload inputs";
     if (!sections.has(sectionName)) {
@@ -356,7 +387,7 @@ function updateGuidance() {
           : "Encrypt VM boot disks with a customer-managed KMS key. Turning this off requests unencrypted boot disks. Review account policy and replacement risks.";
   const notes = {
     windows_virtual_machine: config.provider === "gcp" ? "RDP uses the selected administrator network or Google IAP tunnel. Set the requested user password separately through Google Cloud after provisioning; TerraForma does not create the account or collect its password. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. Review Windows activation prerequisites." : config.provider === "azure" ? "RDP is restricted to your administrator network. Supply TF_VAR_admin_password externally. AzureRM stores the password in state and saved plans; protect them before use. TerraForma configures no protected backend." : "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
-    virtual_machine: config.provider === "gcp" ? "SSH uses the selected administrator network or Google IAP tunnel with OS Login IAM access. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. No application is installed." : "SSH is restricted to your administrator network. AWS/Azure need your public key. Private VMs require a routed access path. No application is installed.",
+    virtual_machine: config.provider === "gcp" ? "SSH uses the selected administrator network or Google IAP tunnel with OS Login IAM access. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. Initialization is optional." : "SSH is restricted to your administrator network. AWS/Azure need your public key. Private VMs require a routed access path. Initialization is optional.",
     single_web_server: config.is_public
       ? "Public mode opens HTTP access. SSH stays closed by default. Add TLS before sensitive use."
       : "Your web server is reached through its cloud network. Outbound NAT may incur charges.",
@@ -643,6 +674,10 @@ byId("back-button").addEventListener("click", () => {
   if (!busy && step > 0) showStep(step - 1);
 });
 form.addEventListener("input", (event) => {
+  if (event.target.id === "recipe-initialization_script") {
+    const review = byId("recipe-confirm_initialization_review");
+    if (review) review.checked = false;
+  }
   updateInputVisibility();
   updatePrivateAddressHint();
   if (typeof event.target.setCustomValidity === "function") {

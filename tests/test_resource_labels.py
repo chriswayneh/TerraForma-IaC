@@ -25,6 +25,13 @@ LABELS = {
 }
 
 
+def test_browser_contract_keeps_blank_labels_optional():
+    fields = {
+        field["name"]: field for field in input_contract(specification("aws", custom=False).recipe)
+    }
+    assert all(fields[name]["kind"] == "optional_label" for name in LABEL_FIELDS)
+
+
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
 @pytest.mark.parametrize("windows", [False, True])
 def test_label_inputs_roundtrip_without_cloud_operations(provider, windows, monkeypatch):

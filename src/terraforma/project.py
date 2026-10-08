@@ -12,6 +12,7 @@ from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
 from terraforma.file_input import read_regular_bytes
 from terraforma.generator import TerraformGenerator, WizardConfig
+from terraforma.initialization import validate_initialization_script
 from terraforma.json_input import strict_json
 from terraforma.network_inputs import selected_vm_cidr, usable_vm_address
 
@@ -55,6 +56,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
             "private_ip_address": "optional_ipv4_address",
             "subscription_id": "uuid",
             "index_html": "multiline",
+            "initialization_script": "multiline",
+            "owner_label": "optional_label",
+            "application_label": "optional_label",
+            "cost_center_label": "optional_label",
         }.get(name, "text")
         if name == "availability_zone" and config.provider == "aws":
             kind = "optional_zone"
@@ -74,6 +79,9 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     else "Existing Google Cloud subnet resource",
                     "existing_security_group_id": "Existing AWS security group ID",
                     "owner_label": "Owner or team (optional)",
+                    "enable_initialization": "Include an initialization script",
+                    "initialization_script": "Initialization script content",
+                    "confirm_initialization_review": "Confirm your initialization review",
                     "application_label": "Application or service (optional)",
                     "cost_center_label": "Cost center (optional)",
                     "existing_subnet_cidr": "Existing subnet IPv4 range (CIDR)",
@@ -258,6 +266,7 @@ def validate_input(name: str, value: str, kind: str):
             "owner_label",
             "application_label",
             "cost_center_label",
+            "initialization_script",
         }
         and value == ""
     ):
@@ -266,6 +275,8 @@ def validate_input(name: str, value: str, kind: str):
         return
     if not value or len(value.encode("utf-8")) > 16384:
         raise ValueError("Input must be nonempty and at most 16 KiB.")
+    if name == "initialization_script":
+        validate_initialization_script(value)
     if re.search(r"-----BEGIN [A-Z ]*PRIVATE KEY-----", value):
         raise ValueError("Private keys cannot be stored as project inputs.")
     if kind != "multiline" and any(ord(char) < 32 for char in value):
@@ -322,6 +333,8 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
             message = "Enter one existing AWS security group ID in the documented sg- format."
         elif definition["name"] in {"owner_label", "application_label", "cost_center_label"}:
             message = "Use 1–63 lowercase letters, digits, underscores or hyphens, starting with a letter or digit, or leave this optional label blank."
+        elif definition["name"] == "initialization_script":
+            message = "Use a reviewed UTF-8 script no larger than 4 KiB, without private keys or unsupported control characters."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -426,6 +439,35 @@ def compile_project(specification: ProjectSpecification) -> dict:
     required_secrets = [item["environment_variable"] for item in contract if item["sensitive"]]
     effective = {item["name"]: item["default"] for item in contract if item["default"] is not None}
     effective.update(specification.inputs)
+    if "enable_initialization" in effective:
+        if effective["enable_initialization"]:
+            if not effective["confirm_initialization_review"]:
+                raise ProjectInputError(
+                    "confirm_initialization_review",
+                    "Review the exact initialization script and its elevated execution before recording your declaration.",
+                )
+            script = effective["initialization_script"]
+            windows = specification.recipe.architecture_type == "windows_virtual_machine"
+            if (
+                not script.strip()
+                or (
+                    windows
+                    and (
+                        script.startswith("#!")
+                        or re.search(r"(?i)<[ /]*(powershell|persist|script)[ >]", script)
+                    )
+                )
+                or (not windows and not re.match(r"^#!/bin/(bash|sh)\r?\n", script))
+            ):
+                raise ProjectInputError(
+                    "initialization_script",
+                    "Use raw PowerShell for Windows, or a Linux script starting with #!/bin/bash or #!/bin/sh on its own line.",
+                )
+        elif effective["initialization_script"] or effective["confirm_initialization_review"]:
+            raise ProjectInputError(
+                "enable_initialization",
+                "Enable initialization before supplying script content or a review declaration.",
+            )
     if "use_existing_network" in effective:
         if effective["use_existing_network"]:
             if not effective["confirm_existing_network_review"]:
@@ -694,6 +736,10 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
             display = "SSH public key provided"
         elif name == "index_html":
             display = "Website page content provided"
+        elif name == "initialization_script":
+            display = (
+                "Reviewed initialization script provided" if value else "No initialization script"
+            )
         elif name == "private_ip_address" and value == "":
             display = "Allocated by the cloud provider"
         elif definition["kind"] == "optional_zone" and value == "":

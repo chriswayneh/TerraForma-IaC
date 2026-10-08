@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from terraforma.aws_network_attachment import add_aws_attachment_data
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
+from terraforma.initialization import aws_initialization_payload
 from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
@@ -392,6 +393,10 @@ def build_aws(builder: TerraformGenerator) -> None:
         if standalone
         else [ref("aws_security_group.web.id")],
         **{"key_name": ref("aws_key_pair.this.key_name")}
+        | {
+            "user_data_base64": aws_initialization_payload(windows),
+            "user_data_replace_on_change": True,
+        }
         if standalone
         else {
             "user_data": ref(

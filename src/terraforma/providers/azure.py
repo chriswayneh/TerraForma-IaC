@@ -10,6 +10,7 @@ from terraforma.azure_network_attachment import (
 from terraforma.configuration import AZURE_RESERVED_USERNAMES
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
+from terraforma.initialization import add_azure_windows_initialization, initialization_precondition
 from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
@@ -352,6 +353,10 @@ def build_azure(builder: TerraformGenerator) -> None:
     }
     if standalone:
         compute.pop("custom_data")
+        if not windows:
+            compute["custom_data"] = ref(
+                "var.enable_initialization ? base64encode(var.initialization_script) : null"
+            )
         compute["zone"] = zone
         compute["source_image_id"] = ref("var.use_custom_image ? var.custom_image : null")
         image = block(
@@ -473,6 +478,7 @@ def build_azure(builder: TerraformGenerator) -> None:
                         "lifecycle",
                         children=[
                             builder._private_ip_precondition(),
+                            initialization_precondition(windows),
                             azure_attachment_precondition(),
                             azure_identity_precondition(),
                             *custom_image_preconditions("azure", windows),
@@ -524,6 +530,8 @@ def build_azure(builder: TerraformGenerator) -> None:
             else "azurerm_network_interface.this.private_ip_address"
         )
     if standalone:
+        if windows:
+            add_azure_windows_initialization(builder)
         builder.output(
             "managed_identity_principal_id",
             f'var.enable_workload_identity && var.workload_identity_type == "system_assigned" ? {vm_resource}.this.identity[0].principal_id : null',

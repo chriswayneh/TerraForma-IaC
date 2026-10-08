@@ -56,7 +56,8 @@ def test_gcp_windows_restricts_access_and_preserves_boot_and_activation(
     assert route["dest_range"] == '"35.190.247.13/32"'
     assert resources['"google_compute_subnetwork"']['"this"']["private_ip_google_access"] is True
     instance = resources['"google_compute_instance"']['"this"']
-    assert instance["metadata"] == {'"serial-port-enable"': '"FALSE"'}
+    assert '"serial-port-enable" = "FALSE"' in instance["metadata"]
+    assert 'var.enable_initialization ? {"windows-startup-script-ps1"' in instance["metadata"]
     assert "metadata_startup_script" not in instance
     assert instance["allow_stopping_for_update"] is False
     assert bool(instance["network_interface"][0].get("access_config")) is public

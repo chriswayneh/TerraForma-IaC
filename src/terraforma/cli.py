@@ -303,7 +303,18 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
 
         if definition["kind"] == "integer":
             click.echo(f"Whole number: {definition['minimum']}–{definition['maximum']}.")
-        if definition["kind"] == "boolean":
+        if definition["name"] == "initialization_script":
+            from terraforma.initialization import read_initialization_file
+
+            path = ask(questionary.text("Trusted initialization file path:"))
+            try:
+                answer = read_initialization_file(path)
+                validate_answer(definition, answer)
+            except (OSError, ValueError):
+                raise click.ClickException(
+                    "Choose a readable regular UTF-8 script file no larger than 4 KiB, without private keys or unsupported control characters."
+                ) from None
+        elif definition["kind"] == "boolean":
             answer = ask(
                 questionary.confirm(definition["label"] + "?", default=definition["default"])
             )
@@ -437,7 +448,7 @@ def wizard(target_dir: Path | None):
             else "VM administrator access is restricted to the selected network. Private access requires a routed path; no VPN or bastion is created."
         )
         click.echo(
-            "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur ongoing charges."
+            "Initialization scripts are optional. Compute, disks, public addresses and outbound NAT can incur ongoing charges."
         )
     elif architecture in {"single_web_server", "load_balanced_tier"}:
         click.echo(

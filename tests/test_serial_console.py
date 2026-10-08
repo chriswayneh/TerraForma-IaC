@@ -24,7 +24,10 @@ def test_gcp_compute_explicitly_disables_interactive_serial_access(workload, pub
     if workload == "virtual_machine":
         assert resource.attributes["metadata"]["enable-oslogin"] == "TRUE"
         assert resource.attributes["metadata"]["block-project-ssh-keys"] == "TRUE"
-        assert "metadata_startup_script" not in resource.attributes
+        assert (
+            resource.attributes["metadata_startup_script"].value
+            == "var.enable_initialization ? var.initialization_script : null"
+        )
     else:
         assert "nginx" in resource.attributes["metadata_startup_script"]
     capabilities = recipe_capabilities(recipe)
