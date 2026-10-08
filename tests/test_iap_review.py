@@ -37,7 +37,7 @@ def test_exact_iap_ingress_requires_manual_review_and_never_grants_approval(port
     assert "iap_admin_ingress" in codes(report)
     assert "limited_policy_coverage" in codes(report) and "unknown_values" in codes(report)
     assert "public_admin_access" not in codes(report)
-    assert report["approval_granted"] is False and report["policy_version"] == "0.10.0"
+    assert report["approval_granted"] is False and report["policy_version"] == "0.11.0"
     assert "private-secret-key" not in json.dumps(report)
 
 

@@ -16,4 +16,4 @@ Changing encryption can replace the VM or disks and delete data. Review backups,
 
 Retaining a disk does not preserve its key. Revoked key access can prevent booting, attaching disks and recovering snapshots. Destroying key material can make recovery irreversible. Keep key ownership, enabled versions, IAM access and retention under a separately reviewed recovery process. This project references the key without managing its lifecycle.
 
-Plan review remains partial: it does not verify KMS access, key state, effective encryption or recoverability. A local validation or review result never approves deployment.
+Local plan review flags declared Cloud KMS references for access and recovery review, blocks changes to an existing reference and blocks inline customer-supplied key material. It checks VM boot disks and standalone persistent disks; source-image/snapshot decryption and other disk attachment shapes remain outside these rules. Plan review remains partial: it does not verify KMS access, key state, effective encryption or recoverability. A local validation or review result never approves deployment.

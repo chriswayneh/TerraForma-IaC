@@ -19,6 +19,7 @@ The next stages turn that workflow into a guided provisioning platform. Users de
 - Extend the initial shared project specification to account/environment identity and resource dependencies.
 - Extend the implemented recipe input contracts as the resource catalog grows.
 - Extend account-specific capability preflight beyond the implemented target identity, optional VM size metadata, AWS standalone EBS/HVM boot and disk encryption capabilities, and selected AWS zone offering checks. Capacity, quotas, image compatibility and Terraform credential equivalence remain unverified.
+- Extend declared disk-key review beyond GCP boot/persistent disk references to effective key ownership, permissions and recovery evidence. Current local checks never grant deployment approval.
 - Artifact, credential, state, and execution controls needed before adding apply.
 
 The current release does not collect every VM setting or execute plan/apply/destroy operations. Cloud deployment and live OpenAI requests remain unverified.
@@ -73,6 +74,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Initial managed disk access review covers Azure remote import/export and public network settings. Effective permissions, private endpoints, encryption and backup/recovery still require separate review.
 - Apply resource-specific encryption and access defaults; explain unavoidable provider defaults.
 - GCP standalone boot/data disks can reference one existing Cloud KMS CryptoKey without managing key lifecycle or IAM grants. Location compatibility, service-agent access, key state and recovery remain unverified.
+- Local plan policy 0.11.0 flags GCP disk key-access review, blocks changes to existing references and inline customer-supplied key material, and handles unresolved/malformed controls without exposing values. Effective encryption and recovery remain outside these checks.
 - Preserve existing provider locks during validation with read-only initialization. Missing locks, remote module content trust and independently reviewed dependency upgrades remain explicit boundaries.
 - Bound request bodies, configuration sizes, subprocess duration, and job concurrency.
 - Keep cloud credentials in provider credential chains; make AI transmission opt-in throughout the product.

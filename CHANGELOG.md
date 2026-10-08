@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Plan review policy 0.11.0 adds GCP boot/persistent disk key-access review, blocks changes to existing key references and inline customer-supplied key material, and handles unresolved or malformed controls without exposing values. Effective encryption, key permissions and recovery remain unverified.
+
 - Added an optional existing Cloud KMS CryptoKey reference for GCP standalone boot/data disks, preserving Google-managed encryption by default. No keys or IAM grants are created; reference validation and generated guidance explain location/access, replacement and recovery boundaries.
 
 - Corrected catalog image choices for Windows recipes, removed the stale GCP exact-pin exclusion and synchronized gp3 capability text with current input limits. Catalog metadata now has regressions against questionnaire choices and performance bounds.

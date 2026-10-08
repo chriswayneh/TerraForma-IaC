@@ -1,5 +1,11 @@
 # Verification record
 
+## GCP disk key review checkpoint
+
+- The default suite passes 1,989 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 100 Python files; whitespace checks pass.
+- Fifty-eight new regressions cover boot/persistent disk references, added/changed/removed keys, unchanged keys, raw key material, relevant versus unrelated unknown values, malformed controls, preserved destructive blocking and identical redacted CLI/API reports.
+- Policy 0.11.0 checks declared plan controls only and always reports that approval is not granted. Effective encryption, key location/state/IAM, source-image decryption and recovery remain unverified. No cloud request, credentials access, key creation, IAM grant or apply was run.
+
 ## Existing GCP disk key checkpoint
 
 - The default suite passes 1,931 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 99 Python files; JavaScript syntax and whitespace checks pass.

@@ -11,7 +11,7 @@ from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.10.0"
+POLICY_VERSION = "0.11.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -70,6 +70,85 @@ def metadata_hop_findings(change: dict) -> list[tuple[str, str, str]]:
             )
         ]
     return []
+
+
+def gcp_disk_key_findings(resource_type: str, change: dict) -> list[tuple[str, str, str]]:
+    vm = resource_type == "google_compute_instance"
+    block_name = "boot_disk" if vm else "disk_encryption_key"
+    raw_fields = ("disk_encryption_key_raw",) if vm else ("raw_key", "rsa_encrypted_key")
+    fields = ("kms_key_self_link", *raw_fields)
+
+    def settings(values):
+        if values is None:
+            return {}
+        if not isinstance(values, dict):
+            raise TypeError("Disk resource values must be an object.")
+        blocks = values.get(block_name)
+        if blocks is None or blocks == []:
+            return {}
+        if not isinstance(blocks, list) or len(blocks) != 1 or not isinstance(blocks[0], dict):
+            raise TypeError("Disk key controls must contain one object.")
+        result = blocks[0]
+        for field in fields:
+            value = result.get(field)
+            if value is not None and (not isinstance(value, str) or len(value) > 4096):
+                raise ValueError("Disk key controls have unsupported values.")
+        return result
+
+    after = settings(change["after"])
+    before = settings(change.get("before"))
+    unknown = change.get("after_unknown", {})
+    if not isinstance(unknown, dict):
+        raise TypeError("Unknown disk key controls must be an object.")
+    markers = unknown.get(block_name, False)
+    if type(markers) is bool:
+        unresolved = markers
+    elif markers == []:
+        unresolved = False
+    elif isinstance(markers, list) and len(markers) == 1 and isinstance(markers[0], dict):
+        relevant = [markers[0].get(field, False) for field in fields]
+        if any(type(marker) is not bool for marker in relevant):
+            raise TypeError("Disk key markers must be boolean.")
+        unresolved = any(relevant)
+    else:
+        raise TypeError("Unknown disk key controls have an unsupported shape.")
+    findings = []
+    if any(after.get(field) for field in raw_fields):
+        findings.append(
+            (
+                "inline_disk_key_material",
+                "block",
+                "Disk encryption declares customer-supplied key material. Review protected configuration, state and plan handling separately; raw key values are omitted from this report.",
+            )
+        )
+    if unresolved or (vm and not after):
+        findings.append(
+            (
+                "disk_encryption_key_unknown",
+                "review",
+                "The plan does not establish the disk encryption-key configuration. Verify key ownership, access and recovery separately.",
+            )
+        )
+    else:
+        key = after.get("kms_key_self_link") or ""
+        previous = before.get("kms_key_self_link") or ""
+        if key:
+            findings.append(
+                (
+                    "disk_key_access_unverified",
+                    "review",
+                    "A disk references a Cloud KMS key. Enabled key versions, compatible location, Compute Engine service-agent permissions and recovery remain unverified; disk retention does not preserve key access.",
+                )
+            )
+        if change.get("before") is not None and key != previous:
+            findings.append(
+                (
+                    "disk_encryption_key_changed",
+                    "block",
+                    "Disk encryption-key ownership or reference changes require separate migration, access and recovery review. This report does not approve the change or establish an in-place migration.",
+                )
+            )
+    return findings
 
 
 def public_source(value: Any) -> bool:
@@ -219,6 +298,7 @@ POLICY_TYPES = NETWORK_TYPES | {
     "azurerm_managed_disk",
     "google_compute_instance",
     "google_compute_instance_template",
+    "google_compute_disk",
 }
 
 
@@ -747,6 +827,9 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                             resource_id,
                             "Database deletion protection is not established.",
                         )
+            if resource_type in {"google_compute_instance", "google_compute_disk"}:
+                for code, severity, message in gcp_disk_key_findings(resource_type, change):
+                    add(code, severity, resource_id, message)
         except (ValueError, KeyError, TypeError, AttributeError):
             add(
                 "unresolved_policy_input",

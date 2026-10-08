@@ -75,4 +75,4 @@ def test_removing_explicit_disable_is_blocked(resource_type):
         item for item in report["findings"] if item["code"] == "serial_console_protection_removed"
     )
     assert finding["severity"] == "block"
-    assert report["policy_version"] == "0.10.0" and report["approval_granted"] is False
+    assert report["policy_version"] == "0.11.0" and report["approval_granted"] is False
