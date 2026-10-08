@@ -390,6 +390,30 @@ dialog {
   padding-top: 28px;
 }
 
+#backend-dialog {
+  max-width: 640px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+#backend-fields .input-label {
+  margin-top: 16px;
+}
+#backend-fields input[type="checkbox"] {
+  margin-right: 8px;
+}
+.backend-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+#backend-results ul {
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
 .plan-review-panel h2 {
   font-size: 20px;
   margin: 12px 0;

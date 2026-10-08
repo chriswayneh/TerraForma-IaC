@@ -14,6 +14,12 @@ Generated ignore rules and file permissions reduce accidental exposure; they do 
 
 Development on `main` includes an offline input contract, separate from generated project specifications.
 
+In the local web UI, choose **Enter storage references** under **Prepare your state storage inputs**. Select S3, Azure Blob or Google Cloud Storage, enter non-secret references, then choose **Check inputs**. A valid check enables **Download input file**. Editing any field requires another check; changing storage type starts a new form. Closing the dialog clears its entries and results.
+
+The browser sends these inputs only to the local server for in-memory validation. The routes do not save files or access state, cloud credentials or AI. Downloading returns a separate `terraforma.backend.json` containing the references you entered; it is not added to the Terraform project ZIP. Browser/download-folder permissions apply. No backend is configured and no deployment is approved.
+
+![Guided state storage inputs using synthetic references](images/backend-inputs.png)
+
 Create the file through a terminal questionnaire when you prefer guided inputs:
 
 ```text
@@ -58,7 +64,7 @@ Use your own existing backend references. This example does not create or establ
 
 The checker accepts regular UTF-8 JSON files up to 16 KiB, rejects unknown fields, duplicate keys, unsupported schema versions and non-finite numbers, and requires strict input types. Never put credential values in this file. Keys/prefixes are bounded relative ASCII locations without traversal or empty segments. Bucket names use a limited 3–63-character lowercase subset; GCS underscores/long dotted names and S3 account-regional names are outside this first contract. Shape checks do not establish complete cloud naming eligibility, bucket ownership, existence or regional availability.
 
-The report includes the backend type, input-byte digest and outstanding reviews, omitting declared owner/account/storage locations. Exit zero means only that the supported input shape is valid. `backend_configured`, `identity_verified` and `approval_granted` are always false. The command makes no network request, reads no credentials, writes no configuration and accesses no state. Users remain responsible for keeping permitted reference fields non-secret. Backend integration and browser configuration remain planned.
+The report includes the backend type, input-byte digest and outstanding reviews, omitting declared owner/account/storage locations. Exit zero means only that the supported input shape is valid. `backend_configured`, `identity_verified` and `approval_granted` are always false. The terminal checker makes no network request, reads no credentials, writes no configuration and accesses no state. Users remain responsible for keeping permitted reference fields non-secret. Actual backend configuration and cloud verification remain planned.
 
 Users should select an existing, separately administered backend and enter its non-secret location. Backend credentials must come from supported external authentication, with backend and provider identities verified separately. TerraForma must not silently create storage or grant permissions while initializing a workload.
 

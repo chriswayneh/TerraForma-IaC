@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added guided backend inputs to the local web UI with shared validation, a separate JSON download, rechecking after edits and clearing on close. API checks/downloads have 16 KiB limits, session/origin guards and redacted errors. No backend configuration, credential/state access or cloud operation is performed.
+
 - Added an offline `backend-wizard` questionnaire using the shared S3/Azure Blob/GCS input contract. It saves a standalone non-secret backend intent with existing writer permissions, synchronization and cleanup; canceled/invalid questions and declined S3 lockfile intent save nothing. No backend configuration or state operation is performed.
 
 - Added offline `check-backend` validation for strictly typed non-secret S3, Azure Blob and GCS intent files, with bounded regular-file reads, credential-field rejection and value-free reports. Shape validation does not configure a backend, verify access or grant deployment approval.

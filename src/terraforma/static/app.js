@@ -299,6 +299,7 @@ function setBusy(value) {
   byId("ai-option").disabled = value || !aiAvailable;
   byId("load-project-button").disabled = value;
   byId("review-plan-button").disabled = value;
+  byId("backend-open").disabled = value;
   byId("target-preflight-consent").disabled = value || !project?.specification;
   byId("target-machine-check").disabled = value || byId("target-machine-option").hidden;
   byId("target-preflight-button").disabled = value || !project?.specification || !byId("target-preflight-consent").checked;

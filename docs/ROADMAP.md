@@ -81,7 +81,7 @@ Status: in progress. Initial local plan review in both interfaces, bounded API r
 - Specify artifact permissions, log redaction, state ownership, dependency trust, and recovery behavior before adding apply.
 - The [state protection design](STATE_PROTECTION.md) records planned backend inputs, separate backend/workload identity, locking, retention, migration and recovery acceptance requirements. Backend integration and live verification remain planned.
 - An offline `check-backend` contract validates non-secret S3/Azure Blob/GCS intent files, requires declared S3 lockfile use and omits location values from its report. It never configures a backend or verifies cloud access; integration remains planned.
-- The terminal `backend-wizard` now collects those inputs through guided questions and saves a separate intent file. Browser inputs, generated backend configuration and verified authentication/locking/recovery remain planned.
+- The terminal `backend-wizard` and local web UI now collect those inputs through guided questions and save/download a separate intent file. Generated backend configuration and verified authentication/locking/recovery remain planned.
 - Terminal artifact generation has documented creation permissions and best-effort failure/interruption cleanup, including explicit leftover-file errors. Protected state and atomic/durable execution artifacts remain outstanding. See [artifact handling](ARTIFACTS.md).
 - Terminal output now flushes and synchronizes each generated file before reporting success. Synchronization failures follow existing cleanup/recovery rules; directory synchronization and atomic project publication remain outstanding.
 

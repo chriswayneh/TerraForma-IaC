@@ -1,11 +1,13 @@
 import asyncio
 import io
+import json
 import os
 import re
 import secrets
 import shutil
 import zipfile
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request
@@ -19,6 +21,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import PROJECT_GITIGNORE, checksum_document, project_artifacts
+from terraforma.backend import (
+    MAX_BACKEND_BYTES,
+    backend_input_contract,
+    parse_backend,
+    review_backend,
+)
 from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
@@ -47,6 +55,11 @@ class PreflightRequest(BaseModel):
     specification: ProjectSpecification
     verify_target: StrictBool = False
     verify_machine: StrictBool = False
+
+
+class BackendChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    backend: Literal["s3", "azurerm", "gcs"]
 
 
 def generate_project(config: WizardConfig) -> dict:
@@ -257,7 +270,12 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
     app.add_middleware(
-        RequestSizeLimitMiddleware, path_limits={"/api/plans/review": MAX_PLAN_BYTES}
+        RequestSizeLimitMiddleware,
+        path_limits={
+            "/api/plans/review": MAX_PLAN_BYTES,
+            "/api/backends/check": MAX_BACKEND_BYTES,
+            "/api/backends/download": MAX_BACKEND_BYTES,
+        },
     )
     token = secrets.token_urlsafe(32)
     validation_lock = asyncio.Lock()
@@ -289,6 +307,35 @@ def create_app() -> FastAPI:
     @app.get("/api/catalog")
     async def catalog():
         return {"recipes": recipe_catalog()}
+
+    @app.post("/api/backends/input-contract")
+    async def backend_inputs(payload: BackendChoice):
+        return {"schema_version": 1, "inputs": backend_input_contract(payload.backend)}
+
+    @app.post("/api/backends/check")
+    async def backend_check(request: Request):
+        try:
+            return review_backend(await request.body())
+        except (ValueError, TypeError, RecursionError):
+            raise HTTPException(
+                status_code=422,
+                detail="Backend inputs are invalid or unsupported. Use non-secret references in the documented format; values are omitted.",
+            ) from None
+
+    @app.post("/api/backends/download")
+    async def backend_download(request: Request):
+        try:
+            intent = parse_backend(await request.body())
+        except (ValueError, TypeError, RecursionError):
+            raise HTTPException(
+                status_code=422,
+                detail="Backend inputs are invalid or unsupported; values are omitted.",
+            ) from None
+        return Response(
+            json.dumps(intent.model_dump(), indent=2) + "\n",
+            media_type="application/json",
+            headers={"Content-Disposition": 'attachment; filename="terraforma.backend.json"'},
+        )
 
     @app.post("/api/projects/import")
     async def project_import(request: Request):

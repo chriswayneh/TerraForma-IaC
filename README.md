@@ -47,6 +47,10 @@ Development on `main` adds a questionnaire for declared recipe inputs, including
 
 ![Configure recipe inputs and preview Terraform](docs/images/configuration.png)
 
+Development on `main` also provides guided state storage references, checked locally and downloaded as a separate input file. The example below uses synthetic references; backend setup and cloud access remain unverified.
+
+![Guided state storage inputs](docs/images/backend-inputs.png)
+
 ## Project status
 
 | Milestone | Status |

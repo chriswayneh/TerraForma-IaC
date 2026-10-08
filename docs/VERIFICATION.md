@@ -1,5 +1,12 @@
 # Verification record
 
+## Browser backend inputs checkpoint
+
+- The default suite passes 2,114 tests with 292 optional/native/platform cases skipped. The targeted backend/CLI/browser API suite passes 142 tests. Ruff checks and formatting pass across 104 Python files; JavaScript syntax and whitespace checks pass.
+- Twenty-three new API regressions cover shared provider contracts/checks/downloads, session/origin guards, credential/invalid-field rejection, strict JSON, exact/streamed byte limits, value-free reports and private attachment/cache headers.
+- A temporary browser tab checked synthetic references for all three storage providers, rejected invalid S3 input, downloaded and inspected the valid S3 file, disabled downloading after an edit and cleared entries after closing. A phone-sized viewport showed no horizontal overflow; its override was reset. No cloud request, credential/state access, backend initialization, migration or provisioning was run.
+- The browser download contains non-secret references and follows browser folder permissions. Local API checks run in memory and never write an input file. Actual authentication, locking, storage protection and recovery remain unverified.
+
 ## Guided backend inputs checkpoint
 
 - The default suite passes 2,091 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 103 Python files; whitespace and changed documentation link checks pass.

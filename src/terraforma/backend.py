@@ -176,10 +176,14 @@ def validate_backend_answer(
     return True
 
 
-def review_backend(raw: bytes) -> dict:
+def parse_backend(raw: bytes) -> S3BackendIntent | AzureBackendIntent | GCSBackendIntent:
     if len(raw) > MAX_BACKEND_BYTES:
         raise ValueError("Backend intent exceeds the supported byte limit.")
-    intent = BACKEND_ADAPTER.validate_python(strict_json(raw))
+    return BACKEND_ADAPTER.validate_python(strict_json(raw))
+
+
+def review_backend(raw: bytes) -> dict:
+    intent = parse_backend(raw)
     return {
         "schema_version": 1,
         "backend": intent.backend,
