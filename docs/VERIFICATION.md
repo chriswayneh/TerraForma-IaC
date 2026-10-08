@@ -1,5 +1,10 @@
 # Verification record
 
+## Prior disk key material checkpoint
+
+- All 162 targeted disk-key and existing plan-review tests pass after extending the rule to prior values; Ruff checks and formatting pass across 100 Python files. Six additional regressions cover removed or migrated boot/persistent disk material without disclosing it. The preceding full-suite checkpoint remains recorded below.
+- No cloud request, credentials access, key creation, IAM grant or apply was run. Removing a key from planned configuration does not remove its prior value from the private plan export.
+
 ## GCP disk key review checkpoint
 
 - The default suite passes 1,989 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 100 Python files; whitespace checks pass.

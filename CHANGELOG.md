@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- GCP disk-key review also blocks prior customer-supplied material retained in a plan after removal or migration to a Cloud KMS reference. The report omits values; removal does not make the original plan safe to publish.
+
 - Plan review policy 0.11.0 adds GCP boot/persistent disk key-access review, blocks changes to existing key references and inline customer-supplied key material, and handles unresolved or malformed controls without exposing values. Effective encryption, key permissions and recovery remain unverified.
 
 - Added an optional existing Cloud KMS CryptoKey reference for GCP standalone boot/data disks, preserving Google-managed encryption by default. No keys or IAM grants are created; reference validation and generated guidance explain location/access, replacement and recovery boundaries.

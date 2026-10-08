@@ -82,6 +82,23 @@ def test_unknown_key_controls_do_not_look_verified(vm, markers):
     assert "disk_key_access_unverified" not in result
 
 
+@pytest.mark.parametrize(
+    "vm,field",
+    [(True, "disk_encryption_key_raw"), (False, "raw_key"), (False, "rsa_encrypted_key")],
+)
+@pytest.mark.parametrize("new_key", ["", KEY])
+def test_removed_key_material_still_requires_protected_plan_review(vm, field, new_key):
+    data = key_plan(
+        vm,
+        [{"kms_key_self_link": new_key}],
+        [{field: "private-prior-key-material"}],
+        actions=["update"],
+    )
+    result = findings(data)
+    assert result["inline_disk_key_material"]["severity"] == "block"
+    assert "private-prior-key-material" not in json.dumps(review_plan(data, artifact_sha256="test"))
+
+
 @pytest.mark.parametrize("vm", [False, True])
 def test_unrelated_unknown_id_keeps_key_access_review(vm):
     result = findings(key_plan(vm, [{"kms_key_self_link": KEY}], markers=[{"id": True}]))

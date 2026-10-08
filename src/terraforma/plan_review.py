@@ -113,12 +113,12 @@ def gcp_disk_key_findings(resource_type: str, change: dict) -> list[tuple[str, s
     else:
         raise TypeError("Unknown disk key controls have an unsupported shape.")
     findings = []
-    if any(after.get(field) for field in raw_fields):
+    if any(values.get(field) for values in (before, after) for field in raw_fields):
         findings.append(
             (
                 "inline_disk_key_material",
                 "block",
-                "Disk encryption declares customer-supplied key material. Review protected configuration, state and plan handling separately; raw key values are omitted from this report.",
+                "The plan contains prior or planned customer-supplied disk key material. Review protected configuration, state and plan handling separately; raw key values are omitted from this report.",
             )
         )
     if unresolved or (vm and not after):
