@@ -3,6 +3,7 @@
 ## v0.3.0 release verification
 
 - The default suite passes 2,150 tests with 292 optional/native/platform cases skipped. Ruff checks and formatting pass across 104 Python files; backend JavaScript syntax, whitespace and local documentation links pass.
+- All 495 selected generator, network, image, administrator-name and AWS-placement tests pass with native checks enabled on Windows, using Terraform 1.14.0 and TFLint 0.61.0. Provider initialization, validation and linting ran without cloud deployment. This suite includes the native template combinations skipped by the default suite.
 - Twenty additional backend API cases verify known-field format guidance and generic unknown/schema errors without submitted values. Three project cases cover the release template default and accepted saved development specifications, preserving template labels and recording the current generator version in receipts.
 - A clean Python 3.14 virtual environment installed the built v0.3.0 wheel with freshly resolved dependencies, including Pydantic 2.14.0 and FastAPI 0.143.0. The installed package passed version, bundled UI assets, generation, ZIP/checksum presence, project import, backend contracts, safe field errors and absent plan/apply/destroy route checks.
 - The installed CLI generated the synthetic example project and `verify-project` reported matching files and specification. Receipt authentication and deployment approval remained false.
