@@ -40,9 +40,16 @@ def test_browser_contract_check_and_download_match_terminal(client, backend, mon
     assert download.headers["content-type"] == "application/json"
     assert download.headers["cache-control"] == "no-store"
     assert download.headers["x-content-type-options"] == "nosniff"
+    imported = client.post("/api/backends/import", headers=auth, content=download.content)
+    assert imported.status_code == 200
+    assert imported.json()["intent"] == intent(backend)
+    assert imported.json()["inputs"] == contract.json()["inputs"]
+    assert imported.json()["backend_configured"] is False
+    assert imported.json()["identity_verified"] is False
+    assert imported.json()["approval_granted"] is False
 
 
-@pytest.mark.parametrize("route", ["input-contract", "check", "download"])
+@pytest.mark.parametrize("route", ["input-contract", "check", "download", "import"])
 def test_backend_routes_require_session_and_reject_cross_origin(client, route):
     body = {"backend": "s3"} if route == "input-contract" else intent("s3")
     path = f"/api/backends/{route}"
@@ -55,7 +62,7 @@ def test_backend_routes_require_session_and_reject_cross_origin(client, route):
     )
 
 
-@pytest.mark.parametrize("route", ["check", "download"])
+@pytest.mark.parametrize("route", ["check", "download", "import"])
 @pytest.mark.parametrize(
     "changes",
     [
@@ -77,7 +84,7 @@ def test_invalid_backend_input_is_rejected_without_values(client, route, changes
     assert "content-disposition" not in response.headers
 
 
-@pytest.mark.parametrize("route", ["check", "download"])
+@pytest.mark.parametrize("route", ["check", "download", "import"])
 def test_backend_bytes_are_limited_and_streamed_overflow_rejected(client, route):
     auth = headers(client)
     raw = json.dumps(intent("gcs")).encode()
@@ -91,7 +98,7 @@ def test_backend_bytes_are_limited_and_streamed_overflow_rejected(client, route)
     assert "16 KiB" in overflow.text
 
 
-@pytest.mark.parametrize("route", ["check", "download"])
+@pytest.mark.parametrize("route", ["check", "download", "import"])
 def test_duplicate_backend_fields_are_rejected(client, route):
     raw = b'{"backend":"s3","backend":"gcs","token":"private-token"}'
     response = client.post(f"/api/backends/{route}", headers=headers(client), content=raw)
@@ -109,3 +116,26 @@ def test_unsupported_contract_is_redacted_and_ui_assets_are_served(client):
     assert "private-unsupported" not in response.text
     assert client.get("/static/backend.js").status_code == 200
     assert "State storage inputs" in client.get("/").text
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"version": 4, "resources": [], "outputs": {"password": "private-secret"}},
+        {"schema_version": 1, "recipe": {"project_name": "private-project"}},
+        {"client_email": "private@example.com", "private_key": "private-key"},
+    ],
+)
+def test_import_rejects_state_project_and_credential_files(client, data):
+    response = client.post("/api/backends/import", headers=headers(client), json=data)
+    assert response.status_code == 422
+    assert "private" not in response.text
+
+
+def test_import_normalizes_supported_references_and_returns_no_execution_claim(client):
+    data = intent("azurerm")
+    data["tenant_id"] = "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA"
+    response = client.post("/api/backends/import", headers=headers(client), json=data)
+    assert response.status_code == 200
+    assert response.json()["intent"]["tenant_id"] == data["tenant_id"].lower()
+    assert response.json()["approval_granted"] is False

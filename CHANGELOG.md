@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added saved backend input-file import in the web UI, with strict 16 KiB validation, provider-specific form restoration and fresh checks before download. Invalid files preserve current entries; no backend or cloud operation is performed.
+
 - Added guided backend inputs to the local web UI with shared validation, a separate JSON download, rechecking after edits and clearing on close. API checks/downloads have 16 KiB limits, session/origin guards and redacted errors. No backend configuration, credential/state access or cloud operation is performed.
 
 - Added an offline `backend-wizard` questionnaire using the shared S3/Azure Blob/GCS input contract. It saves a standalone non-secret backend intent with existing writer permissions, synchronization and cleanup; canceled/invalid questions and declined S3 lockfile intent save nothing. No backend configuration or state operation is performed.

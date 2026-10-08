@@ -275,6 +275,7 @@ def create_app() -> FastAPI:
             "/api/plans/review": MAX_PLAN_BYTES,
             "/api/backends/check": MAX_BACKEND_BYTES,
             "/api/backends/download": MAX_BACKEND_BYTES,
+            "/api/backends/import": MAX_BACKEND_BYTES,
         },
     )
     token = secrets.token_urlsafe(32)
@@ -311,6 +312,23 @@ def create_app() -> FastAPI:
     @app.post("/api/backends/input-contract")
     async def backend_inputs(payload: BackendChoice):
         return {"schema_version": 1, "inputs": backend_input_contract(payload.backend)}
+
+    @app.post("/api/backends/import")
+    async def backend_import(request: Request):
+        try:
+            intent = parse_backend(await request.body())
+        except (ValueError, TypeError, RecursionError):
+            raise HTTPException(
+                status_code=422,
+                detail="Backend input file is invalid or unsupported. Choose a non-secret backend intent; values are omitted.",
+            ) from None
+        return {
+            "intent": intent.model_dump(),
+            "inputs": backend_input_contract(intent.backend),
+            "backend_configured": False,
+            "identity_verified": False,
+            "approval_granted": False,
+        }
 
     @app.post("/api/backends/check")
     async def backend_check(request: Request):

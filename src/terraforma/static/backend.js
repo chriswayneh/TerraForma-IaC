@@ -13,6 +13,7 @@
     backendForm.querySelectorAll("input, select").forEach((input) => { input.disabled = value; });
     byId("backend-check").disabled = value || !definitions.length;
     byId("backend-download").disabled = value || !checkedPayload;
+    byId("backend-import").disabled = value;
     backendForm.setAttribute("aria-busy", String(value));
   }
 
@@ -33,6 +34,35 @@
     return JSON.stringify(data);
   }
 
+  function renderFields(inputs, values = {}) {
+    definitions = inputs;
+    byId("backend-fields").replaceChildren();
+    for (const definition of definitions) {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.id = `backend-${definition.name}`;
+      input.name = definition.name;
+      input.type = definition.kind === "boolean" ? "checkbox" : "text";
+      input.required = true;
+      input.autocomplete = "off";
+      input.spellcheck = false;
+      label.className = "input-label";
+      label.htmlFor = input.id;
+      const value = values[definition.name] ?? definition.default;
+      if (definition.kind === "boolean") {
+        input.checked = value;
+        label.append(input, document.createTextNode(definition.label));
+        byId("backend-fields").append(label);
+      } else {
+        input.className = "text-input";
+        input.value = value;
+        input.maxLength = 512;
+        label.textContent = definition.label;
+        byId("backend-fields").append(label, input);
+      }
+    }
+  }
+
   async function loadFields() {
     const current = ++version;
     definitions = [];
@@ -43,30 +73,7 @@
     try {
       const result = await (await api("/api/backends/input-contract", { backend: byId("backend-type").value })).json();
       if (current !== version || !dialog.open) return;
-      definitions = result.inputs;
-      for (const definition of definitions) {
-        const label = document.createElement("label");
-        const input = document.createElement("input");
-        input.id = `backend-${definition.name}`;
-        input.name = definition.name;
-        input.type = definition.kind === "boolean" ? "checkbox" : "text";
-        input.required = true;
-        input.autocomplete = "off";
-        input.spellcheck = false;
-        label.className = "input-label";
-        label.htmlFor = input.id;
-        if (definition.kind === "boolean") {
-          input.checked = definition.default;
-          label.append(input, document.createTextNode(definition.label));
-          byId("backend-fields").append(label);
-        } else {
-          input.className = "text-input";
-          input.value = definition.default;
-          input.maxLength = 512;
-          label.textContent = definition.label;
-          byId("backend-fields").append(label, input);
-        }
-      }
+      renderFields(result.inputs);
       invalidate();
     } catch (error) {
       if (current === version) byId("backend-status").textContent = error.message;
@@ -93,6 +100,38 @@
   });
   byId("backend-type").addEventListener("change", loadFields);
   byId("backend-fields").addEventListener("input", invalidate);
+
+  byId("backend-import").addEventListener("click", () => {
+    if (!pending) byId("backend-file").click();
+  });
+  byId("backend-file").addEventListener("change", async () => {
+    const file = byId("backend-file").files[0];
+    if (!file) return;
+    byId("backend-file").value = "";
+    if (pending || !dialog.open) return;
+    const current = ++version;
+    invalidate();
+    if (file.size > 16 * 1024) {
+      byId("backend-status").textContent = "Choose a non-secret backend input file up to 16 KiB. Existing entries were kept.";
+      return;
+    }
+    setPending(true);
+    byId("backend-status").textContent = "Checking the saved input file locally…";
+    try {
+      const raw = await file.arrayBuffer();
+      if (current !== version || !dialog.open) return;
+      const result = await (await api("/api/backends/import", raw, true)).json();
+      if (current !== version || !dialog.open) return;
+      byId("backend-type").value = result.intent.backend;
+      renderFields(result.inputs, result.intent);
+      invalidate();
+      byId("backend-status").textContent = "Saved inputs loaded. Review the references and check inputs before downloading. No backend was configured or cloud access verified.";
+    } catch (error) {
+      if (current === version) byId("backend-status").textContent = error.message + " Existing entries were kept.";
+    } finally {
+      if (current === version) setPending(false);
+    }
+  });
 
   backendForm.addEventListener("submit", async (event) => {
     event.preventDefault();

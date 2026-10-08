@@ -18,6 +18,8 @@ In the local web UI, choose **Enter storage references** under **Prepare your st
 
 The browser sends these inputs only to the local server for in-memory validation. The routes do not save files or access state, cloud credentials or AI. Downloading returns a separate `terraforma.backend.json` containing the references you entered; it is not added to the Terraform project ZIP. Browser/download-folder permissions apply. No backend is configured and no deployment is approved.
 
+Choose **Load saved storage inputs** to reuse a previously downloaded file. The local server validates its strict schema and 16 KiB byte limit, then returns the supported non-secret references to fill the form. A valid import selects its storage type and replaces the entries; invalid or oversized files preserve current entries. Imports clear the previous check result, so review and check again before downloading. State exports, project manifests and credential-file schemas are unsupported; do not select files containing secrets. Closing still clears the form, and inputs are not saved in browser storage.
+
 ![Guided state storage inputs using synthetic references](images/backend-inputs.png)
 
 Create the file through a terminal questionnaire when you prefer guided inputs:

@@ -464,6 +464,9 @@
       <div class="eyebrow">PREPARE YOUR WORKSPACE</div>
       <h2 id="backend-heading">State storage inputs</h2>
       <p>Enter references for existing storage. Keep credentials outside this form. This checks inputs and downloads a separate file; it does not configure storage, access state or migrate a project.</p>
+      <button class="button subtle" id="backend-import" type="button">Load saved storage inputs</button>
+      <input id="backend-file" type="file" accept=".json,application/json" aria-label="Saved non-secret backend input file" hidden />
+      <p>Load a terraforma.backend.json file, up to 16 KiB. Do not select state, plan or credential files. A valid file replaces the form; an invalid file leaves your entries in place.</p>
       <form id="backend-form">
         <label class="input-label" for="backend-type">Existing state storage</label>
         <select id="backend-type" class="text-input">

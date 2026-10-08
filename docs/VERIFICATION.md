@@ -1,5 +1,11 @@
 # Verification record
 
+## Saved backend input import checkpoint
+
+- The default suite passes 2,127 tests with 292 optional/native/platform cases skipped. The targeted backend/browser suite passes 155 tests. Ruff checks and formatting pass across 104 Python files; JavaScript syntax and whitespace checks pass.
+- Thirteen additional API cases cover import authentication/origin guards, unsupported/credential fields, duplicate keys, exact and streamed size boundaries, rejected state/project/credential-file schemas and canonical UUID restoration. Existing provider round trips now import downloaded files and confirm the returned contract and unverified status.
+- Browser checks imported a synthetic GCP intent into the S3 form, restored its references and required a new check before download. Invalid state-shaped and oversized files preserved an existing owner entry. A new check succeeded; the screenshot uses synthetic references. No cloud request, credential/state access, backend initialization or migration was run.
+
 ## Browser backend inputs checkpoint
 
 - The default suite passes 2,114 tests with 292 optional/native/platform cases skipped. The targeted backend/CLI/browser API suite passes 142 tests. Ruff checks and formatting pass across 104 Python files; JavaScript syntax and whitespace checks pass.
