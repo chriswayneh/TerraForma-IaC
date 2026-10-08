@@ -63,7 +63,7 @@ def test_private_ip_boundaries_match_generated_subnet(provider, public, network,
     ):
         with pytest.raises(ValueError, match="provider-reserved"):
             compile_project(specification(provider, public, network, str(expected[offset])))
-    with pytest.raises(ValueError, match="generated VM subnet"):
+    with pytest.raises(ValueError, match="selected VM subnet"):
         compile_project(specification(provider, public, network, "192.168.250.10"))
 
 

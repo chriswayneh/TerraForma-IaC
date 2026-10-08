@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added standalone Azure Linux/Windows attachment to one reviewed existing IPv4-only subnet with a subnet NSG in the selected subscription and VM region. Existing mode leaves VNet, subnet, NSG association and NAT ownership separate, checks declared subnet metadata, and validates private addresses against the actual declared range. See [Azure subnet inputs](docs/AZURE_EXISTING_SUBNET.md).
+- Added counted-address moves for eight prior Azure network resources and offline mocked plan ownership/metadata checks. Switching deployed projects can still delete owned infrastructure; live migration is unverified.
+- Corrected the browser private-address hint after project import to use restored inputs instead of initial defaults.
+
 - Added standalone GCP Linux/Windows attachment to one reviewed existing IPv4-only subnet in the selected project/region. Existing mode leaves network infrastructure, access rules, Windows activation connectivity and API enablement separately managed; no existing network tag is adopted automatically. Exact CIDR and network review guards fail closed. See [existing subnet inputs](docs/GCP_EXISTING_SUBNET.md).
 - Added counted-address moves for prior standalone GCP network resources and mocked plan ownership tests. Switching an already managed project to existing mode can still delete its old owned infrastructure; no state ownership transfer is performed.
 - Expanded the bounded project input budget to 48 fields as the guided contracts grow. Unsupported and credential inputs remain rejected.

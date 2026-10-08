@@ -25,13 +25,15 @@ def recipe_capabilities(config: WizardConfig) -> dict:
         "Automatic provisioning",
         "Custom resource composition",
     ]
-    if not (standalone and config.provider == "gcp"):
+    if not (standalone and config.provider in {"gcp", "azure"}):
         unsupported.append("Existing-network attachment")
     else:
         unsupported.extend(
             [
-                "GCP Shared VPC or cross-project subnets",
-                "GCP existing IPv6/dual-stack or legacy networks",
+                "GCP Shared VPC or cross-project subnets"
+                if config.provider == "gcp"
+                else "Azure cross-subscription, delegated or unprotected existing subnets",
+                "Existing IPv6/dual-stack networks",
                 "Managing existing-network access rules or NAT",
             ]
         )

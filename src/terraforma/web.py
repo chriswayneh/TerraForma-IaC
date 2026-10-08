@@ -177,14 +177,19 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
                     "One VM uses the declared existing custom image, selected machine size and boot disk. Image provenance, guest agents, OS family, licensing, boot compatibility and administrator access remain unverified. Application initialization is not configured."
                 )
     if payload.inputs.get("use_existing_network", False):
+        azure_attachment = payload.recipe.provider == "azure"
         project["guide"]["components"][0] = {
-            "name": "Existing Google Cloud subnet",
-            "explanation": "The VM attaches to the declared existing subnet. No VPC, subnet, firewall, route, router, NAT or Compute API enablement is managed in this mode. Existing policies, routing and egress remain independently managed and unverified.",
+            "name": "Existing Azure subnet" if azure_attachment else "Existing Google Cloud subnet",
+            "explanation": "The new VM NIC attaches to the declared existing subnet with an existing subnet NSG. No VNet, subnet, NSG, NSG association or NAT infrastructure is managed in this mode. Existing policies, routing and egress remain independently managed and unverified."
+            if azure_attachment
+            else "The VM attaches to the declared existing subnet. No VPC, subnet, firewall, route, router, NAT or Compute API enablement is managed in this mode. Existing policies, routing and egress remain independently managed and unverified.",
         }
         for component in project["guide"]["components"]:
             if component["name"] == "Administrator access":
                 component["explanation"] = (
-                    "Administrator access depends on existing firewall policies, routing and guest authentication. The selected CIDR or IAP path is a declaration only; this mode creates no access rule, target network tag, IAM grant or connection. Windows activation must also be provided by the existing network."
+                    "Administrator access depends on existing NSGs, routing and guest authentication. The supplied administrator CIDR is a declaration only; this mode creates no access rule, NSG association, role grant or connection. Windows activation must also be provided by the existing network."
+                    if azure_attachment
+                    else "Administrator access depends on existing firewall policies, routing and guest authentication. The selected CIDR or IAP path is a declaration only; this mode creates no access rule, target network tag, IAM grant or connection. Windows activation must also be provided by the existing network."
                 )
         project["guide"]["route"][1] = "Existing access rules (separate review)"
         project["guide"]["route"][0] = (
@@ -193,7 +198,9 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             else "Existing administrator routing (unverified)"
         )
         project["notes"].append(
-            "Existing subnet mode leaves network infrastructure and Compute API enablement separately managed. Review inherited rules, egress, administrator access and Windows activation. No existing network tag is attached automatically; generation does not verify effective access."
+            "Existing Azure subnet mode leaves network infrastructure separately managed. Metadata guards check subscription, region, one declared IPv4 prefix and a subnet NSG; they do not check delegation, effective rules, available addresses, egress or attachment permissions. Review administrator access and Windows activation separately."
+            if azure_attachment
+            else "Existing subnet mode leaves network infrastructure and Compute API enablement separately managed. Review inherited rules, egress, administrator access and Windows activation. No existing network tag is attached automatically; generation does not verify effective access."
         )
     if payload.recipe.architecture_type in {
         "virtual_machine",

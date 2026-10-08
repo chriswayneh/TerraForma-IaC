@@ -1,5 +1,13 @@
 # Verification record
 
+## Existing Azure subnet — v0.4.0 development checkpoint
+
+- The full default suite passes 2,255 tests with 356 optional/native/platform cases skipped. Twenty-one new regressions cover ownership, subscription/CIDR guards, provider-reserved addresses, explicit range input, terminal questions, safe errors, offline API round trips and browser address calculations.
+- Eight Linux/Windows, public/private and catalog/custom existing-subnet combinations pass Terraform 1.14.0 validation and TFLint 0.61.0 with existing initialized provider locks. All 24 baseline Azure recipe combinations pass validation/lint too. Two additional Terraform mocked tests (eight plan runs) confirm zero managed VNet/subnet/NSG/NAT infrastructure in existing mode and reject mismatched CIDR, region and missing subnet NSG metadata. All Azure provider operations in these plan tests are mocked; no live provider or cloud credentials are used.
+- Browser imports restore both OS variants, show the declared existing range's usable addresses, and generate with cloud consent off. Missing review focuses the declaration field; correction succeeds. The 390×844 check has no horizontal page overflow; temporary viewport settings and synthetic entries were cleared. The screenshot uses synthetic references.
+- Ruff checks/formatting pass across 112 Python files, JavaScript syntax and local documentation links pass, and the rebuilt development wheel passes twelve offline fixture imports plus bundled UI checks from an isolated package directory using existing local dependencies. This is not a released artifact or a fresh dependency-resolution claim.
+- The preceding GCP checkpoint (`c579617`) passes GitHub CI run 37857826630. Azure attachment tests are included in native CI. This checkpoint does not establish live upgrades, delegated-subnet detection, effective NSG safety, attachment permissions, IP availability, login or cleanup. v0.4.0 release gates remain open; the user selected continued offline development without cloud test accounts.
+
 ## Existing GCP subnet — v0.4.0 development checkpoint
 
 - The full default suite passes 2,234 tests with 346 optional/native/platform cases skipped. Ruff checks and formatting pass across 110 Python files; JavaScript syntax and whitespace checks pass. Sixteen new regressions cover ownership guards, project/region/CIDR validation, safe errors, API round trips and the Linux/Windows terminal questionnaires.

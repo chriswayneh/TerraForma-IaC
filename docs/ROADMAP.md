@@ -102,7 +102,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 | Operating system and images | Catalog choices and guided existing-image references on AWS, Azure and GCP | Account/image compatibility and guest boot evidence |
 | Capacity and disks | Machine size, boot disk, one optional data disk and documented provider choices | Broader disk/backup choices and live behavior |
 | Workload identity | Existing AWS profile/GCP service account; Azure system or one existing user-assigned identity | Effective permissions and attachment evidence |
-| Networks | New networks on all clouds; one existing GCP IPv4-only subnet | Existing AWS/Azure network inputs, broader composition and live access |
+| Networks | New networks on all clouds; one existing Azure or GCP IPv4-only subnet | Existing AWS network inputs, broader composition and live access |
 | Tags and initialization | Environment labels and fixed recipe tags; standalone application setup remains external | Additional guided labels and trusted initialization inputs |
 | Release acceptance | Structural, lint and local mocked checks | Dedicated account creation, Linux/Windows login, teardown and recovery evidence |
 

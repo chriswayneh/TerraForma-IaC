@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from terraforma.azure_identity import azure_identity_precondition
+from terraforma.azure_network_attachment import (
+    add_azure_attachment_data,
+    azure_attachment_precondition,
+)
 from terraforma.configuration import AZURE_RESERVED_USERNAMES
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
@@ -12,6 +16,15 @@ if TYPE_CHECKING:
 
 
 def build_azure(builder: TerraformGenerator) -> None:
+    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
+    owned_network = {"count": ref("var.use_existing_network ? 0 : 1")} if standalone else {}
+    subnet_id = (
+        ref(
+            "var.use_existing_network ? data.azurerm_subnet.existing[0].id : azurerm_subnet.this[0].id"
+        )
+        if standalone
+        else ref("azurerm_subnet.this.id")
+    )
     builder.variable("location", "Azure region.", "eastus")
     builder.variable("subscription_id", "Azure subscription ID.")
     builder.main.append(
@@ -38,6 +51,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         return
     builder.resource(
         "azurerm_virtual_network",
+        **owned_network,
         name=ref('"${var.project_name}-vnet"'),
         address_space=[ref("var.network_cidr")]
         if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
@@ -47,7 +61,9 @@ def build_azure(builder: TerraformGenerator) -> None:
     subnet = {
         "name": "workload",
         "resource_group_name": common["resource_group_name"],
-        "virtual_network_name": ref("azurerm_virtual_network.this.name"),
+        "virtual_network_name": ref("azurerm_virtual_network.this[0].name")
+        if standalone
+        else ref("azurerm_virtual_network.this.name"),
         "address_prefixes": [ref("cidrsubnet(var.network_cidr, 8, 1)")]
         if builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
         else ["10.0.1.0/24"],
@@ -55,10 +71,11 @@ def build_azure(builder: TerraformGenerator) -> None:
     if builder.config.architecture_type == "secure_database":
         build_database(builder, common, subnet)
         return
-    builder.resource("azurerm_subnet", **subnet)
+    builder.resource("azurerm_subnet", **owned_network, **subnet)
+    if standalone:
+        add_azure_attachment_data(builder)
     windows = builder.config.architecture_type == "windows_virtual_machine"
     vm_resource = "azurerm_windows_virtual_machine" if windows else "azurerm_linux_virtual_machine"
-    standalone = builder.config.architecture_type in {"virtual_machine", "windows_virtual_machine"}
     zone = ref('var.availability_zone == "regional" ? null : var.availability_zone')
     zones = ref('var.availability_zone == "regional" ? null : [var.availability_zone]')
     if standalone:
@@ -133,6 +150,7 @@ def build_azure(builder: TerraformGenerator) -> None:
         )
     builder.resource(
         "azurerm_network_security_group",
+        **owned_network,
         name=ref('"${var.project_name}-nsg"'),
         children=[
             block(
@@ -170,12 +188,16 @@ def build_azure(builder: TerraformGenerator) -> None:
     )
     builder.resource(
         "azurerm_subnet_network_security_group_association",
-        subnet_id=ref("azurerm_subnet.this.id"),
-        network_security_group_id=ref("azurerm_network_security_group.this.id"),
+        **owned_network,
+        subnet_id=subnet_id,
+        network_security_group_id=ref("azurerm_network_security_group.this[0].id")
+        if standalone
+        else ref("azurerm_network_security_group.this.id"),
     )
     builder.resource(
         "azurerm_public_ip",
         "egress",
+        **owned_network,
         name=ref('"${var.project_name}-egress"'),
         allocation_method="Static",
         sku="Standard",
@@ -184,6 +206,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     )
     builder.resource(
         "azurerm_nat_gateway",
+        **owned_network,
         name=ref('"${var.project_name}-nat"'),
         sku_name="Standard",
         **{"zones": zones} if standalone else {},
@@ -191,13 +214,21 @@ def build_azure(builder: TerraformGenerator) -> None:
     )
     builder.resource(
         "azurerm_nat_gateway_public_ip_association",
-        nat_gateway_id=ref("azurerm_nat_gateway.this.id"),
-        public_ip_address_id=ref("azurerm_public_ip.egress.id"),
+        **owned_network,
+        nat_gateway_id=ref("azurerm_nat_gateway.this[0].id")
+        if standalone
+        else ref("azurerm_nat_gateway.this.id"),
+        public_ip_address_id=ref("azurerm_public_ip.egress[0].id")
+        if standalone
+        else ref("azurerm_public_ip.egress.id"),
     )
     builder.resource(
         "azurerm_subnet_nat_gateway_association",
-        subnet_id=ref("azurerm_subnet.this.id"),
-        nat_gateway_id=ref("azurerm_nat_gateway.this.id"),
+        **owned_network,
+        subnet_id=subnet_id,
+        nat_gateway_id=ref("azurerm_nat_gateway.this[0].id")
+        if standalone
+        else ref("azurerm_nat_gateway.this.id"),
     )
     balanced = builder.config.architecture_type == "load_balanced_tier"
     if builder.config.is_public:
@@ -399,7 +430,7 @@ def build_azure(builder: TerraformGenerator) -> None:
     else:
         ip = {
             "name": "internal",
-            "subnet_id": ref("azurerm_subnet.this.id"),
+            "subnet_id": subnet_id,
             "private_ip_address_allocation": "Dynamic",
         }
         if standalone:
@@ -435,6 +466,7 @@ def build_azure(builder: TerraformGenerator) -> None:
                         "lifecycle",
                         children=[
                             builder._private_ip_precondition(),
+                            azure_attachment_precondition(),
                             azure_identity_precondition(),
                             *custom_image_preconditions("azure", windows),
                         ],

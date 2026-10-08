@@ -1,9 +1,16 @@
 import ipaddress
 
 
-def vm_subnet(provider: str, network_cidr: str, public: bool) -> ipaddress.IPv4Network:
+def selected_vm_cidr(provider: str, values: dict) -> tuple[str, bool]:
+    existing = provider in {"aws", "azure"} and values.get("use_existing_network", False)
+    return values["existing_subnet_cidr"] if existing else values["network_cidr"], existing
+
+
+def vm_subnet(
+    provider: str, network_cidr: str, public: bool, existing: bool = False
+) -> ipaddress.IPv4Network:
     network = ipaddress.IPv4Network(network_cidr, strict=True)
-    if provider == "gcp":
+    if provider == "gcp" or existing:
         return network
     number = 1 if provider == "azure" else 0 if public else 10
     prefix = network.prefixlen + 8
@@ -12,8 +19,10 @@ def vm_subnet(provider: str, network_cidr: str, public: bool) -> ipaddress.IPv4N
     )
 
 
-def usable_vm_address(provider: str, network_cidr: str, public: bool, address: str) -> bool:
-    subnet = vm_subnet(provider, network_cidr, public)
+def usable_vm_address(
+    provider: str, network_cidr: str, public: bool, address: str, existing: bool = False
+) -> bool:
+    subnet = vm_subnet(provider, network_cidr, public, existing)
     value = ipaddress.IPv4Address(address)
     first, reserved_last = (2, 2) if provider == "gcp" else (4, 1)
     return (
@@ -29,6 +38,8 @@ def private_ip_condition(provider: str, public: bool) -> str:
         if provider == "gcp"
         else f"cidrsubnet(var.network_cidr, 8, {1 if provider == 'azure' else 0 if public else 10})"
     )
+    if provider == "azure":
+        subnet = f"(var.use_existing_network ? var.existing_subnet_cidr : {subnet})"
     first, last = (2, -3) if provider == "gcp" else (4, -2)
 
     def number(expression: str) -> str:

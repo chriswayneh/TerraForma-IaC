@@ -13,7 +13,7 @@ from terraforma.catalog import recipe_capabilities
 from terraforma.file_input import read_regular_bytes
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.json_input import strict_json
-from terraforma.network_inputs import usable_vm_address
+from terraforma.network_inputs import selected_vm_cidr, usable_vm_address
 
 
 class ProjectSpecification(BaseModel):
@@ -50,6 +50,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
             "ssh_public_key": "ssh_public_key",
             "allowed_cidr": "ipv4_cidr",
             "network_cidr": "ipv4_cidr",
+            "existing_subnet_cidr": "ipv4_cidr",
             "database_client_ip": "ipv4_address",
             "private_ip_address": "optional_ipv4_address",
             "subscription_id": "uuid",
@@ -66,7 +67,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "gcp"
                     else "New network address range (CIDR)",
                     "use_existing_network": "Use an existing subnet",
-                    "existing_subnetwork_resource": "Existing Google Cloud subnet resource",
+                    "existing_subnetwork_resource": "Existing Azure subnet resource ID"
+                    if config.provider == "azure"
+                    else "Existing Google Cloud subnet resource",
+                    "existing_subnet_cidr": "Existing subnet IPv4 range (CIDR)",
                     "confirm_existing_network_review": "Confirm your existing network review",
                     "private_ip_address": "Private IPv4 address (optional)",
                     "instance_type": "VM size",
@@ -303,7 +307,7 @@ def validate_answer(definition: dict, value: str | int | bool) -> None:
         elif definition["name"] == "custom_image_admin_username":
             message = "Enter the existing non-root Linux administrator username using lowercase letters, digits, underscores or hyphens."
         elif definition["name"] == "existing_subnetwork_resource":
-            message = "Enter an exact Google Cloud subnet resource in projects/PROJECT/regions/REGION/subnetworks/NAME format; URLs and credentials are unsupported."
+            message = "Enter the exact existing subnet resource in the documented provider format; URLs and credentials are unsupported."
         elif definition.get("required_when"):
             message = "Enter the existing identity reference in the documented provider format; credentials and keys are unsupported."
         elif definition["choices"]:
@@ -415,23 +419,47 @@ def compile_project(specification: ProjectSpecification) -> dict:
                     "confirm_existing_network_review",
                     "Review the existing subnet, inherited policies, administrator access and egress before recording your declaration.",
                 )
-            if "network_cidr" not in specification.inputs:
+            cidr_field = (
+                "existing_subnet_cidr"
+                if specification.recipe.provider == "azure"
+                else "network_cidr"
+            )
+            if cidr_field not in specification.inputs:
                 raise ProjectInputError(
-                    "network_cidr",
+                    cidr_field,
                     "Enter the actual primary IPv4 CIDR of the existing subnet; the new-network default cannot establish its range.",
                 )
             resource = effective["existing_subnetwork_resource"]
-            if resource and (
-                resource.split("/")[1] != effective["gcp_project_id"]
-                or resource.split("/")[3] != effective["region"]
+            if (
+                specification.recipe.provider == "gcp"
+                and resource
+                and (
+                    resource.split("/")[1] != effective["gcp_project_id"]
+                    or resource.split("/")[3] != effective["region"]
+                )
             ):
                 raise ProjectInputError(
                     "existing_subnetwork_resource",
                     "Choose a subnet in the selected project and region; shared or cross-project attachment is unsupported.",
                 )
+            if specification.recipe.provider == "azure":
+                if (
+                    resource
+                    and resource.split("/")[2].lower() != effective["subscription_id"].lower()
+                ):
+                    raise ProjectInputError(
+                        "existing_subnetwork_resource",
+                        "Choose an existing subnet in the selected subscription; cross-subscription attachment is unsupported.",
+                    )
+                if effective["network_cidr"] != definitions["network_cidr"]["default"]:
+                    raise ProjectInputError(
+                        "use_existing_network",
+                        "Clear the inactive new-network range before selecting an existing subnet.",
+                    )
         elif (
             effective["existing_subnetwork_resource"]
             or effective["confirm_existing_network_review"]
+            or effective.get("existing_subnet_cidr", "10.0.0.0/24") != "10.0.0.0/24"
         ):
             raise ProjectInputError(
                 "use_existing_network",
@@ -565,16 +593,19 @@ def compile_project(specification: ProjectSpecification) -> dict:
                 "image_version",
                 "Choose an exact image name matching the selected operating system.",
             )
-    if effective.get("private_ip_address") and not usable_vm_address(
-        specification.recipe.provider,
-        effective["network_cidr"],
-        specification.recipe.is_public,
-        effective["private_ip_address"],
-    ):
-        raise ProjectInputError(
-            "private_ip_address",
-            "Choose a usable private IPv4 address in the generated VM subnet, excluding provider-reserved addresses.",
-        )
+    if effective.get("private_ip_address"):
+        cidr, existing = selected_vm_cidr(specification.recipe.provider, effective)
+        if not usable_vm_address(
+            specification.recipe.provider,
+            cidr,
+            specification.recipe.is_public,
+            effective["private_ip_address"],
+            existing,
+        ):
+            raise ProjectInputError(
+                "private_ip_address",
+                "Choose a usable address in the selected VM subnet, excluding provider-reserved addresses.",
+            )
     for definition in contract:
         if (
             definition.get("required_when")

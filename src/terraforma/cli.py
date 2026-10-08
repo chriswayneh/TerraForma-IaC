@@ -26,7 +26,7 @@ from terraforma.generator import (
     project_destination,
     write_configuration,
 )
-from terraforma.network_inputs import usable_vm_address, vm_subnet
+from terraforma.network_inputs import selected_vm_cidr, usable_vm_address, vm_subnet
 from terraforma.plan_review import load_and_review
 from terraforma.preflight import target_preflight
 from terraforma.project import (
@@ -260,7 +260,8 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
             )
             continue
         if definition["name"] == "private_ip_address":
-            subnet = vm_subnet(config.provider, inputs["network_cidr"], config.is_public)
+            cidr, existing = selected_vm_cidr(config.provider, inputs)
+            subnet = vm_subnet(config.provider, cidr, config.is_public, existing)
             first, excluded_last = (2, 2) if config.provider == "gcp" else (4, 1)
             click.echo(
                 f"Usable private addresses: {subnet[first]} through {subnet[subnet.num_addresses - excluded_last - 1]} in {subnet}. Address availability is not checked."
@@ -284,7 +285,11 @@ def collect_recipe_inputs(config: WizardConfig) -> ProjectSpecification:
                     definition["name"] == "private_ip_address"
                     and value
                     and not usable_vm_address(
-                        config.provider, inputs["network_cidr"], config.is_public, value
+                        config.provider,
+                        selected_vm_cidr(config.provider, inputs)[0],
+                        config.is_public,
+                        value,
+                        selected_vm_cidr(config.provider, inputs)[1],
                     )
                 ):
                     return (
