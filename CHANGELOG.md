@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Reworked the roadmap through v1.0.0 with ten phases, including hosted generation/export, team workspaces and approved user-controlled runners. Existing release and live VM acceptance gates remain unchanged; hosted features are planned.
+
 - Compute recipe size inputs reject recognized Arm identifiers before generation, with matching Terraform variable validation for later overrides. Documented AWS Graviton families, Azure Arm naming features and GCP Arm prefixes share terminal/API/export safeguards; passing the guard does not establish cloud compatibility or availability.
 
 - Added optional `export-terragrunt` CLI support for up to twelve validated project specifications. Matching recipes share local Terraform code; per-unit inputs, target summaries, external secret references and checksums are exported without executing infrastructure commands. Remote state and dependency-aware execution remain planned.

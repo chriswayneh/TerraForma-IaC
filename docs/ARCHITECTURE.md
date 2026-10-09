@@ -56,6 +56,12 @@ The supported launcher binds to `127.0.0.1`. Requests have trusted-host checks, 
 
 This protects the local browser workflow; it is not authentication for a shared deployment. Do not expose the app to a network or run it as a multi-user service without redesigning access controls and execution isolation.
 
+## Future hosted architecture
+
+The [product roadmap](ROADMAP.md#phase-8) plans a hosted generation/export service that reuses versioned input contracts and the generator. It initially accepts bounded non-secret requirements and returns project files without running Terraform, provider plugins or user-selected modules. The local UI and CLI remain supported.
+
+Persistent team workspaces and authenticated user-controlled local/CI runners follow in [Phase 9](ROADMAP.md#phase-9). Execution requires protected state, saved-plan review and explicit approval bound to the artifact and target. Shared-service authentication, tenant isolation, abuse controls and retention require their own implementation and verification; the current process token does not provide them. These are planned boundaries, not deployed capabilities.
+
 ## Validation limits
 
 Validation initializes providers and checks configuration structure and configured lint rules. It does not verify cloud account quotas, organization policies, pricing, successful resource creation, or application reachability. Native binaries and plugins execute on the host; temporary files do not contain an untrusted process.

@@ -75,6 +75,7 @@ Guided state storage references are checked locally and downloaded as a separate
 | Completed phase | [Phase 1: Security and project foundation](docs/ROADMAP.md#phase-1) |
 | Current target | v0.4.0 — complete supported VM configuration |
 | Next user milestone | v0.4.0 — complete supported Linux/Windows VM configuration |
+| Product direction | [v1.0.0 roadmap](docs/ROADMAP.md) — local and hosted configuration with approved user-controlled runners |
 
 [Release notes](docs/RELEASE_0.3.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
 

@@ -1,5 +1,11 @@
 # TerraForma-IaC roadmap
 
+## Product direction
+
+TerraForma-IaC will become a guided infrastructure workspace for AWS, Azure and Google Cloud. Users enter provisioning requirements, review explained defaults and generate readable Terraform without needing to write HCL. The lightweight local application remains supported alongside a future hosted website.
+
+The stable product connects **configure and export**, **review and approve**, and **provision through a controlled runner**. Each supported pattern has complete input questions, clear limits and appropriate verification evidence. Unsupported requests remain visible; catalog expansion continues after the stable release.
+
 ## Current phase
 
 | Milestone | Details |
@@ -9,6 +15,8 @@
 | **Latest release** | [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) — reusable projects and local security review |
 | **Current target** | **v0.4.0** |
 | **Next user milestone** | Configure supported Linux and Windows VMs without editing Terraform in v0.4.0 |
+| **Release blocker** | Dedicated AWS/Azure/GCP accounts and separately authorized live creation, login, initialization and cleanup evidence |
+| **Final milestone** | **v1.0.0: stable local and hosted infrastructure workspace** |
 
 TerraForma-IaC already generates Terraform recipes through a local web UI and CLI. It explains the resources, exports the files, validates trusted configurations, and provides an initial local plan reviewer. [Start with the current release](GETTING_STARTED.md).
 
@@ -35,10 +43,28 @@ Versions are targets, not date promises. A release ships only after its document
 | **In progress** | v0.4.0 | [2 · Complete VM configuration](#phase-2) | Guided Linux/Windows VM inputs across AWS, Azure, and GCP |
 | Planned | v0.5.0 | [3 · Networks, storage, and identity](#phase-3) | Compose connected resources with explicit access and identity decisions |
 | Planned | v0.6.0 | [4 · State and plan workflow](#phase-4) | Protected state, account preflight, saved plans, and change review |
-| Planned | v0.7.0 | [5 · Approved provisioning and lifecycle](#phase-5) | Approve and apply reviewed plans; manage updates and controlled teardown |
+| Planned | v0.7.0 | [5 · Approved local provisioning and lifecycle](#phase-5) | Approve and apply reviewed plans through a local runner; manage updates and controlled teardown |
 | Planned | v0.8.0 | [6 · Multi-environment automation](#phase-6) | Environment reuse, optional Terragrunt, and protected CI workflows |
 | Planned | v0.9.0 | [7 · Broader workload catalog](#phase-7) | Individually verified database, TLS, container, and serverless patterns |
-| Planned | v1.0.0 | [8 · Stable platform](#phase-8) | Stable contracts, migrations, cross-platform support, and end-to-end evidence |
+| Planned | v0.10.0 | [8 · Hosted generator](#phase-8) | Configure, preview and download Terraform from a website |
+| Planned | v0.11.0 | [9 · Team workspace and runners](#phase-9) | Collaborate and request approved operations on user-controlled runners |
+| Planned | v1.0.0 | [10 · Stable platform](#phase-10) | Verified local/hosted workflows, stable contracts, recovery and cross-platform support |
+
+Hosted generation can be developed independently while live cloud acceptance is pending. It does not clear the v0.4.0 gates or justify publishing an unverified release. Runner integration depends on the state, lifecycle and automation controls in Phases 4–6.
+
+## Final user journey
+
+| Step | User action | Product support |
+| --- | --- | --- |
+| Select | Choose provider, environment and workload | Scope, prerequisites and verification status |
+| Configure | Enter variables and review optional settings | Conditional questions, explained defaults and validation |
+| Preview | Inspect resources, access and ownership | Readable Terraform, relationships and unresolved checks |
+| Export | Download or save a project | Versioned specification, Terraform and integrity receipts; optional Terragrunt |
+| Review | Connect an explicitly selected execution target | Account preflight, protected state, saved plan and policy findings |
+| Approve | Confirm exact changes and target | Approval bound to the artifact and permitted operation |
+| Operate | Execute through an authorized local or CI runner | Progress, redacted history and recovery guidance |
+
+Only implemented steps are available today. The first hosted version offers configuration, preview and export without collecting cloud credentials or running Terraform plugins.
 
 ## Explore the project
 
@@ -181,7 +207,7 @@ Exit criteria: concurrent operations respect locks, drift and stale artifacts ar
 
 <a id="phase-5"></a>
 
-## Phase 5: Approved provisioning and lifecycle
+## Phase 5: Approved local provisioning and lifecycle
 
 Target: **v0.7.0**.
 
@@ -193,6 +219,7 @@ Status: planned; requires verified state and plan controls.
 - Redacted local operation history and clear outputs without exposing sensitive output values.
 - Separate destroy planning and explicit destructive approval; protect production environments and protected resources.
 - Drift review and rerun workflows, with state-aware behavior and no assumption that partial apply rolled back.
+- Establish these controls for a local runner before accepting remote operation requests from a hosted workspace.
 
 Exit criteria: tests prove rejected/stale approvals cannot execute, failure does not become success, wrong-target operations are blocked, and dedicated cloud tests verify creation, updates, and cleanup. Cancellation is not described as rollback.
 
@@ -236,7 +263,46 @@ Exit criteria: each catalog entry declares required inputs, policy coverage, cos
 
 <a id="phase-8"></a>
 
-## Phase 8: Stable platform
+## Phase 8: Hosted generator
+
+Target: **v0.10.0**.
+
+Status: planned; the initial website generates and exports configurations.
+
+Keep the lightweight local UI and CLI available. Shared input contracts and generation code serve both modes. Begin with transient projects and no mandatory account; persistent collaboration follows in Phase 9.
+
+| Deliverable | Acceptance requirement |
+| --- | --- |
+| Guided website | Provider/workload selection, conditional forms, resource preview, bounded non-secret project import and ZIP export |
+| Public-service boundary | Dedicated service design; local process tokens are not shared-service authentication |
+| Privacy | No cloud credential collection, state/plan upload or server-side Terraform/provider-plugin execution in this phase |
+| Protection | HTTPS, request/rate/concurrency limits, session isolation, abuse controls and minimal redacted logs |
+| User experience | Responsive accessible forms, keyboard navigation, useful errors and clear support status |
+| Hosting operations | Reviewed deployment configuration, dependency updates, rollback and retention/deletion rules |
+
+Exit criteria: website generation/export agrees with local output; sessions cannot access one another's data; privacy, accessibility and security checks pass. Hosted AI assistance, if introduced, requires separate opt-in and explicit data disclosure. Hosting does not authorize cloud operations.
+
+<a id="phase-9"></a>
+
+## Phase 9: Team workspace and runners
+
+Target: **v0.11.0**.
+
+Status: planned; execution integration requires the verified controls from Phases 4–6.
+
+| Deliverable | Acceptance requirement |
+| --- | --- |
+| Saved workspace | Project history, template versions, configuration comparison and documented retention/deletion |
+| Team access | Authentication, scoped membership/roles, project authorization and tenant isolation |
+| Review workflow | Approval history, protected environment policies and exact artifact/target binding |
+| Runner connection | Authenticated user-controlled local/CI runners with short-lived scoped identity |
+| Operation requests | Replay protection, expiry, explicit authorization and redacted status; runner scope cannot expand through a request |
+
+Exit criteria: cross-tenant access, approval bypass, replay and runner-scope failures are tested; dedicated accounts prove approved operations and cleanup. The hosted control plane does not receive long-lived cloud credentials. Hosted multi-tenant cloud execution is a separate future decision requiring stronger isolation and review.
+
+<a id="phase-10"></a>
+
+## Phase 10: Stable platform
 
 Target: **v1.0.0**.
 
@@ -248,8 +314,26 @@ Status: planned.
 - Dependency pinning and update process, supply-chain checks, supported versions, and security response process.
 - Independently reviewed execution boundaries and policy gates; documented limits remain visible.
 - Versioned releases, tested quickstart, complete architecture/runbooks, and contributor process.
+- Hosted generation/export, team authorization and user-controlled runner workflows with privacy, accessibility and tenant-isolation evidence.
+- Backup/restore, retention/deletion, incident handling and reviewed hosting rollback procedures.
 
-Exit criteria: a clean installation reproduces supported generation, review, plan, approved apply, and cleanup workflows in test accounts. There are no claims of universal coverage or security certification.
+Exit criteria: clean local installations and hosted sessions reproduce supported generation, review, plan, approved apply and cleanup workflows in dedicated accounts. Team isolation and recovery gates pass; exact-source release checks are verified. v1.0.0 is the stable product milestone, with maintenance and catalog expansion afterward. There are no claims of universal coverage or security certification.
+
+## Architecture direction
+
+```mermaid
+flowchart LR
+    Local[Local web UI and CLI] --> Contracts[Shared versioned input contracts]
+    Hosted[Future hosted website] --> Contracts
+    Contracts --> Generator[Terraform generator and policy metadata]
+    Generator --> Export[Reviewed project export]
+    Export --> Runner[Authorized local or user-controlled CI runner]
+    Runner --> Review[Protected state and saved-plan review]
+    Review --> Approval[Explicit artifact and target approval]
+    Approval --> Cloud[AWS / Azure / Google Cloud]
+```
+
+This is the target architecture; hosted and execution stages are planned. [Architecture](ARCHITECTURE.md) describes the implementation and current local boundaries.
 
 ## Security gates across every phase
 
@@ -259,6 +343,8 @@ Exit criteria: a clean installation reproduces supported generation, review, pla
 4. Filesystem isolation is not a process sandbox. Native plugins execute code; untrusted modules require stronger isolation before they can become a supported product workflow.
 5. Defaults reduce risk but are not deployment certification. Unknown policy coverage and unverified account capabilities remain visible and block automated approval.
 6. Each phase must pass its exit criteria before being described as released. Release numbers are targets, not published artifacts or dates.
+7. Hosted services require separately verified authentication, tenant isolation, abuse controls and privacy. Generation never runs user-selected modules/plugins; execution belongs to explicitly authorized runners.
+8. Offline tests, metadata reads, mocked plans and live acceptance are distinct evidence levels. Missing accounts block live gates; separately scoped offline work can continue.
 
 ## Reference decisions
 
