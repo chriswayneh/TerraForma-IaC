@@ -1,5 +1,11 @@
 # Verification record
 
+## Documentation onboarding checkpoint — 2026-10-09
+
+- Cloned released `v0.3.0` (`e389817dd53ba5df8a8724da1da8932c70e37659`) into a separate local checkout, created a fresh Windows/Python 3.14 virtual environment and installed `.[web]` with its independently resolved dependencies. Version and web-readiness commands pass; the released server starts on a separate loopback port. No user preview or browser tab was replaced.
+- Exercised the documented private AWS static-site example through the running release's local API, with synthetic account ID `123456789012` and the default input contract. Generation, eight-file ZIP export, saved-project reload and receipt comparison pass; exported Terraform matches the preview. No native validation, cloud metadata, provisioning or AI endpoint was called. This checks installation and the local export flow, not cloud compatibility or a browser-click walkthrough. macOS/Linux command paths are documented but were not executed locally in this checkpoint.
+- Reorganized the README, onboarding and documentation index; added terminology, security/adoption and detailed validation guides. Existing screenshots are reused, with development features labeled. Runtime code and package configuration are unchanged from `321a580`, whose [six GitHub jobs passed](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37885695739). No new release or live acceptance is claimed.
+
 ## v0.4.0 source review and literal-key checkpoint
 
 - A Standard Codex Security source review of all 48 files under `src/terraforma` at `4ee27a71f4d05a1c13a52ee26a96c8abc5051822` completed without reportable findings. Independent baseline and focused filesystem/process/AI and HCL-input reviews were reconciled. This is static review of the documented local workflow, not security certification or live cloud acceptance. Trusted native tool/plugin authority, host filesystem protections and public-service deployment remain external assumptions.

@@ -2,211 +2,138 @@
 
 # TerraForma-IaC
 
-### Create Terraform configuration files from simple answers.
+### Enter your infrastructure requirements. Generate readable Terraform.
 
-TerraForma creates Terraform configuration files from scratch based on answers to simple questions. Terraform is a tool that uses those files to set up cloud servers, networks, and other resources. TerraForma helps explain and check the files before they’re used.
+A local web interface and terminal wizard for AWS, Microsoft Azure and Google Cloud.
+Choose a supported workload, enter its configuration inputs, and review the generated files.
+You can start without Terraform experience or a cloud account.
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE)
-[![Status](https://img.shields.io/badge/release-v0.3.0-7ce2fe)](docs/ROADMAP.md)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![CI](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chriswayneh/TerraForma-IaC/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/License-MIT-7ce2fe)](LICENSE) [![Release](https://img.shields.io/badge/release-v0.3.0-7ce2fe)](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0)
 
-**Available release:** [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0). Create, reuse, and check Terraform projects locally. Building cloud resources is planned.
-
-[Quick Start](#install-and-use) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Documentation](docs/README.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Start here](#quick-start) · [Screenshots](#screenshots) · [Security overview](docs/SECURITY_OVERVIEW.md) · [Architecture](#architecture) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
----
+## What you can do
 
-## What does it actually do?
+Terraform describes infrastructure in text files. TerraForma builds those files from a guided questionnaire and explains the resources they describe.
 
-**Terraform** uses text files to describe the servers, networks, storage, and access rules a cloud system needs. It can use those files to build and update that system, making the setup repeatable instead of a series of manual steps.
+| Step | What happens |
+| --- | --- |
+| **Configure** | Choose a cloud and workload, then enter the supported variables. |
+| **Understand** | Preview the Terraform and read the resource explanations. |
+| **Check** | Optionally run local Terraform/TFLint checks or review an existing plan JSON file. |
+| **Export** | Download a project you can review, save in Git and reuse. |
 
-**TerraForma creates those Terraform configuration files from scratch** through a guided questionnaire using supported, built-in templates. Enter your infrastructure requirements, select your cloud provider and workload, and configure the supported inputs. TerraForma generates the files, explains the resources, and helps check the configuration.
+**TerraForma does not deploy or delete cloud resources, run a Terraform plan, or approve a deployment.** Generated projects still need cloud-specific review before use. Local checks do not prove that a configuration will deploy successfully.
 
-**For example:** you need a small server to host a website. Choose a supported cloud service, name the project, and decide whether people should be able to reach it from the internet. TerraForma produces Terraform files describing the server and its supporting network, shows an explanation, and lets you download the result for review.
+## Quick start
 
-**Available now:** a guided interface that runs in your browser on your own computer, downloadable setup files, resource explanations, and optional local checks for configuration errors. You can also use it from a terminal.
+You need **Git and Python 3.11 or newer**. Terraform, TFLint, cloud credentials and an AI key are optional for this first run. Installation downloads Python dependencies.
 
-**Planned:** broader setup choices and an approved workflow for building and managing cloud resources. TerraForma **does not create or delete cloud resources yet**. Passing its checks does not guarantee that a setup will work in a particular cloud account.
+These commands install **released v0.3.0** in its own Python environment. Run the block for your operating system in a terminal.
 
-### The technical details
+### Windows — PowerShell
 
-The setup files use **Terraform**, a tool that describes infrastructure in text files so a setup can be reviewed, reused, and tracked over time. TerraForma exports `main.tf`, `variables.tf`, and `outputs.tf` for AWS, Microsoft Azure, and Google Cloud. The terminal interface is a command-line interface (CLI); installed Terraform and TFLint tools provide local validation. An existing Terraform plan JSON can also be reviewed, but TerraForma does not run plan, apply, or destroy.
+```powershell
+git clone --branch v0.3.0 --depth 1 https://github.com/chriswayneh/TerraForma-IaC.git
+cd TerraForma-IaC
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install ".[web]"
+.venv/Scripts/python.exe -m terraforma.cli serve --open-browser
+```
 
-The released **v0.3.0** provides guided configuration questions, saved project specifications, import, export receipts, local plan review, Linux virtual-machine templates and initial [AWS/Azure/GCP Windows VM recipes](docs/WINDOWS_VM.md). Complete Linux/Windows acceptance and approved deployment remain [roadmap milestones](docs/ROADMAP.md).
+### macOS / Linux
 
-**In development for v0.4.0:** guided [existing VM image inputs](docs/CUSTOM_IMAGES.md) for standalone Linux and Windows on all three clouds. The development branch also supports [existing Azure workload identity](docs/AZURE_WORKLOAD_IDENTITY.md) and existing subnet inputs for [AWS](docs/AWS_EXISTING_SUBNET.md), [Azure](docs/AZURE_EXISTING_SUBNET.md) and [GCP](docs/GCP_EXISTING_SUBNET.md). Compatibility, permissions and live deployment remain unverified.
+```bash
+git clone --branch v0.3.0 --depth 1 https://github.com/chriswayneh/TerraForma-IaC.git
+cd TerraForma-IaC
+python3 -m venv .venv
+.venv/bin/python -m pip install ".[web]"
+.venv/bin/python -m terraforma.cli serve --open-browser
+```
 
-Standalone VM development also includes optional [owner, application and cost-center labels](docs/VM_RESOURCE_LABELS.md).
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765) if a browser does not open. Keep the terminal running; **Ctrl+C** stops the server. The app runs on your computer. No Node.js or frontend build is required.
 
-Optional [reviewed initialization scripts](docs/VM_INITIALIZATION.md) are available in development for Linux and Windows VMs. Enter your script content or load a local file; generation never executes it. Guest execution and live deployment remain unverified.
+**First project:** choose **AWS → A static website**, use `first-site` as the project name, leave public access off, and enter the demonstration AWS account ID `123456789012`. Keep the other defaults, then select **Generate Terraform** and **Download .zip**. This is an offline private object-storage example; it does not publish a website or contact AWS during generation. The account ID is a synthetic placeholder: replace it with your intended account and review the project before live use.
 
-Development builds also offer optional [operating system image checks](docs/IMAGE_PREFLIGHT.md). Separate consent enables bounded cloud CLI metadata reads; missing compatibility fields remain unknown. Offline generation needs no cloud account.
-
-Current compute recipes require x86-64. Development [machine architecture checks](docs/MACHINE_ARCHITECTURE.md) reject known Arm size identifiers before generation; other sizes still require account-specific compatibility and availability checks.
-
-For new standalone VM networks, choose an [outbound port profile](docs/VM_OUTBOUND_ACCESS.md): preserve unrestricted ports or allow HTTPS and DNS with provider platform exceptions. Review workload dependencies; effective connectivity remains unverified.
-
-Development questionnaires keep VM protection visible and group optional operations/identity controls under [advanced options](docs/VM_INPUTS.md). Imported custom settings open for review; closing the section preserves its answers and defaults.
+You are done with the first run when you can open the downloaded `main.tf`, `variables.tf` and `outputs.tf`. Follow [Getting started](docs/GETTING_STARTED.md) for file explanations, optional checks, terminal commands and troubleshooting. A [release wheel](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) is also available; the package is not published on PyPI.
 
 ## Screenshots
 
-Development CLI builds also support optional [Terragrunt environment export](docs/TERRAGRUNT.md). Matching recipes share local module code while keeping each unit's inputs separate. Remote state and protected execution remain planned.
+The local workspace combines configuration inputs with a Terraform preview. These screenshots show the interface; feature availability follows the installed version.
 
-The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.
+![TerraForma configuration questionnaire and Terraform preview](docs/images/configuration.png)
 
-![TerraForma-IaC local workspace](docs/images/workspace.png)
+More detailed VM questions are available on the development branch:
 
-The questionnaire covers declared recipe inputs, including VM size and boot-disk choices.
+![Development VM inputs grouped by purpose](docs/images/grouped-inputs.png)
 
-![Configure recipe inputs and preview Terraform](docs/images/configuration.png)
+## Supported starting configurations
 
-Guided state storage references are checked locally and downloaded as a separate input file. The example below uses synthetic references; backend setup and cloud access remain unverified.
-
-![Guided state storage inputs](docs/images/backend-inputs.png)
-
-## Project status
-
-| Milestone | Status |
-| --- | --- |
-| Latest release | [v0.3.0](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0) — reusable projects and local security review |
-| Completed phase | [Phase 1: Security and project foundation](docs/ROADMAP.md#phase-1) |
-| Current target | v0.4.0 — complete supported VM configuration |
-| Next user milestone | v0.4.0 — complete supported Linux/Windows VM configuration |
-| Product direction | [v1.0.0 roadmap](docs/ROADMAP.md) — local and hosted configuration with approved user-controlled runners |
-
-[Release notes](docs/RELEASE_0.3.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
-
-### Development without cloud accounts
-
-**Cloud test accounts are not configured yet; offline development is continuing.** You do not need AWS, Azure or Google Cloud accounts to use the local questionnaire, generate/export supported configurations or run offline tests. Optional native Terraform/TFLint checks need installed tools and network access for provider downloads, but do not require cloud credentials.
-
-Live account checks, VM creation, authenticated guest access, initialization and cleanup remain pending. Offline validation and mocked plans do not prove deployment success; **v0.4.0 remains unreleased** until its [live acceptance gates](docs/VM_ACCEPTANCE.md) pass.
-
-Work that can continue now includes shared input contracts, usability, documentation and [hosted-generator preparation](docs/HOSTED_GENERATOR.md). The future website is planned; the current application remains a local workspace.
-
-Try the [six development VM examples](examples/vm/README.md) to inspect Linux/Windows inputs without cloud accounts. They use synthetic references and demonstration keys for preview only.
-
-## What you get
-
-The Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export.
-
-Project import, a recipe capability catalog, and [local plan review in the browser](docs/PLAN_REVIEW.md) help you reuse and inspect your work.
-
-New project exports also include the saved questionnaire, [generation receipt and checksums](docs/ARTIFACTS.md) for reuse and file comparison.
-
-- A three-step browser wizard with guided cloud, workload, and configuration choices.
-- AWS, Azure, and Google Cloud configurations with public/private access choices.
-- Readable previews of `main.tf`, `variables.tf`, and `outputs.tf`.
-- A simplified access diagram and plain-language resource explanations.
-- ZIP downloads with project-specific input guidance.
-- Local Terraform and TFLint checks, with optional AI explanations of failures.
-- A CLI and reusable GitHub Action over the same backend.
-
-Generation works without cloud credentials, an OpenAI key, Terraform, or TFLint. Install the native tools when you want to validate. The app never applies infrastructure.
-
-## Install and use
-
-Requires Python 3.11+. Terraform 1.6+ and TFLint on PATH are optional for generation and required for local validation. Install the native tools separately using their official installers.
-
-```powershell
-git clone https://github.com/chriswayneh/TerraForma-IaC.git
-cd TerraForma-IaC
-python -m venv .venv
-.venv/Scripts/python.exe -m pip install -e ".[web]"
-.venv/Scripts/terraforma.exe serve
-```
-
-Open [the local workspace](http://127.0.0.1:8765) in your browser. Stop the server with Ctrl+C. Use `--port` to choose another port or `--open-browser` to launch your default browser. On macOS/Linux, use `.venv/bin/python` and `.venv/bin/terraforma` instead of the Windows paths.
-
-For the terminal workflow, install the base package and use:
-
-```powershell
-terraforma wizard
-terraforma run --dir ./my-project --no-ai
-```
-
-The security-first provisioning roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md). The current build still generates and validates files; it does not provision resources. An initial [local plan-review command](docs/PLAN_REVIEW.md) is available with `terraforma review-plan --file review.tfplan.json`. AI diagnostics require explicit opt-in.
-
-Use `terraforma backend-wizard --dir ./state-inputs` to collect non-secret backend references through a questionnaire, and `terraforma check-backend --file backend.json` to check an existing file. These validate supported S3, Azure Blob or GCS inputs locally, without configuring storage or accessing state. See the [state protection guide](docs/STATE_PROTECTION.md) for fields, limits and the cloud verification still required.
-
-Activate your virtual environment first, or use its full executable path. The web server binds to this computer's loopback address; it is not intended for network exposure or multi-user hosting.
-
-Use `terraforma doctor` to check local dependency availability. Use `terraforma doctor --require web` before launching the UI or `terraforma doctor --require validation --json-output` for a machine-readable report. Exit `1` means the selected capability has missing dependencies. This command checks package metadata and PATH without executing tools, reading credentials, or contacting cloud accounts; it does not verify tool versions, trust, authentication, or deployment readiness.
-
-The wizard creates `main.tf`, `variables.tf`, and `outputs.tf` in a new project directory. Use `--dir` to choose the destination. It refuses to add generated files to an existing Terraform configuration. Cancellation writes nothing.
-
-To enable optional AI explanations, set `OPENAI_API_KEY` in your environment before launching. The UI requires an explicit opt-in to send redacted failed command logs to OpenAI. The CLI defaults to local-only diagnosis; pass `--ai` explicitly to send redacted failure logs. The default model is `gpt-4o` through OpenAI Chat Completions. Validation works without a key. Known-secret redaction cannot identify every possible secret. Neither interface separately uploads source files, but tool diagnostics may include snippets.
-
-## Architecture
-
-The browser and CLI share generation, validation, local plan review, project specifications and artifact receipts.
-
-```mermaid
-flowchart LR
-    User[User] --> Wizard[Local web wizard or CLI]
-    Wizard --> Generator[Validated choices and reviewed templates]
-    Generator --> Files[Preview, ZIP, or Terraform files]
-    Files --> Validation[Temporary validation workspace]
-    Validation --> Tools[Terraform and TFLint]
-    Tools --> Results[Readable results]
-    Results -. explicit opt-in .-> AI[AI explanations]
-    Plan[Existing Terraform plan JSON] --> Review[Local policy reviewer]
-    Review --> Report[Findings and review gaps]
-```
-
-Generation and local review do not apply infrastructure. [Architecture and boundaries](docs/ARCHITECTURE.md) · [Security policy](SECURITY.md)
-
-## Generated infrastructure
-
-The table below describes **v0.3.0**. See the [project specification guide](docs/PROJECT_SPECIFICATION.md) for supported choices and limits.
+The table describes the **v0.3.0 release**, with recipes for all three providers. These are documented starting patterns, not coverage of every service, VM size or cloud option.
 
 | Workload | AWS | Azure | Google Cloud |
 | --- | --- | --- | --- |
-| Standalone Linux/Windows VM | EC2 | Azure VM | Compute Engine VM |
-| Single web server | EC2, nginx, VPC | Ubuntu VM, nginx, VNet | Debian VM, nginx, VPC |
-| Load-balanced tier | Two EC2 instances, ALB | Two-instance VM scale set, load balancer | Two-instance managed group, HTTP or internal TCP load balancer |
-| Managed PostgreSQL | Multi-AZ RDS | Flexible Server with same-zone HA | Regional Cloud SQL |
-| Static site | S3 | Blob Storage | Cloud Storage |
+| Linux or Windows VM | EC2 | Azure VM | Compute Engine |
+| Single web server | EC2 with nginx | Ubuntu VM with nginx | Debian VM with nginx |
+| Load-balanced tier | EC2 and Application Load Balancer | VM scale set and load balancer | Managed instance group and load balancer |
+| Managed PostgreSQL | RDS | Flexible Server | Cloud SQL |
+| Static site / object storage | S3 | Blob Storage | Cloud Storage |
 
-All workloads support public or private access. Private static sites are authenticated object storage, not a publicly hosted website. Database templates use backups and deletion protection. They create a managed primary and standby, not a sharded database cluster. Public databases require a restricted client IP/CIDR; set the generated variable to your actual client network.
+Public/private choices and encryption controls depend on the recipe. A private static-site recipe creates authenticated object storage. Database standby configurations are not sharded clusters. Web-server recipes need a separate TLS review before sensitive use. See [recipe inputs and limits](docs/PROJECT_SPECIFICATION.md).
 
-Required inputs are declared without defaults in `variables.tf`: Azure subscription ID, Azure compute SSH public key, Google Cloud project ID, database passwords, and selected database firewall inputs. Supply them using Terraform variables, preferably environment variables for secrets. Configure cloud authentication separately using your provider's normal credential chain. Required values are unnecessary for structural validation but are needed for planning and deployment.
+## Security and adoption
 
-Azure and Google Cloud encrypt stored data by default. S3 also enforces server-side encryption. The encryption option enables customer-managed KMS encryption for AWS compute/databases and encryption at host for Azure compute; Azure subscription and VM-size support are required. It never disables mandatory provider encryption. Google Cloud uses provider-managed keys in this release.
+Start with [the security overview](docs/SECURITY_OVERVIEW.md) for data flows, access boundaries, verification evidence and adoption prerequisites.
 
-These are starting configurations, not deployment certification. Web servers and most load balancers serve HTTP; add TLS before sensitive use. NAT gateways, load balancers, managed databases, storage, and VMs can incur charges. The AWS NAT gateway is shared across availability zones and the Azure/GCP compute tiers do not guarantee availability across zones. Review quotas, organization policy, region/SKU availability, access, and a Terraform plan before deploying. Sensitive Terraform variables can still appear in state; secure your state storage.
+| Question | Current behavior |
+| --- | --- |
+| Does it need cloud access to generate files? | No. Account references are configuration inputs; authentication remains separate. |
+| Does it collect cloud passwords or API keys in the browser? | No. Secret values belong in external credential/variable mechanisms. |
+| Does anything leave the computer? | Generation is local. Native validation can download provider/linter plugins. Consented target checks contact cloud services. AI diagnostics send failed logs to OpenAI only when enabled. |
+| Are native checks isolated from the host? | Temporary files are isolated; trusted Terraform/TFLint binaries and plugins still have host authority. |
+| Does a passing check approve deployment? | No. Permissions, costs, connectivity, state protection and a reviewed plan remain separate responsibilities. |
 
-## Validation behavior
+Keep AI explanations off when diagnostic data must stay local. Redaction is best effort. Terraform state and plan exports can contain secrets and need protected storage. [Security policy and vulnerability reporting](SECURITY.md) · [Validation details](docs/VALIDATION.md)
 
-`terraforma run` discovers absolute tool paths, copies the target directory into a temporary workspace, runs `terraform init -backend=false -input=false`, `terraform validate -json`, `tflint --init`, and recursive TFLint checks, then removes the copy. It captures both output streams, stops dependent checks when initialization fails, and applies a per-command timeout (`--timeout`, default 120 seconds). Any failed or unavailable check exits with status 1, including when AI explanations fail. It never runs plan, apply, or destroy.
+## Architecture
 
-Local child modules and referenced assets must reside inside the selected target directory. Include a shared parent directory as the target only if it is itself a Terraform root. External/sibling paths, linked files, and directory junctions are unsupported. The copy excludes common Terraform state, saved plan/plan JSON, `.tfbackend`, local Terraform CLI configuration, crash log, `.env` and variable-value filenames, plus Terraform caches, Git and virtual environments. Exclusion matching is case-insensitive. Limits are 8 MiB per file and 32 MiB per copied workspace, checked against actual bytes read as well as the initial size. Other referenced assets are copied; these filename rules do not discover every secret or make arbitrary configuration safe. Existing `.terraform.lock.hcl` and `.tflint.hcl` files are preserved. An existing provider lock is passed to `terraform init` in read-only mode: changed requirements, incompatible selections or missing checksum information can fail initialization and require review. Validation never retries with an upgrade. Without a lock, provider selections are unpinned and any lock created in the temporary copy is discarded. Initialize the reviewed real configuration yourself and commit its lockfile to pin provider selections.
+Both interfaces use the same input contracts and generation core.
 
-This is filesystem isolation, not a security boundary. Terraform/providers, modules, and configured TFLint plugins execute on the host and may access its credentials and network. Validate trusted configurations only. The built-in TFLint Terraform rules run by default; cloud-specific rules require an explicit plugin configuration. TFsec is not implemented. The web UI validates regenerated, reviewed templates; arbitrary HCL editing and host-directory import are not exposed through its API.
-
-## GitHub Action
-
-```yaml
-steps:
-  - uses: actions/checkout@v4
-  - uses: chriswayneh/TerraForma-IaC@v0.3.0
-    with:
-      target_dir: infrastructure
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-      explain_with_ai: 'true'
+```mermaid
+flowchart LR
+    User[Infrastructure requirements] --> Interface[Local browser or terminal wizard]
+    Interface --> Generator[Validated inputs and built-in templates]
+    Generator --> Files[Preview and project export]
+    Files --> Checks[Optional local Terraform and TFLint checks]
+    Checks --> Results[Results for human review]
+    Results -. explicit opt-in .-> AI[OpenAI diagnostic advice]
+    Plan[Existing plan JSON] --> Review[Local policy review]
 ```
 
-The `main` reference is for development; pin a reviewed commit for reproducibility. Tagged Action releases will follow the release roadmap. The action installs Python, Terraform, TFLint, and this package from its own action directory. The API key is optional. Avoid running validation with credentials on untrusted pull requests.
+[Architecture and trust boundaries](docs/ARCHITECTURE.md) · [Generated project files](docs/ARTIFACTS.md) · [Dependency trust](docs/DEPENDENCIES.md)
 
-## Development
+## Versions and phases
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m pytest -q
-python -m ruff check src tests
-```
+| Track | Status | What to expect |
+| --- | --- | --- |
+| **v0.3.0** | Released | Guided generation, reusable projects, local checks and review. Use this for the first run above. |
+| **v0.4.0** | In development on `main` | Expanded Linux/Windows VM inputs. Live creation, login, initialization and cleanup testing remain pending dedicated cloud accounts. |
+| **v1.0.0** | Planned | A stable local and hosted workspace, with protected state and approved user-controlled provisioning runners. |
 
-Automated tests cover questionnaire cancellation, overwrite protection, all generator combinations, isolated validation/error handling, local API protections, ZIP downloads, and HTTP diagnostics contracts with mocked OpenAI responses. Native provider validation is an additional check and requires tools and network access. Enable it with `TERRAFORMA_NATIVE_TESTS=1`. No cloud infrastructure is provisioned by tests. Live OpenAI requests and cloud deployment behavior remain unverified; see the [roadmap](docs/ROADMAP.md).
+The `main` branch contains unreleased features. [The roadmap](docs/ROADMAP.md) lists versions, phases and release gates. [Verification](docs/VERIFICATION.md) distinguishes offline tests, native checks and live evidence; **v0.4.0 is not released**.
+
+## Find the next guide
+
+| I need to… | Open |
+| --- | --- |
+| Install, create a first project or fix a startup problem | [Getting started](docs/GETTING_STARTED.md) |
+| Assess the local tool before organizational use | [Security overview](docs/SECURITY_OVERVIEW.md) |
+| Understand cloud authentication | [Cloud authentication](docs/CLOUD_AUTHENTICATION.md) |
+| Validate files or use the GitHub Action | [Validation guide](docs/VALIDATION.md) |
+| Review a plan or prepare state storage inputs | [Plan review](docs/PLAN_REVIEW.md) · [State protection](docs/STATE_PROTECTION.md) |
+| Explore development VM inputs and Terragrunt export | [Documentation index](docs/README.md) |
+| Contribute code or report a problem | [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) |
+
+[Release notes](docs/RELEASE_0.3.0.md) · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)

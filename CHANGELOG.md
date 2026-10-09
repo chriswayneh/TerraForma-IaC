@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Reorganized the project home and documentation for first-time operators and security reviewers: released-version quick start, a first export walkthrough, file explanations, troubleshooting, terminology, a security/adoption overview and a dedicated validation guide. Release and development capabilities remain distinct.
+
 - HCL object keys now preserve literal interpolation markers, template directives and Unicode. A provider-free native Terraform test verifies exact evaluated keys. Supported recipe keys were already fixed; this corrects the generic renderer's literal contract.
 
 - Added six account-free development VM examples with synthetic references, explicit preview-only guidance and Azure Windows external-password handling. Updated project-specification version guidance to distinguish released and development generators.

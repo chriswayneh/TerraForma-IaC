@@ -4,6 +4,19 @@
 
 TerraForma-IaC is a Python package with two interfaces over one generation and validation core. The local web UI uses plain browser assets served by FastAPI; it requires no Node.js installation or frontend build.
 
+## Read the workflow first
+
+| Component | Purpose | Where it runs |
+| --- | --- | --- |
+| Browser or terminal wizard | Collect supported infrastructure requirements | User's computer |
+| Shared input contracts and templates | Validate answers and produce Terraform files | Local Python process |
+| Export | Save configuration and reusable non-secret answers | Local directory or browser download |
+| Optional native validation | Check trusted configuration using Terraform and TFLint | Host tools with temporary working files |
+| Local plan reviewer | Inspect a supplied plan JSON and explain selected concerns | Local Python process |
+| Optional AI diagnosis | Explain failed-tool logs after explicit consent | OpenAI; redaction is best effort |
+
+No component deploys resources or grants approval. Start with the [security overview](SECURITY_OVERVIEW.md) for the data-flow and adoption summary; the module-level boundaries below provide implementation detail.
+
 ```mermaid
 flowchart LR
     User[User] --> Browser[Local browser wizard]

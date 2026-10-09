@@ -1,88 +1,120 @@
 # Getting started
 
-## 1. Launch the local workspace
+[Project home](../README.md) · [Security overview](SECURITY_OVERVIEW.md) · [All guides](README.md)
 
-Install Python 3.11+, then clone the repository and install the optional web interface into a virtual environment:
+**Goal:** launch the local app and export your first Terraform project. You do not need a cloud account, Terraform installation or AI key for this walkthrough.
+
+## 1. Install the released version
+
+Use the [Windows or macOS/Linux commands in the README](../README.md#quick-start). They clone release `v0.3.0`, create a private Python environment named `.venv`, install the web dependencies and start the app. The environment keeps these packages separate from your other projects; it is not a security sandbox.
+
+Check prerequisites before installing:
+
+| Requirement | Check | Used for |
+| --- | --- | --- |
+| Python 3.11+ | `python --version` on Windows; `python3 --version` on macOS/Linux | Running TerraForma |
+| Git | `git --version` | Downloading the repository |
+| Internet access | Package downloads must be reachable | Installing Python dependencies |
+| Terraform and TFLint | Optional; install later | Native configuration checks |
+| Cloud account / OpenAI key | Not needed for the first run | Separately enabled cloud checks / AI explanations |
+
+The released checkout is pinned to a tag, so Git's **detached HEAD** notice is expected. It does not prevent installation or use. For development, clone `main` into a separate directory without `--branch v0.3.0`; it currently installs `0.4.0.dev0`. Do not mix development examples with a released installation.
+
+If Git is unavailable, download the wheel and `SHA256SUMS.txt` from the [v0.3.0 release](https://github.com/chriswayneh/TerraForma-IaC/releases/tag/v0.3.0), compare the wheel's SHA-256 to the published checksum, and install into a virtual environment. From the folder containing the wheel, on Windows:
 
 ```powershell
-git clone https://github.com/chriswayneh/TerraForma-IaC.git
-cd TerraForma-IaC
 python -m venv .venv
-.venv/Scripts/python.exe -m pip install -e ".[web]"
-.venv/Scripts/terraforma.exe serve
+.venv/Scripts/python.exe -m pip install "./terraforma_iac-0.3.0-py3-none-any.whl[web]"
+.venv/Scripts/python.exe -m terraforma.cli serve --open-browser
 ```
 
-On macOS/Linux, replace `.venv/Scripts/` with `.venv/bin/`. Open `http://127.0.0.1:8765`. You do not need cloud credentials or an AI key to generate files.
+On macOS/Linux use `python3` to create the environment and `.venv/bin/python` for the other two commands. A checksum compares downloaded bytes; it is not independent proof of publisher identity.
 
-## 2. Create a first configuration
+## 2. Open the workspace
 
-Configuration inputs are grouped by cloud target, image/capacity, network/access, storage and operations/identity. Enter the supported variables in each section; conditional disk and identity questions appear when enabled. External secrets are shown as references rather than password fields.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765). This address points to your computer. Keep the server terminal open while using the app.
 
-![Configuration inputs grouped by purpose](images/grouped-inputs.png)
+To launch again later, return to the project folder and run:
 
-For a small first example, select **Amazon Web Services → A static website**, name the project `first-site`, and leave public access off. Generate the files and inspect all three tabs.
+```powershell
+.venv/Scripts/python.exe -m terraforma.cli serve --open-browser
+```
 
-- `main.tf` defines the provider and resources to create.
-- `variables.tf` declares the inputs those resources use.
-- `outputs.tf` defines the useful values Terraform will show after deployment.
+Use `.venv/bin/python` on macOS/Linux. Stop the server with **Ctrl+C**. If port 8765 is already occupied, add `--port 8766` and open `http://127.0.0.1:8766`.
 
-The diagram and resource guide explain the major parts. This example stores an HTML object privately; it does not create a publicly reachable website. Generation itself creates no cloud resources and incurs no cloud usage charges.
+## 3. Generate a first project
 
-Enable **Remember choices on this browser** to retain the questionnaire selections and current step locally. No credentials, API key, AI opt-in, generated code, or validation logs are saved with these choices. Uncheck it to remove the saved choices; the current form stays available. Storage access is optional, and the app remains usable when browser storage is disabled.
+1. Choose **Amazon Web Services** and continue.
+2. Choose **A static website** and continue.
+3. Enter `first-site` as the project name. Keep public access off. Enter `123456789012` in **AWS account ID** for this offline demonstration; keep the other defaults, including region `us-east-1`.
+4. Select **Generate Terraform**. Read the resource explanation and inspect all three file tabs.
+5. Select **Download .zip**, then extract it into a new folder.
 
-## 3. Set up optional local validation
+This example describes private S3 object storage containing an HTML object. It does not create a public website. The demonstration account ID is a synthetic placeholder, not an authenticated target. Replace it with your intended account ID and review the project before live use. Generation does not authenticate to AWS, create resources or incur cloud usage charges. Optional cloud checks and AI explanations are unnecessary for this exercise.
 
-You do not need accounts with all three clouds to work on or test TerraForma locally. A configuration for your own deployment needs the selected cloud's account/subscription/project reference; the local test suite uses example references without authenticating to those accounts.
+### Understand the output
 
-Development builds include [six account-free VM examples](../examples/vm/README.md) for importing and reviewing Linux/Windows inputs across all three providers. These use synthetic references and demonstration keys, require `0.4.0.dev0` development support and must not be deployed as provided.
-
-| Stage | Cloud account needed? |
+| File | Plain-language purpose |
 | --- | --- |
-| Generate example files and run local unit/provider validation | No cloud credentials; provider downloads need network access |
-| Opt-in target and VM metadata checks | Credentials for the selected cloud only |
-| Live deployment/access/cleanup testing | A dedicated account/project and permissions for each cloud being tested; these checks remain outstanding |
+| `main.tf` | The cloud provider and resources Terraform would manage. |
+| `variables.tf` | The configuration inputs and any required values without defaults. |
+| `outputs.tf` | Values Terraform would display after deployment. |
+| `terraforma.project.json` | Non-secret answers you can load into TerraForma again. |
+| `terraforma.receipt.json` and `SHA256SUMS.txt` | Hashes for comparing exported files; they do not approve deployment or authenticate the publisher. |
+| `README.md` | Instructions and required inputs for this generated project. |
+| `.gitignore` | Common state, plan, variable and credential filenames to exclude from Git. |
 
-Install Terraform using [HashiCorp's official installation instructions](https://developer.hashicorp.com/terraform/install). Install TFLint using [the official TFLint installation guide](https://github.com/terraform-linters/tflint#installation). Choose the binary for your operating system and CPU architecture.
+You have completed the first run when the ZIP is downloaded and you can read the three Terraform files. Load `terraforma.project.json` using **Load project** to reuse the saved answers. Generate again after editing inputs.
 
-On Windows, extract the executables into a directory on your user PATH. On macOS/Linux, follow the official package-manager or binary instructions. Verify in a new terminal:
+Browser **Remember choices** saves non-secret questionnaire choices locally. It does not save credentials, AI consent, generated code or validation logs. Unchecking it removes those saved choices; [data-handling details](SECURITY_OVERVIEW.md#data-and-network-access) explain the other storage boundaries.
 
-```text
-terraform -version
-tflint --version
+## 4. Add local validation when ready
+
+Install Terraform and TFLint separately using the [validation guide](VALIDATION.md). Choose **Validate locally** after generation. These checks initialize provider dependencies and inspect configuration structure and lint rules; they can download executable plugins and should use trusted configurations only.
+
+A passing result does not verify cloud permissions, prices, capacity, guest login or deployment success. You can export without installing either tool.
+
+## 5. Use the terminal instead
+
+From the installed project folder on Windows:
+
+```powershell
+.venv/Scripts/python.exe -m terraforma.cli --version
+.venv/Scripts/python.exe -m terraforma.cli doctor --require web
+.venv/Scripts/python.exe -m terraforma.cli wizard --dir ./output/first-project
 ```
 
-After changing PATH, restart the TerraForma server so it inherits the updated environment. The sidebar shows whether both tools are available. The app does not install native tools automatically.
+On macOS/Linux replace the interpreter path with `.venv/bin/python`. The wizard asks the configuration questions in the terminal and writes into a fresh directory. It refuses to overwrite an existing Terraform project; cancellation writes nothing.
 
-Choose **Validate locally** to initialize the provider and run structural checks in a temporary workspace. Provider installation needs network access and can take several minutes on the first run. A passing check means the configuration is structurally valid and passed the configured lint rules; it does not establish successful deployment, application reachability, costs, or cloud permissions.
+`doctor` checks installed Python packages and executable availability without contacting cloud accounts. It does not establish tool trust, authentication or deployment readiness. After optional native-tool installation, validate trusted files with:
 
-## 4. Download and review
+```powershell
+.venv/Scripts/python.exe -m terraforma.cli run --dir ./output/first-project --no-ai
+```
 
-Choose **Download .zip**. Extract it into a project directory. The archive includes all three Terraform files and a README that describes required inputs and the generated resources.
+## Before using a project in a cloud account
 
-Before planning, configure authentication using your cloud provider's normal credential chain. Use the [cloud authentication guide](CLOUD_AUTHENTICATION.md) to connect your selected tools and understand Terraform's separate credential requirements. Supply the required variables listed by the UI and `variables.tf`. Do not put passwords or API keys in the web form or commit them to Git.
+Review the generated README and inputs, configure the selected provider's [authentication](CLOUD_AUTHENTICATION.md), and protect Terraform state and plan artifacts. Obtain your organization's normal change approval and review a Terraform plan outside TerraForma before provisioning.
 
-Review a Terraform plan before applying anything. Cloud resources can incur costs after deployment; NAT gateways, load balancers, managed database standbys, storage, and VMs may charge while idle. Terraform can store sensitive values in state even if a variable is marked sensitive. Use appropriate state storage and access controls.
+TerraForma currently does not run plan, apply or destroy. Resources created through external tools can incur charges; private resources also need an appropriate access path. Secret variables marked sensitive can still appear in state or plan files. The [security overview](SECURITY_OVERVIEW.md) and [state protection guide](STATE_PROTECTION.md) describe these responsibilities.
 
-## 5. Optional AI explanations
-
-Set `OPENAI_API_KEY` in the server's environment before launching. The browser never collects the key. Enable **Explain failures with AI** to send redacted failed command logs to OpenAI. Known-secret redaction is best effort, and logs may contain source snippets. Leave the option off for local-only checks.
-
-Suggestions are shown for review and are not applied automatically. A suggested fix does not turn a failed validation into a passing result. CLI validation also defaults to local-only diagnostics; pass `--ai` explicitly to request an explanation.
-
-## Local plan review
-
-The CLI can inspect a Terraform plan JSON export using `terraforma review-plan --file review.tfplan.json`. It flags selected destructive, network, storage, and database concerns without applying resources or transmitting the plan. See [plan review](PLAN_REVIEW.md) for export instructions, limits, and why a successful command still requires manual review.
+For the development VM workflow, use [six synthetic examples](../examples/vm/README.md) with a development installation. Their account references and demonstration keys must be replaced and reviewed before any live use. Dedicated-account creation, login, initialization and cleanup evidence remain pending for v0.4.0.
 
 ## Troubleshooting
 
 | Symptom | Next step |
 | --- | --- |
+| Python or Git is not recognized | Install the prerequisite or correct PATH, then open a new terminal. Confirm the version before retrying. |
+| `python3 -m venv` is unavailable | Install your operating system's Python virtual-environment support, then retry environment creation. |
+| `terraforma` is not recognized | Use the full `.venv` interpreter command shown above; activation is not required. |
+| Installation cannot reach the package index | Check the approved proxy/index settings and network access; use your organization's normal package source. |
+| The browser cannot connect | Keep the server running, check its displayed port and open the exact local address. |
+| Port 8765 is busy | Use `serve --port 8766` and open the matching address. |
 | A tool is shown as not installed | Verify its executable is on PATH in a new terminal, then restart the server. |
-| Provider initialization fails | Check network/proxy settings, registry availability, and local disk space. |
-| Another validation is running | Wait for the current validation to finish; one native check pipeline runs at a time. |
-| The local request is rejected | Refresh the page to obtain a new session token after restarting the server. |
-| Port 8765 is busy | Launch with `terraforma serve --port 8766`. |
-| A required input is missing when planning | Read `variables.tf` and supply the named input using Terraform's variable mechanisms. |
-| A private endpoint is unreachable from your laptop | Private resources require connectivity into their cloud network; authenticated storage objects require credentials. |
+| Provider initialization fails | Check network/proxy settings, registry availability and disk space. Follow [validation troubleshooting](VALIDATION.md). |
+| Another validation is running | Wait for it to finish; one native check pipeline runs at a time. |
+| A local request is rejected after restart | Refresh the page to obtain the new process's session token. |
+| An output directory is rejected | Choose a fresh directory and preserve the previous project. |
+| Planning needs a missing variable | Read `variables.tf` and the exported README; supply the required input through Terraform's variable mechanisms. |
 
-See the [architecture](ARCHITECTURE.md), [security guidance](../SECURITY.md), and [roadmap](ROADMAP.md) for the project's execution boundaries and planned features.
+Need help? Include your operating system, installed version and sanitized reproduction steps in an issue. Use [private security reporting](../SECURITY.md) for suspected vulnerabilities.
