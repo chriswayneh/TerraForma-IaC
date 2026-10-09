@@ -84,6 +84,8 @@ Stored data is encrypted on every cloud regardless of this choice; generated Ter
 | --- | --- |
 | AWS compute | On: boot and optional data disks use a generated customer-managed KMS key (with rotation, an alias and an explicit key policy). Off: disks remain encrypted (`encrypted = true`) with the account's default EBS key. |
 | AWS database | On: RDS storage uses the generated customer-managed KMS key. Off: storage remains encrypted (`storage_encrypted = true`) with the AWS-managed RDS key. |
+
+**Upgrading older AWS projects:** earlier development builds wrote `encrypted = false` / `storage_encrypted = false` when this choice was off. Regenerating such a project now requests encrypted storage, which Terraform applies by replacing the EC2 instance or RDS instance. Local plan review blocks that destructive change; migrate data through a snapshot copy or backup before accepting it.
 | Azure compute | Adds encryption at host to provider-managed disk encryption; requires reported size support and subscription feature registration. |
 | GCP, static sites and Azure databases | Provider-managed encryption remains enforced; this choice does not configure a customer-managed key for those recipes. |
 
