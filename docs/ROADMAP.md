@@ -139,7 +139,7 @@ Exit criteria: users can supply every required input for each documented VM patt
 
 Input-completeness gate: a user who understands provisioning can finish a supported VM configuration without editing HCL. Every supported operational choice is collected or explicitly defaulted, every generated variable has a supplied value/default/external-secret reference, and no hidden hardcoded image, size, network, or administrator choice is presented as configurable. Region/size/image availability is checked against the selected account before planning when credentials are available; offline generation labels those checks as outstanding.
 
-The offline combined-input matrix covers 24 provider/OS/access/network combinations with custom images, identity, data disks, labels and reviewed initialization enabled together. It checks exact exported defaults, external secret requirements and saved-project round trips, with native structural/lint validation. These checks do not satisfy the dedicated-account creation, login, execution or cleanup gates.
+The offline combined-input matrix covers 36 provider/OS/access/network combinations with custom images, identity, data disks, labels and reviewed initialization enabled together. New networks exercise unrestricted and HTTPS/DNS profiles; AWS cases request Dedicated Instance tenancy. It checks exact exported defaults, external secret requirements and saved-project round trips, with native structural/lint validation. Eighteen terminal cases collect the same combined options from the questionnaire and reviewed local script file. These checks do not satisfy the dedicated-account creation, login, execution or cleanup gates.
 
 <a id="phase-3"></a>
 

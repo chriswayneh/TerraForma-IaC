@@ -1,5 +1,13 @@
 # Verification record
 
+## Combined network/tenancy inputs — v0.4.0 development checkpoint
+
+- Thirty-six combined provider/OS/public-private/network configurations pass Terraform 1.14.0 validation and TFLint 0.61.0. Custom images, identity, data disks, labels and reviewed initialization are enabled together; new networks exercise both outbound profiles and AWS cases request Dedicated Instance tenancy.
+- All 36 offline saved-project/export/import cases pass, checking every supplied value's generated default, required-variable completeness, external secrets, exact file content and the existing 48-input bound. Eighteen terminal cases also pass, verifying the same combined answers and exact reviewed local script content without invoking cloud/guest commands.
+- All 54 offline cases pass against the isolated tenancy wheel installation using existing runtime dependencies. No package/runtime code changed; the previously recorded 163,414-byte wheel and its digest remain applicable. Ruff checks/formatting and local documentation links pass. No additional full-suite result is claimed for this test-only checkpoint.
+- Outbound checkpoint 1d1a76d/run 37867379798 now passes all six GitHub jobs, including native validation. Later guidance, documentation and tenancy runs remain unverified as complete at this checkpoint.
+- Live policy, tenancy, guest execution, creation, login and cleanup remain pending dedicated-account evidence. v0.3.0 remains the latest release.
+
 ## AWS hardware tenancy — v0.4.0 development checkpoint
 
 - The full default suite passes 2,757 tests with 494 optional/native/platform cases skipped. Four subsequent terminal/offline-preflight cases pass. Both OS families and new/existing networks preserve tenancy answers through generation/import; invalid host and other unsupported values are rejected.

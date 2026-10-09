@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Expanded the combined VM verification matrix to both outbound profiles and AWS Dedicated Instance tenancy, with terminal collection checks for reviewed script files and all selected operational inputs.
+
 - AWS standalone Linux/Windows VMs offer unmanaged or Dedicated Instance hardware tenancy through both questionnaires. Dedicated Hosts remain unsupported; metadata preflight explicitly leaves tenancy compatibility unverified. Generation performs no cloud operations.
 
 - Linux/Windows guides distinguish development main from the released v0.3.0 scope and reflect reviewed existing subnets, custom images, initialization, outbound profiles and AWS gp3 performance support.
