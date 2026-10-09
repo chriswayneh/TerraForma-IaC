@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from terraforma.file_input import read_regular_bytes
+from terraforma.initialization_review import initialization_findings
 from terraforma.json_input import strict_json
 
 MAX_PLAN_BYTES = 8 * 1024 * 1024
 MAX_RESOURCES = 2000
-POLICY_VERSION = "0.11.0"
+POLICY_VERSION = "0.12.0"
 ADMIN_PORTS = {22, 3389, 5985, 5986}
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(value)
@@ -512,6 +513,16 @@ def review_plan(data: dict, *, artifact_sha256: str) -> dict:
                 "review",
                 resource_id,
                 "Some planned values are unknown; review cannot establish their safety.",
+            )
+        try:
+            for code, severity, message in initialization_findings(resource_type, change):
+                add(code, severity, resource_id, message)
+        except (ValueError, KeyError, TypeError):
+            add(
+                "unresolved_policy_input",
+                "block",
+                resource_id,
+                "An initialization-relevant field is malformed or unsupported; review it manually.",
             )
         if resource_type not in POLICY_TYPES:
             add(

@@ -31,7 +31,7 @@ def metadata_plan(hops=1, endpoint="enabled", tokens="required", markers=False):
 def report(data):
     result = review_plan(data, artifact_sha256="test")
     assert result["approval_granted"] is False
-    assert result["policy_version"] == "0.11.0"
+    assert result["policy_version"] == "0.12.0"
     return {item["code"]: item for item in result["findings"]}
 
 

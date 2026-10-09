@@ -1,5 +1,13 @@
 # Verification record
 
+## Guest initialization plan review — v0.4.0 development checkpoint
+
+- The full default suite passes 2,462 tests with 424 optional/native/platform cases skipped. Ruff checks and formatting pass across 120 Python files. Eighty-one new regressions cover payloads, references, absence, unknown/malformed values, removals, extension coverage gaps, destructive actions and CLI/API report privacy.
+- A browser report from a synthetic EC2 plan shows guest initialization review and limited policy coverage under policy 0.12.0, without echoing payload content. Reports never approve deployment; the screenshot contains no cloud identity or script content.
+- The development wheel is 151,693 bytes, SHA-256 a01ba339c2cc6b12858c1d9197300cdd1f386f01c033eb32d360048b7c6486f6. Its isolated installation passes all 81 guest initialization policy regressions and confirms bundled policy/report privacy with existing dependencies.
+- Native validation is unchanged by this local review feature. The preceding initialization checkpoint 3bcdab2 passes package smoke and all four Python/platform test jobs; its native GitHub job was still running when this record was written. Check Actions for the final result.
+- No script execution, live provider operations, credentials/state reads, cloud provisioning or live AI calls were performed. v0.4.0 live acceptance remains outstanding; v0.3.0 remains the latest release.
+
 ## Reviewed VM initialization — v0.4.0 development checkpoint
 
 - The full default suite passes 2,381 tests with 424 optional/native/platform cases skipped. Ruff checks/formatting pass across 118 Python files; JavaScript syntax and whitespace checks pass.

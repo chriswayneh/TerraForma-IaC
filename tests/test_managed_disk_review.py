@@ -19,7 +19,7 @@ def disk_plan(**values):
 
 def findings(data):
     report = review_plan(data, artifact_sha256="test")
-    assert report["policy_version"] == "0.11.0"
+    assert report["policy_version"] == "0.12.0"
     assert report["approval_granted"] is False
     assert "private-secret-key" not in json.dumps(report)
     return {item["code"]: item["severity"] for item in report["findings"]}
