@@ -1,5 +1,12 @@
 # Verification record
 
+## Combined VM inputs — v0.4.0 development checkpoint
+
+- The full default suite passes 2,486 tests with 454 optional/native/platform cases skipped. Ruff checks/formatting pass across 122 Python files. Twenty-four new round-trip cases verify each supplied variable's exact exported default, required input completeness, external-secret requirements and preserved project/file content.
+- All 24 combined provider/OS/public-private/new-existing-network configurations pass Terraform 1.14.0 validation and TFLint 0.61.0 with initialized provider locks. Custom images, workload identity, a data disk, labels and reviewed initialization are enabled together. Image provenance, effective permissions, guest behavior and live compatibility remain unverified.
+- The initialization checkpoint 3bcdab2 passes all six GitHub CI jobs, including native validation (run 37862222834). Subsequent plan-review and mocked-payload checkpoints were still running in Actions when this record was written.
+- [VM acceptance evidence](VM_ACCEPTANCE.md) records pending dedicated-account gates and the evidence needed for future separately authorized testing. No live operations, credential/state reads, guest execution or AI requests were performed. v0.3.0 remains the latest release.
+
 ## Mocked initialization payloads — v0.4.0 development checkpoint
 
 - Six provider/OS fixtures pass native validation/TFLint and twelve Terraform mocked plan runs. Enabled checks decode AWS and Azure Linux payloads, inspect Azure Windows protected command encoding and verify GCP Linux/Windows startup fields. Disabled checks verify the requested payload or extension is absent from its modeled configuration; GCP serial-console disable remains intact.

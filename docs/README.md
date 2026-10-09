@@ -21,6 +21,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Understand future state storage and recovery requirements | [State protection design](STATE_PROTECTION.md) |
 | Understand the future VM questions | [VM input design](VM_INPUTS.md) |
 | Include a reviewed local script on development VMs | [VM initialization](VM_INITIALIZATION.md) |
+| Prepare future dedicated-account VM release testing | [VM acceptance evidence](VM_ACCEPTANCE.md) |
 | Review security boundaries or report a vulnerability | [Security policy](../SECURITY.md) |
 | Contribute a change | [Contribution guide](../CONTRIBUTING.md) |
 

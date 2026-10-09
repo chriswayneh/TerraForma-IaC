@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added a combined VM configuration matrix covering custom images, workload identity, data disks, labels and initialization together across new/existing networks, both OS families and public/private access. Export/import checks verify each supplied variable default and external secret requirements without cloud operations.
+
 - Added twelve Terraform mocked plan runs to exercise enabled/disabled initialization for Linux and Windows across AWS, Azure and GCP. All providers are mocked and every run uses plan only. AWS optional/computed user-data behavior is documented explicitly; disabling generation does not establish cloud metadata cleanup or undo guest changes.
 
 - Expanded local plan review to policy `0.12.0`: known, unresolved and removed VM initialization payloads receive explicit manual findings. Azure guest extensions retain a coverage gap and require independent review. Script contents never appear in reports, and no review approves deployment.
