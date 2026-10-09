@@ -842,6 +842,15 @@ byId("target-preflight-button").addEventListener("click", async () => {
       };
       content.append(diagnostic("Operating system image", imageMessages[report.image_check.status] || "Image metadata needs separate review."));
     }
+    if (report.image_machine_check?.status && !["not_checked", "not_applicable"].includes(report.image_machine_check.status)) {
+      const bootMessages = {
+        metadata_confirmed: report.image_machine_check.legacy_bios_fallback ? "The AWS metadata reports a Legacy BIOS fallback for this UEFI-preferred image. UEFI-dependent features will need separate review; successful boot remains unverified." : "The AWS image and VM-size metadata report a common boot mode. Guest configuration, boot drivers and successful deployment still need verification.",
+        metadata_unknown: "The AWS metadata does not establish a common image/VM boot mode. Review missing boot-mode fields before planning.",
+        incompatible: "The selected AWS image and VM size report no common boot mode. Select a compatible image or instance type before planning.",
+        invalid_response: "The boot-mode metadata is unsupported or ambiguous. Review it separately in your cloud tools.",
+      };
+      content.append(diagnostic("Image and VM boot mode", bootMessages[report.image_machine_check.status] || "Image/VM boot compatibility needs separate review."));
+    }
     const reference = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent = "Configuration reference";

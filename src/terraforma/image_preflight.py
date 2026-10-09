@@ -156,3 +156,28 @@ def inspect_image(specification, executable, environment, timeout):
         return {"status": "failed"}
     except (ValueError, TypeError, KeyError, IndexError, RecursionError):
         return {"status": "invalid_response"}
+
+
+def image_machine_boot_check(image, machine):
+    modes = ("legacy_bios_boot_supported", "uefi_boot_supported")
+    outcomes = []
+    for mode in modes:
+        values = (image.get(mode), machine.get(mode))
+        if any(value is not None and type(value) is not bool for value in values):
+            return {"status": "invalid_response"}
+        outcomes.append(False if False in values else None if None in values else True)
+    compatible = True if True in outcomes else None if None in outcomes else False
+    return {
+        "status": "metadata_confirmed"
+        if compatible
+        else "metadata_unknown"
+        if compatible is None
+        else "incompatible",
+        "boot_mode_compatible": compatible,
+        "legacy_bios_fallback": (
+            image.get("legacy_bios_boot_supported") is True
+            and image.get("uefi_boot_supported") is True
+            and machine.get("uefi_boot_supported") is False
+            and machine.get("legacy_bios_boot_supported") is True
+        ),
+    }

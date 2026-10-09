@@ -6,7 +6,7 @@ import tempfile
 from uuid import UUID
 
 from terraforma.artifacts import specification_digest
-from terraforma.image_preflight import inspect_image
+from terraforma.image_preflight import image_machine_boot_check, inspect_image
 from terraforma.json_input import strict_json
 from terraforma.process import run_bounded
 from terraforma.project import ProjectSpecification, compile_project, input_contract
@@ -95,6 +95,20 @@ def aws_boot_compatibility(machine: dict) -> bool | None:
     return False if False in compatibility else None if None in compatibility else True
 
 
+def aws_boot_mode_metadata(machine):
+    modes = machine.get("SupportedBootModes")
+    if modes is not None and (
+        not isinstance(modes, list)
+        or any(not isinstance(mode, str) or mode not in {"legacy-bios", "uefi"} for mode in modes)
+        or len(modes) != len(set(modes))
+    ):
+        raise ValueError("Unsupported or ambiguous boot mode metadata.")
+    return {
+        "legacy_bios_boot_supported": "legacy-bios" in modes if modes else None,
+        "uefi_boot_supported": "uefi" in modes if modes else None,
+    }
+
+
 def machine_report(
     provider: str,
     data,
@@ -106,6 +120,7 @@ def machine_report(
     require_host_encryption: bool = False,
     require_ebs_encryption: bool = False,
     require_aws_boot: bool = False,
+    inspect_boot_modes: bool = False,
     availability_zone: str | None = None,
 ) -> dict:
     report = {"status": "not_found", "architecture_compatible": None}
@@ -143,6 +158,8 @@ def machine_report(
         raise ValueError("Ambiguous machine metadata.")
     machine = matches[0]
     if provider == "aws":
+        if inspect_boot_modes:
+            report.update(aws_boot_mode_metadata(machine))
         processor = machine.get("ProcessorInfo")
         if processor is not None and not isinstance(processor, dict):
             raise ValueError("Unsupported processor metadata.")
@@ -328,7 +345,7 @@ def inspect_aws_zone(report, executable, environment, timeout, size, region, zon
     }
 
 
-def inspect_machine(specification, executable, environment, timeout):
+def inspect_machine(specification, executable, environment, timeout, *, verify_image=False):
     provider = specification.recipe.provider
     values = {item["name"]: item["default"] for item in input_contract(specification.recipe)}
     values.update(specification.inputs)
@@ -420,6 +437,7 @@ def inspect_machine(specification, executable, environment, timeout):
                 and specification.recipe.architecture_type
                 in {"virtual_machine", "windows_virtual_machine"}
             ),
+            inspect_boot_modes=provider == "aws" and verify_image,
             availability_zone=(
                 values["availability_zone"]
                 if provider == "azure" and values.get("availability_zone", "regional") != "regional"
@@ -480,6 +498,7 @@ def target_preflight(
         "approval_granted": False,
         "machine_check": {"status": "not_checked", "architecture_compatible": None},
         "image_check": {"status": "not_checked"},
+        "image_machine_check": {"status": "not_checked"},
         "message": "Account checks are off. Use --verify-target to run a bounded cloud CLI read with its existing credentials.",
         "limitations": "Trusted configured cloud CLI output only. No verification of Terraform credential equivalence, principal permissions, endpoint trust, region/image/SKU availability, quotas, network reachability or deployment readiness. CLI authentication may refresh its local credential cache. This report does not authorize provisioning.",
     }
@@ -600,7 +619,9 @@ def target_preflight(
         )
         if verify_machine:
             report["machine_check"] = (
-                inspect_machine(specification, executable, environment, timeout)
+                inspect_machine(
+                    specification, executable, environment, timeout, verify_image=verify_image
+                )
                 if specification.recipe.architecture_type
                 in {
                     "virtual_machine",
@@ -620,6 +641,12 @@ def target_preflight(
                     "single_web_server",
                     "load_balanced_tier",
                 }
+                else {"status": "not_applicable"}
+            )
+        if verify_image and verify_machine:
+            report["image_machine_check"] = (
+                image_machine_boot_check(report["image_check"], report["machine_check"])
+                if provider == "aws" and report["image_check"]["status"] != "not_applicable"
                 else {"status": "not_applicable"}
             )
     return report

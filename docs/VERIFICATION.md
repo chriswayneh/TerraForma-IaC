@@ -1,5 +1,12 @@
 # Verification record
 
+## AWS image/VM boot mode — v0.4.0 development checkpoint
+
+- The full default suite passes 2,623 tests with 454 optional/native/platform cases skipped. Thirty-six additional mocked regressions verify Linux/Windows UEFI, Legacy BIOS, preferred-mode fallback, documented x86 defaults, missing/malformed capabilities, independent consent and CLI/API mismatch reporting. No additional cloud command is introduced.
+- Ruff checks/formatting pass across 126 Python files; JavaScript syntax passes. Terraform output remains unchanged. An isolated local mock server verifies the browser warning, with an explicit synthetic-test notice in the screenshot. The temporary server/tab were closed; the normal preview was restarted with current code and an empty questionnaire.
+- The development wheel is 159,466 bytes, SHA-256 817a13fc848e1e7098b3b034357461ef3d65bd7f94163a50132ef3f251b02739. Its isolated installation passes 131 image/boot-mode mocked regressions and 27 offline imports/bundled-UI checks using existing runtime dependencies. No release was published.
+- Cloud reads, guest boot/execution, live creation/access/cleanup and v0.4.0 acceptance remain unverified. The image checkpoint fcde04b is pushed; its CI was still running when this entry was written. v0.3.0 remains the latest release.
+
 ## Image metadata preflight — v0.4.0 development checkpoint
 
 - The full default suite passes 2,587 tests with 454 optional/native/platform cases skipped. Ninety-five image regressions cover provider/OS/catalog/custom sources, explicit consent, pins, incompatible/missing/malformed fields, ambiguous records, private diagnostics and combined bounded read budgets. All provider responses are synthetic mocks; no cloud CLI was invoked.

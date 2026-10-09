@@ -240,6 +240,12 @@ def preflight_command(
             click.echo(f"VM size metadata: {report['machine_check']['status']}")
         if verify_image:
             click.echo(f"Image metadata: {report['image_check']['status']}")
+        if (
+            verify_image
+            and verify_machine
+            and report["image_machine_check"]["status"] != "not_applicable"
+        ):
+            click.echo(f"Image/VM boot mode: {report['image_machine_check']['status']}")
         click.echo(report["limitations"])
     if report["status"] not in {"not_checked", "target_confirmed"}:
         raise click.exceptions.Exit(1)
@@ -252,6 +258,16 @@ def preflight_command(
         "metadata_confirmed",
         "not_applicable",
     }:
+        raise click.exceptions.Exit(1)
+    if (
+        verify_image
+        and verify_machine
+        and report["image_machine_check"]["status"]
+        not in {
+            "metadata_confirmed",
+            "not_applicable",
+        }
+    ):
         raise click.exceptions.Exit(1)
 
 

@@ -190,7 +190,19 @@ def aws_image_metadata(data, values, windows):
         codes = metadata_list(image, "ProductCodes")
         checks["private_image"] = compatible(public, False)
         checks["purchase_plan_supported"] = None if codes is None else not codes
-    return image_result(checks, identifier)
+    mode = metadata_text(image, "BootMode")
+    if mode not in {None, "legacy-bios", "uefi", "uefi-preferred"}:
+        raise ValueError("Image boot mode metadata is unsupported.")
+    if mode is None and checks["architecture_compatible"] is True:
+        mode = "legacy-bios"
+    result = image_result(checks, identifier)
+    result.update(
+        legacy_bios_boot_supported=None
+        if mode is None
+        else mode in {"legacy-bios", "uefi-preferred"},
+        uefi_boot_supported=None if mode is None else mode in {"uefi", "uefi-preferred"},
+    )
+    return result
 
 
 def gcp_image_metadata(data, values, windows):

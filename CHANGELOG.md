@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Combined AWS image/VM metadata checks now compare reported firmware boot modes without additional commands, detect incompatible combinations and preserve unknown support. UEFI-preferred Legacy BIOS fallback receives a separate warning. Actual guest boot remains unverified.
+
 - Added separately consented operating-system image metadata preflight to the CLI and browser. Bounded provider reads check selected catalog/custom sources and reported compatibility, preserve missing fields as unknown, and omit raw metadata. Development verification uses mocked responses only; live boot, access and v0.4.0 acceptance remain pending. See [image preflight](docs/IMAGE_PREFLIGHT.md).
 
 - Browser project restoration now detects script text changes caused by textarea line-ending normalization, clears the previous initialization review and disables stale preview/export. API round trips preserve both LF and CRLF content exactly.
