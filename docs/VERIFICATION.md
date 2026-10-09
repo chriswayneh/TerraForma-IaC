@@ -1,5 +1,14 @@
 # Verification record
 
+## Image metadata preflight — v0.4.0 development checkpoint
+
+- The full default suite passes 2,587 tests with 454 optional/native/platform cases skipped. Ninety-five image regressions cover provider/OS/catalog/custom sources, explicit consent, pins, incompatible/missing/malformed fields, ambiguous records, private diagnostics and combined bounded read budgets. All provider responses are synthetic mocks; no cloud CLI was invoked.
+- Ruff checks and formatting pass across 125 Python files. JavaScript syntax and local documentation links pass. Generated Terraform is unchanged by this read-only feature; this checkpoint does not add live or native provisioning evidence.
+- Browser verification confirms all cloud consent controls start off, image consent alone cannot enable a target check, and changing the questionnaire clears image consent and the stale preview. The screenshot uses a synthetic project; no cloud check was submitted.
+- The development wheel is 158,400 bytes, SHA-256 da83e6dd6bf1228ad2d59b956a665b92c83cb451bdf5124e77b8aec07fabf9d2. An isolated installation passes all 95 mocked image regressions and 27 offline project imports/bundled-UI checks using existing runtime dependencies. Initial local building without build isolation failed because setuptools was absent; the normal isolated build succeeded. This is not a release asset or fresh runtime dependency-resolution test.
+- Previous checkpoint 1f2d2a9 passes all six GitHub CI jobs in run 37863555733. The image checkpoint's CI remains unverified until its own run completes.
+- v0.3.0 remains the latest release. v0.4.0 dedicated-account creation, login, guest execution and cleanup gates remain pending; the user has requested offline development without provider accounts.
+
 ## Restored script review — v0.4.0 development checkpoint
 
 - The full default suite passes 2,492 tests with 454 optional/native/platform cases skipped. Twelve provider/OS LF/CRLF API cases preserve exact script text and safe summaries; six are additional regressions. Ruff checks/formatting pass across 122 Python files; JavaScript syntax passes.

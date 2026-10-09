@@ -334,6 +334,7 @@ function setBusy(value) {
   byId("backend-open").disabled = value;
   byId("target-preflight-consent").disabled = value || !project?.specification;
   byId("target-machine-check").disabled = value || byId("target-machine-option").hidden;
+  byId("target-image-check").disabled = value || byId("target-image-option").hidden;
   byId("target-preflight-button").disabled = value || !project?.specification || !byId("target-preflight-consent").checked;
   form.setAttribute("aria-busy", String(value));
   updateInputVisibility();
@@ -455,6 +456,8 @@ function renderProject(result) {
   byId("target-preflight-consent").checked = false;
   byId("target-machine-check").checked = false;
   byId("target-machine-option").hidden = !["virtual_machine", "windows_virtual_machine", "single_web_server", "load_balanced_tier"].includes(result.specification?.recipe.architecture_type);
+  byId("target-image-check").checked = false;
+  byId("target-image-option").hidden = byId("target-machine-option").hidden;
   byId("target-preflight-button").disabled = true;
   byId("target-preflight-results").replaceChildren();
   byId("preview-empty").hidden = true;
@@ -706,6 +709,7 @@ form.addEventListener("input", (event) => {
     byId("target-preflight-consent").checked = false;
     byId("target-machine-check").checked = false;
     byId("target-preflight-button").disabled = true;
+    byId("target-image-check").checked = false;
     byId("target-preflight-results").replaceChildren();
     notify(
       "Your settings changed. Generate again to preview the updated files.",
@@ -780,7 +784,7 @@ byId("target-preflight-consent").addEventListener("change", () => setBusy(busy))
 
 byId("target-preflight-button").addEventListener("click", async () => {
   if (busy || !project?.specification || !byId("target-preflight-consent").checked) return;
-  const payload = {specification: project.specification, verify_target: true, verify_machine: byId("target-machine-check").checked};
+  const payload = {specification: project.specification, verify_target: true, verify_machine: byId("target-machine-check").checked, verify_image: byId("target-image-check").checked};
   setBusy(true);
   const content = byId("target-preflight-results");
   content.textContent = "Checking the selected target through your cloud CLI. No infrastructure is being deployed.";
@@ -826,6 +830,18 @@ byId("target-preflight-button").addEventListener("click", async () => {
       };
       content.append(diagnostic("VM size metadata", machineMessages[report.machine_check.status] || "VM metadata needs separate review."));
     }
+    if (report.image_check?.status && !["not_checked", "not_applicable"].includes(report.image_check.status)) {
+      const imageMessages = {
+        metadata_confirmed: "The image has no reported incompatibility among the metadata fields checked. Boot, guest agents, image trust, licensing, access permissions and deployment readiness remain unverified.",
+        metadata_unknown: "The image response does not establish every checked compatibility field. Review missing metadata before planning. Azure Marketplace responses do not establish the minimum boot disk size.",
+        incompatible: "The image reports an incompatible or unsupported property. Review the selected image, operating system, architecture, disk size, purchase plan and provider requirements before planning.",
+        selection_incomplete: "The image list exceeded a single bounded page. No latest image was confirmed. Select an exact image version or review it separately in your cloud tools.",
+        not_found: "No matching image was found in the returned metadata. Review source, version, location and access separately.",
+        failed: "The image read failed or exceeded its limits. Review CLI authentication, image access and selection separately; raw diagnostics are omitted.",
+        invalid_response: "The image response contains unsupported or ambiguous metadata. Review it separately in your cloud tools; raw values are omitted.",
+      };
+      content.append(diagnostic("Operating system image", imageMessages[report.image_check.status] || "Image metadata needs separate review."));
+    }
     const reference = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent = "Configuration reference";
@@ -840,6 +856,7 @@ byId("target-preflight-button").addEventListener("click", async () => {
   } finally {
     byId("target-preflight-consent").checked = false;
     byId("target-machine-check").checked = false;
+    byId("target-image-check").checked = false;
     setBusy(false);
   }
 });

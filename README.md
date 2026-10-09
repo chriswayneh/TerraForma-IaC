@@ -43,6 +43,8 @@ Standalone VM development also includes optional [owner, application and cost-ce
 
 Optional [reviewed initialization scripts](docs/VM_INITIALIZATION.md) are available in development for Linux and Windows VMs. Enter your script content or load a local file; generation never executes it. Guest execution and live deployment remain unverified.
 
+Development builds also offer optional [operating system image checks](docs/IMAGE_PREFLIGHT.md). Separate consent enables bounded cloud CLI metadata reads; missing compatibility fields remain unknown. Offline generation needs no cloud account.
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.

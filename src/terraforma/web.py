@@ -56,6 +56,7 @@ class PreflightRequest(BaseModel):
     specification: ProjectSpecification
     verify_target: StrictBool = False
     verify_machine: StrictBool = False
+    verify_image: StrictBool = False
 
 
 class BackendChoice(BaseModel):
@@ -476,6 +477,7 @@ def create_app() -> FastAPI:
                     payload.specification,
                     verify_target=payload.verify_target,
                     verify_machine=payload.verify_machine,
+                    verify_image=payload.verify_image,
                     timeout=30,
                 )
             except ProjectInputError:

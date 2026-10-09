@@ -422,6 +422,10 @@
             <input type="checkbox" id="target-machine-check" />
             <span>Also read the selected VM size metadata.<small>Checks reported CPU architecture, AWS standalone VM EBS/HVM boot and required disk encryption support, Azure SKU restrictions and requested VM features. A selected Azure zone is checked against SKU metadata; a selected AWS zone adds an instance-type offering read. Capacity, quotas, guest drivers, image/disk/network compatibility and provisioning remain unverified. Up to three bounded reads can take about 90 seconds.</small></span>
           </label>
+          <label class="ai-option" id="target-image-option" hidden>
+            <input type="checkbox" id="target-image-check" />
+            <span>Also read the selected operating system image metadata.<small>Checks reported source, architecture, operating system and provider-specific compatibility. Missing metadata remains unknown. This does not test boot, image trust, licensing or deployment permissions. Image checks add one read, or two for an Azure gallery version. Combined checks can take about two minutes.</small></span>
+          </label>
           <button class="button outline" id="target-preflight-button" type="button" disabled>Check cloud target</button>
           <div id="target-preflight-results" role="status" aria-live="polite"></div>
           </div>

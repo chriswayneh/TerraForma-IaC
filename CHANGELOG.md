@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added separately consented operating-system image metadata preflight to the CLI and browser. Bounded provider reads check selected catalog/custom sources and reported compatibility, preserve missing fields as unknown, and omit raw metadata. Development verification uses mocked responses only; live boot, access and v0.4.0 acceptance remain pending. See [image preflight](docs/IMAGE_PREFLIGHT.md).
+
 - Browser project restoration now detects script text changes caused by textarea line-ending normalization, clears the previous initialization review and disables stale preview/export. API round trips preserve both LF and CRLF content exactly.
 
 - Added a combined VM configuration matrix covering custom images, workload identity, data disks, labels and initialization together across new/existing networks, both OS families and public/private access. Export/import checks verify each supplied variable default and external secret requirements without cloud operations.

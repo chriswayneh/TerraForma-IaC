@@ -18,7 +18,7 @@ The next stages turn that workflow into a guided provisioning platform. Users de
 
 - Extend the initial shared project specification to account/environment identity and resource dependencies.
 - Extend the implemented recipe input contracts as the resource catalog grows.
-- Extend account-specific capability preflight beyond the implemented target identity, optional VM size metadata, AWS standalone EBS/HVM boot and disk encryption capabilities, and selected AWS zone offering checks. Capacity, quotas, image compatibility and Terraform credential equivalence remain unverified.
+- Extend account-specific capability preflight beyond target identity, optional VM-size metadata, AWS boot/disk encryption and selected zone checks, and the development [image metadata checks](IMAGE_PREFLIGHT.md). Missing image fields remain unknown; live boot, capacity, quotas and Terraform credential equivalence remain unverified.
 - Extend declared disk-key review beyond GCP boot/persistent disk references to effective key ownership, permissions and recovery evidence. Current local checks never grant deployment approval.
 - Artifact, credential, state, and execution controls needed before adding apply.
 
@@ -99,7 +99,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 
 | VM input area | Development status | Remaining work |
 | --- | --- | --- |
-| Operating system and images | Catalog choices and guided existing-image references on AWS, Azure and GCP | Account/image compatibility and guest boot evidence |
+| Operating system and images | Catalog choices, guided existing-image references and separately consented [image metadata checks](IMAGE_PREFLIGHT.md) | Missing metadata, access/guest-agent compatibility and live boot evidence |
 | Capacity and disks | Machine size, boot disk, one optional data disk and documented provider choices | Broader disk/backup choices and live behavior |
 | Workload identity | Existing AWS profile/GCP service account; Azure system or one existing user-assigned identity | Effective permissions and attachment evidence |
 | Networks | New networks or one reviewed existing IPv4-only subnet on AWS, Azure and GCP | Broader composition, effective policy checks and live access |

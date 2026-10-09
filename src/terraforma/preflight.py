@@ -6,6 +6,7 @@ import tempfile
 from uuid import UUID
 
 from terraforma.artifacts import specification_digest
+from terraforma.image_preflight import inspect_image
 from terraforma.json_input import strict_json
 from terraforma.process import run_bounded
 from terraforma.project import ProjectSpecification, compile_project, input_contract
@@ -443,11 +444,13 @@ def target_preflight(
     *,
     verify_target: bool = False,
     verify_machine: bool = False,
+    verify_image: bool = False,
     timeout: float = 30,
 ) -> dict:
     if (
         type(verify_target) is not bool
         or type(verify_machine) is not bool
+        or type(verify_image) is not bool
         or type(timeout) not in {int, float}
         or not math.isfinite(timeout)
         or not 0 < timeout <= 120
@@ -455,6 +458,8 @@ def target_preflight(
         raise ValueError("Use a boolean opt-in and a finite timeout from 0 to 120 seconds.")
     if verify_machine and not verify_target:
         raise ValueError("VM metadata checks require target-check consent.")
+    if verify_image and not verify_target:
+        raise ValueError("Image metadata checks require target-check consent.")
     project = compile_project(specification)
     provider = project["target"]["provider"]
     expected = project["target"]["account_reference"]
@@ -474,6 +479,7 @@ def target_preflight(
         "deployment_readiness_verified": False,
         "approval_granted": False,
         "machine_check": {"status": "not_checked", "architecture_compatible": None},
+        "image_check": {"status": "not_checked"},
         "message": "Account checks are off. Use --verify-target to run a bounded cloud CLI read with its existing credentials.",
         "limitations": "Trusted configured cloud CLI output only. No verification of Terraform credential equivalence, principal permissions, endpoint trust, region/image/SKU availability, quotas, network reachability or deployment readiness. CLI authentication may refresh its local credential cache. This report does not authorize provisioning.",
     }
@@ -603,5 +609,17 @@ def target_preflight(
                     "load_balanced_tier",
                 }
                 else {"status": "not_applicable", "architecture_compatible": None}
+            )
+        if verify_image:
+            report["image_check"] = (
+                inspect_image(specification, executable, environment, timeout)
+                if specification.recipe.architecture_type
+                in {
+                    "virtual_machine",
+                    "windows_virtual_machine",
+                    "single_web_server",
+                    "load_balanced_tier",
+                }
+                else {"status": "not_applicable"}
             )
     return report

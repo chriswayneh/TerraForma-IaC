@@ -73,4 +73,6 @@ terraforma preflight --spec terraforma.project.json --verify-target --verify-mac
 
 Or use **Check your cloud target** in the web UI and enable the relevant consent controls. Results omit raw responses and never grant deployment approval. Authentication sessions can expire; reauthenticate through the cloud tool when needed.
 
+Development builds also offer a separately consented `--verify-image` check. It reads selected image metadata after target confirmation, without provisioning or authenticating automatically. Missing metadata remains unknown; see [image preflight](IMAGE_PREFLIGHT.md) for source selection, read budgets and remaining boot/access checks.
+
 Before any external deployment, review [artifact and state handling](ARTIFACTS.md), the recipe's limits and your organization's approval process. Never paste tokens, private keys or passwords into the questionnaire, screenshots or repository.

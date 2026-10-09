@@ -196,6 +196,11 @@ def doctor_command(json_output: bool, required_capability: str):
     help="Also inspect VM size/architecture metadata after confirming the target; requires --verify-target.",
 )
 @click.option(
+    "--verify-image",
+    is_flag=True,
+    help="Also read selected image metadata after confirming the target; requires --verify-target.",
+)
+@click.option(
     "--timeout", type=click.FloatRange(min=0, max=120, min_open=True), default=30, show_default=True
 )
 @click.option(
@@ -205,17 +210,21 @@ def preflight_command(
     specification_path: Path,
     verify_target: bool,
     verify_machine: bool,
+    verify_image: bool,
     timeout: float,
     json_output: bool,
 ):
     """Inspect a saved project; opt in explicitly to cloud target checks."""
     if verify_machine and not verify_target:
         raise click.UsageError("--verify-machine requires --verify-target.")
+    if verify_image and not verify_target:
+        raise click.UsageError("--verify-image requires --verify-target.")
     try:
         report = target_preflight(
             load_specification(specification_path),
             verify_target=verify_target,
             verify_machine=verify_machine,
+            verify_image=verify_image,
             timeout=timeout,
         )
     except (OSError, ValueError, TypeError, RecursionError):
@@ -229,10 +238,17 @@ def preflight_command(
         click.echo(report["message"])
         if verify_machine:
             click.echo(f"VM size metadata: {report['machine_check']['status']}")
+        if verify_image:
+            click.echo(f"Image metadata: {report['image_check']['status']}")
         click.echo(report["limitations"])
     if report["status"] not in {"not_checked", "target_confirmed"}:
         raise click.exceptions.Exit(1)
     if verify_machine and report["machine_check"]["status"] not in {
+        "metadata_confirmed",
+        "not_applicable",
+    }:
+        raise click.exceptions.Exit(1)
+    if verify_image and report["image_check"]["status"] not in {
         "metadata_confirmed",
         "not_applicable",
     }:
