@@ -9,10 +9,13 @@ python -m venv .venv
 .venv/Scripts/python.exe -m pip install -e ".[dev]"
 .venv/Scripts/python.exe -m pytest -q
 .venv/Scripts/python.exe -m ruff check src tests
+.venv/Scripts/python.exe .github/scripts/check_doc_links.py
 .venv/Scripts/terraforma.exe serve
 ```
 
 On macOS/Linux, replace `.venv/Scripts/` with `.venv/bin/`. Python 3.11+ is required. Terraform and TFLint must be on PATH for native validation. Set `TERRAFORMA_NATIVE_TESTS=1` to include the provider-schema and native lint matrix; these checks download provider binaries and need network access.
+
+The documentation check needs Git and inspects tracked Markdown files. It checks local inline guide/image targets within the repository, including percent-encoded paths and angle-wrapped paths with spaces. External URLs and heading anchors are not verified. GitHub CI runs this check on Linux and Windows alongside the Python checks.
 
 ## Pull requests
 

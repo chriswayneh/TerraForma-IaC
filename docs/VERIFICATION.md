@@ -1,5 +1,11 @@
 # Verification record
 
+## Documentation CI and source verification — v0.4.0 development checkpoint
+
+- The committed local inline-documentation link checker passes across all 43 tracked Markdown files. Three subprocess tests in isolated local Git repositories verify valid/encoded/spaced references, broken screenshot reporting without exposing the target value, and rejection of an existing file outside the repository. No external URL or heading-anchor verification is claimed.
+- GitHub's Linux/Windows Python matrix now runs this check and includes the script in Ruff checks/formatting. No package runtime, generated Terraform or UI behavior changes in this checkpoint; previously recorded native/package results remain historical evidence for their exact source checkpoints.
+- Architecture-guard commit cc9a520/run 37871056118 now passes all six GitHub jobs, including native validation. Readiness-audit run 37871647916 remained in progress with five successful jobs when inspected. This checkpoint's CI is not yet verified. Live creation, guest access, initialization and cleanup still require dedicated-account evidence; v0.3.0 remains the latest release.
+
 ## Machine architecture guards — v0.4.0 development checkpoint
 
 - The full default suite passes 2,917 tests with 535 optional/native/platform cases skipped. Subsequently added CLI cases and expanded NVIDIA Grace/Azure case-variant coverage pass in the final focused set: 176 architecture/CPU-credit/Terragrunt tests, with 29 optional cases skipped. These later cases are not included in the full-suite count.
