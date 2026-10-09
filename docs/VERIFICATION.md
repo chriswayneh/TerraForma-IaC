@@ -1,5 +1,13 @@
 # Verification record
 
+## Restored script review — v0.4.0 development checkpoint
+
+- The full default suite passes 2,492 tests with 454 optional/native/platform cases skipped. Twelve provider/OS LF/CRLF API cases preserve exact script text and safe summaries; six are additional regressions. Ruff checks/formatting pass across 122 Python files; JavaScript syntax passes.
+- Browser restoration of a synthetic CRLF script normalizes displayed text, clears its prior review and invalidates preview/export. Confirming the displayed content and generating again restores export. Ordinary LF restoration preserves its unchanged review. The screenshot uses synthetic content.
+- The development wheel is 151,884 bytes, SHA-256 debe68fdd38ecca86d01fce96544338d6be84763fe28248ed732afb140d946c1. Its isolated installation passes 27 offline fixture imports and bundled UI checks using existing dependencies.
+- Both initialization 3bcdab2 (run 37862222834) and guest plan review 4989a06 (run 37862503651) pass all six GitHub CI jobs. Later checkpoints were still running when this record was written.
+- No live cloud operations, state/credential reads, script execution or AI calls were performed. The v0.4.0 live acceptance gates remain pending.
+
 ## Combined VM inputs — v0.4.0 development checkpoint
 
 - The full default suite passes 2,486 tests with 454 optional/native/platform cases skipped. Ruff checks/formatting pass across 122 Python files. Twenty-four new round-trip cases verify each supplied variable's exact exported default, required input completeness, external-secret requirements and preserved project/file content.

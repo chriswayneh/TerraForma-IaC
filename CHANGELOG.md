@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Browser project restoration now detects script text changes caused by textarea line-ending normalization, clears the previous initialization review and disables stale preview/export. API round trips preserve both LF and CRLF content exactly.
+
 - Added a combined VM configuration matrix covering custom images, workload identity, data disks, labels and initialization together across new/existing networks, both OS families and public/private access. Export/import checks verify each supplied variable default and external secret requirements without cloud operations.
 
 - Added twelve Terraform mocked plan runs to exercise enabled/disabled initialization for Linux and Windows across AWS, Azure and GCP. All providers are mocked and every run uses plan only. AWS optional/computed user-data behavior is documented explicitly; disabling generation does not establish cloud metadata cleanup or undo guest changes.

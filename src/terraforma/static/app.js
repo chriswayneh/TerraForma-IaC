@@ -552,13 +552,20 @@ byId("project-file").addEventListener("change", async () => {
       if (typeof value === "boolean") input.checked = value;
       else input.value = value;
     });
+    const restoredScript = byId("recipe-initialization_script");
+    const scriptChanged = restoredScript && typeof specification.inputs.initialization_script === "string" && restoredScript.value !== specification.inputs.initialization_script;
     updateInputVisibility();
     updatePrivateAddressHint();
     showStep(2);
     updateGuidance();
     byId("validation-panel").hidden = true;
     renderProject(result);
-    notify("Project loaded. Review its inputs, generate changes, or export it again. Credentials and secrets remain external.");
+    if (scriptChanged) {
+      restoredScript.dispatchEvent(new Event("input", {bubbles: true}));
+      notify("Project loaded. The browser normalized script line endings. Review the displayed content, confirm its review again and regenerate before export.");
+    } else {
+      notify("Project loaded. Review its inputs, generate changes, or export it again. Credentials and secrets remain external.");
+    }
   } catch (error) {
     notify(error.message, true);
   } finally {

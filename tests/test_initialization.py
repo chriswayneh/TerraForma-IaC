@@ -39,13 +39,18 @@ def initialized_spec(provider, windows=False, public=False, **changes):
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
 @pytest.mark.parametrize("windows", [False, True])
+@pytest.mark.parametrize("line_endings", ["lf", "crlf"])
 def test_initialization_roundtrip_has_no_host_execution_and_summary_hides_content(
-    provider, windows, monkeypatch
+    provider, windows, line_endings, monkeypatch
 ):
     monkeypatch.setattr(
         "subprocess.run", lambda *a, **k: pytest.fail("Generation must not execute scripts.")
     )
     spec = initialized_spec(provider, windows)
+    if line_endings == "crlf":
+        spec.inputs["initialization_script"] = spec.inputs["initialization_script"].replace(
+            "\n", "\r\n"
+        )
     result = compile_project(spec)
     assert value_hcl(spec.inputs["initialization_script"]) in result["files"]["variables.tf"]
     assert "review-marker" not in json.dumps(result["choice_summary"])

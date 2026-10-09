@@ -36,6 +36,8 @@ The exact script is saved in project exports and generated variable defaults. It
 
 File selection reads only the selected bounded regular file. No remote URL is fetched. Oversized or invalid UTF-8 browser uploads preserve current content. Remembered browser choices store recipe selection and wizard position, not script content. Explicit project exports do contain the script; handle them accordingly. Human-readable choice summaries omit its text.
 
+Browsers normalize textarea line endings. When restoring a project changes the displayed script content, the previous review declaration is cleared and the generated preview/export is invalidated. Review the displayed content and generate again. The API and terminal file reader preserve supplied text; importing a file does not silently authorize a changed script.
+
 Development plan-review policy 0.12.0 flags initialization content/references, unresolved payloads, removal of prior initialization and Azure guest extensions for manual review. Reports omit contents, retain incomplete policy coverage and never approve deployment. Review initialization and extension commands manually, even when other local checks pass. See [Plan review](PLAN_REVIEW.md) for exact scope.
 
 ## References
