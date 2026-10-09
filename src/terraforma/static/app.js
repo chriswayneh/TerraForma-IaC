@@ -22,7 +22,8 @@ const inputSections = [
   ["Image and capacity", ["use_custom_image", "custom_image", "custom_image_owner_account_id", "custom_image_admin_username", "confirm_custom_image_compatibility", "os_image", "image_version", "instance_type", "vm_size", "machine_type", "instance_tenancy", "instance_count", "computer_name", "license_type"]],
   ["Network and access", ["use_existing_network", "existing_subnetwork_resource", "existing_security_group_id", "existing_subnet_cidr", "confirm_existing_network_review", "network_cidr", "private_ip_address", "outbound_access", "admin_access_method", "allowed_cidr", "admin_username", "windows_username", "admin_password", "ssh_public_key", "client_ip"]],
   ["Storage", ["use_customer_managed_disk_key", "disk_kms_key", "enable_data_disk", "data_disk_size_gb", "data_disk_type", "data_disk_iops", "data_disk_throughput", "data_disk_caching", "boot_disk_size_gb", "boot_disk_type", "boot_disk_iops", "boot_disk_throughput", "boot_disk_caching", "delete_boot_disk_with_vm"]],
-  ["Operations and identity", ["enable_workload_identity", "workload_identity", "workload_identity_type", "workload_identity_resource_id", "detailed_monitoring", "cpu_credit_mode", "metadata_hop_limit", "protect_vm", "enable_secure_boot", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
+  ["VM protection", ["protect_vm", "enable_secure_boot"]],
+  ["Operations and identity", ["enable_workload_identity", "workload_identity", "workload_identity_type", "workload_identity_resource_id", "detailed_monitoring", "cpu_credit_mode", "metadata_hop_limit", "enable_boot_diagnostics", "enable_accelerated_networking", "enable_patch_assessment", "host_maintenance_policy", "automatic_restart"]],
   ["Workload inputs", []],
   ["Initialization", ["enable_initialization", "initialization_script", "confirm_initialization_review"]],
 ];
@@ -190,10 +191,22 @@ async function loadRecipeInputs() {
     sections.get(sectionName).append(group);
   });
   inputSections.forEach(([name]) => {
-    if (sections.has(name)) container.append(sections.get(name));
+    if (!sections.has(name)) return;
+    if (name === "Operations and identity") {
+      const advanced = document.createElement("details");
+      advanced.className = "recipe-advanced";
+      const summary = document.createElement("summary");
+      summary.textContent = "Advanced operations and identity";
+      const hint = document.createElement("p");
+      hint.className = "input-help";
+      hint.textContent = "Review optional identity, monitoring and availability settings. Defaults remain selected when this section is closed.";
+      advanced.append(summary, sections.get(name));
+      container.append(advanced, hint);
+    } else container.append(sections.get(name));
   });
   contractKey = key;
   updateInputVisibility();
+  revealConfiguredAdvancedSections();
   updatePrivateAddressHint();
 }
 
@@ -219,6 +232,21 @@ function updateInputVisibility() {
     const input = byId(`recipe-${definition.name}`);
     if (input) input.disabled = busy || !visible;
   });
+}
+
+function revealConfiguredAdvancedSections() {
+  contract.forEach((definition) => {
+    const input = byId(`recipe-${definition.name}`);
+    const advanced = input?.closest("details.recipe-advanced");
+    if (!advanced || byId(`recipe-group-${definition.name}`).hidden) return;
+    const value = definition.kind === "boolean" ? input.checked : definition.kind === "integer" ? Number(input.value) : input.value;
+    if (value !== (definition.default ?? "")) advanced.open = true;
+  });
+}
+
+function revealRecipeInput(input) {
+  const advanced = input?.closest("details.recipe-advanced");
+  if (advanced) advanced.open = true;
 }
 
 function setTheme(theme) {
@@ -558,6 +586,7 @@ byId("project-file").addEventListener("change", async () => {
     const restoredScript = byId("recipe-initialization_script");
     const scriptChanged = restoredScript && typeof specification.inputs.initialization_script === "string" && restoredScript.value !== specification.inputs.initialization_script;
     updateInputVisibility();
+    revealConfiguredAdvancedSections();
     updatePrivateAddressHint();
     showStep(2);
     updateGuidance();
@@ -655,6 +684,7 @@ form.addEventListener("submit", async (event) => {
     if (invalid) {
       notify("Complete the required recipe inputs before generating.", true);
       setBusy(false);
+      revealRecipeInput(invalid);
       invalid.reportValidity();
       return;
     }
@@ -672,6 +702,7 @@ form.addEventListener("submit", async (event) => {
     if (field) {
       field.setCustomValidity(error.message);
       field.setAttribute("aria-invalid", "true");
+      revealRecipeInput(field);
       field.reportValidity();
     }
   } finally {

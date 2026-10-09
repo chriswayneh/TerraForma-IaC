@@ -6,6 +6,10 @@ Each resource adapter must declare questions, types, defaults, validation, visib
 
 ## Shared decisions
 
+Development browser questionnaires keep **VM protection** visible and place optional operations/identity settings behind **Advanced operations and identity**. Closed sections preserve their answers and defaults. Imported non-default operations open for review, and invalid required advanced fields are revealed for correction. This display change does not alter Terraform defaults, conditional input rules or deployment authorization.
+
+![Visible VM protection and advanced operations](images/vm-advanced-options.png)
+
 | Group | Inputs and conditional questions |
 | --- | --- |
 | Scope | Provider, account/subscription/project, environment, project/resource names, region, zone, ownership, tags/labels, intended cost constraints. |

@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Browser questionnaires place optional operations and identity settings behind an expandable section while keeping VM protection visible. Imported non-default options open for review, invalid advanced fields are revealed for correction, and collapsing the section preserves values.
+
 - Expanded the combined VM verification matrix to both outbound profiles and AWS Dedicated Instance tenancy, with terminal collection checks for reviewed script files and all selected operational inputs.
 
 - AWS standalone Linux/Windows VMs offer unmanaged or Dedicated Instance hardware tenancy through both questionnaires. Dedicated Hosts remain unsupported; metadata preflight explicitly leaves tenancy compatibility unverified. Generation performs no cloud operations.

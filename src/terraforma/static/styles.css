@@ -487,6 +487,25 @@ main {
   letter-spacing: 0;
   padding-right: 10px;
 }
+.recipe-advanced {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 14px;
+  margin-top: 24px;
+}
+.recipe-advanced summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.recipe-advanced summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.recipe-advanced .recipe-input-section {
+  margin-top: 12px;
+}
 .text-input {
   width: 100%;
   border: 1px solid var(--line);

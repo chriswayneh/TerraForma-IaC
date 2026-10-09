@@ -1,5 +1,13 @@
 # Verification record
 
+## Advanced VM disclosure — v0.4.0 development checkpoint
+
+- The full default suite passes 2,791 tests with 506 optional/native/platform cases skipped. Ruff checks and formatting pass across 132 Python files; JavaScript syntax passes. No provider, contract or Terraform output changed, so the prior combined native/plan evidence remains applicable.
+- Browser checks across AWS/Azure/GCP confirm default operations/identity sections are closed and non-default imported settings open. Deletion protection and Secure Boot remain visible. AWS monitoring survives generation while collapsed; an incomplete identity input reopens and focuses for correction. Keyboard Enter toggles the disclosure. All fixtures are synthetic; no cloud check was submitted.
+- The [screenshot](images/vm-advanced-options.png) shows the visible protection controls, collapsed section and persistent default notice. Initialization controls and their review behavior remain outside the advanced section.
+- The final isolated development wheel is 163,722 bytes, SHA-256 e1099aeb30ddad0b4d5a93142f84112aa0b337b4a6d4fc4aa79f485acd1d9795. Its installation passes 27 offline imports/bundled UI checks and 138 combined-input/web/initialization regressions using existing dependencies. Packaged JavaScript and CSS exactly match the browser-verified source.
+- Earlier guidance 57e2e5e/run 37867691252 and VM documentation d2bd5df/run 37867782164 now pass all six GitHub jobs. Tenancy 8899f09/run 37868363894 remains running; advanced-disclosure CI has not yet run. No new release or live acceptance is claimed.
+
 ## Combined network/tenancy inputs — v0.4.0 development checkpoint
 
 - Thirty-six combined provider/OS/public-private/network configurations pass Terraform 1.14.0 validation and TFLint 0.61.0. Custom images, identity, data disks, labels and reviewed initialization are enabled together; new networks exercise both outbound profiles and AWS cases request Dedicated Instance tenancy.

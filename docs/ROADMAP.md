@@ -133,6 +133,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - SSH public keys, identity-based access, or references to external secret mechanisms for Windows administration. The [Azure Windows credential design](AZURE_WINDOWS_DESIGN.md) documents the implemented external password reference, native provider state retention, and protected state controls still needed before managed deployment.
 - Tags/labels, initialization scripts from trusted local files, availability choices, and explanations of cost drivers.
 - Provider-aware questions and validation; advanced options stay behind progressive disclosure.
+- Development browser questionnaires collapse optional operations/identity settings while keeping VM protection visible. Non-default imports reopen advanced settings for review; closed sections preserve values, and invalid required controls are revealed for correction.
 - Existing web-server recipes become compositions of the same VM/network primitives.
 
 Exit criteria: users can supply every required input for each documented VM pattern through the guided workflow. Structural/lint tests cover supported combinations. Dedicated test-account deployments verify Linux/Windows creation, access, and teardown; unsupported combinations are rejected explicitly.

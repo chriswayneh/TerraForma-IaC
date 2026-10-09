@@ -47,6 +47,8 @@ Development builds also offer optional [operating system image checks](docs/IMAG
 
 For new standalone VM networks, choose an [outbound port profile](docs/VM_OUTBOUND_ACCESS.md): preserve unrestricted ports or allow HTTPS and DNS with provider platform exceptions. Review workload dependencies; effective connectivity remains unverified.
 
+Development questionnaires keep VM protection visible and group optional operations/identity controls under [advanced options](docs/VM_INPUTS.md). Imported custom settings open for review; closing the section preserves its answers and defaults.
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.
