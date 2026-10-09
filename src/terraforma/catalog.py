@@ -95,6 +95,9 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 else "Creates a tier with 2–20 instances (default 2); placement is fixed and automatic scaling is not configured.",
             ]
         )
+        fixed.append(
+            "Spot/preemptible capacity is not configured by this recipe. Generation does not reserve capacity or verify pricing; review the selected size, account terms and availability before deployment."
+        )
         if config.provider == "azure":
             fixed.append(
                 "Windows administrator and computer names are configurable. Supply TF_VAR_admin_password externally; AzureRM retains it in state and saved plans. Protect storage/access before use; this generator configures no protected backend. Standard licensing and automatic OS updates are defaults; Azure Hybrid Benefit requires qualifying licenses."
@@ -134,6 +137,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             [
                 "Other Windows versions or publishers" if windows else "Windows VMs",
                 "ARM64 VMs",
+                "Spot/preemptible VMs",
                 "Custom image families, specialized images and Marketplace plans"
                 if standalone
                 else "Custom images",
@@ -206,7 +210,7 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             fixed.append(
                 "Standard VM host maintenance is configurable: MIGRATE (default) or TERMINATE. Automatic restart after host failures/maintenance is configurable (default enabled); it does not restart user-stopped VMs or repair applications. Actual host behavior and machine compatibility require cloud verification."
             )
-            unsupported.extend(["Spot/preemptible VMs", "Custom host maintenance schedules"])
+            unsupported.append("Custom host maintenance schedules")
             fixed.append(
                 "Shielded VM Secure Boot is configurable (default enabled); vTPM and integrity monitoring stay enabled. Unsigned drivers/modules can prevent booting. Shielded setting changes require a stopped VM; automatic stopping is disabled."
             )

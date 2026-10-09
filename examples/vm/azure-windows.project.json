@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "template_version": "0.4.0.dev0",
+  "recipe": {
+    "provider": "azure",
+    "project_name": "azure-windows-demo",
+    "architecture_type": "windows_virtual_machine",
+    "is_public": false,
+    "enable_encryption": true
+  },
+  "inputs": {
+    "subscription_id": "00000000-0000-0000-0000-000000000001",
+    "environment": "development"
+  },
+  "secret_references": {
+    "admin_password": "TF_VAR_admin_password"
+  }
+}

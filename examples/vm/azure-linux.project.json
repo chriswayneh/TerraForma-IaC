@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "template_version": "0.4.0.dev0",
+  "recipe": {
+    "provider": "azure",
+    "project_name": "azure-linux-demo",
+    "architecture_type": "virtual_machine",
+    "is_public": false,
+    "enable_encryption": true
+  },
+  "inputs": {
+    "subscription_id": "00000000-0000-0000-0000-000000000001",
+    "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+    "environment": "development"
+  },
+  "secret_references": {}
+}

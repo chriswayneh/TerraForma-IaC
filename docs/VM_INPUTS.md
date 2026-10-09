@@ -43,6 +43,8 @@ Questions include project, region/zone, enabled-service prerequisites, machine f
 
 ## Required tests before release
 
+Current compute recipes do not configure Spot/preemptible capacity. Their capability summaries expose that limitation for all three providers; selecting a machine size does not reserve it or establish its price. Interrupted-capacity lifecycle and recovery require separately implemented and verified support.
+
 - Every declared question maps to a real generated value or explicit external reference; unsupported settings produce an error rather than being dropped.
 - Every generated required variable is resolved or visibly deferred to an external secret mechanism; defaulted variables are documented.
 - Conditional inputs appear when applicable and stale values from earlier choices are rejected or explicitly cleared.

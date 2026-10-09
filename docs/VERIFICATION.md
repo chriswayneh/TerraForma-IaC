@@ -1,5 +1,12 @@
 # Verification record
 
+## v0.4.0 example and capability checkpoint
+
+- Six synthetic private-VM specifications compile and pass terminal input inspection, description and fresh-directory generation. Local API imports succeed, retain unverified target identity and produce downloads whose three Terraform files byte-match terminal output. Azure Windows preserves its external `TF_VAR_admin_password` reference. These checks prohibit `subprocess.run` and `subprocess.Popen`; no native tools, cloud resources or guests are exercised.
+- All twelve compute catalog entries consistently disclose unsupported Spot/preemptible capacity. Existing catalog CLI/API/privacy checks pass (12 tests). The running local preview serves the current catalog; Terraform generation code is unchanged.
+- The example keys have no supplied private counterpart and cannot provide usable login. Examples and documentation explicitly prohibit deploying the synthetic inputs as provided. They demonstrate offline import/export, not cloud compatibility or successful creation.
+- The preceding 2,938-test installed-package result remains evidence for source `6406995`; it is not a new full-suite result for this catalog metadata change. Native validation and live acceptance are distinct; no v0.4.0 release or live success is claimed.
+
 ## v0.4.0 account-free package checkpoint
 
 - Built source commit `6406995880170ccc956c56df2507269bc674cc32` as a `0.4.0.dev0` wheel using standard build isolation. Build dependencies required network access; no cloud account was used. Installed the wheel into a separate package directory and asserted imports resolved there, using the existing development environment's runtime/test dependencies.

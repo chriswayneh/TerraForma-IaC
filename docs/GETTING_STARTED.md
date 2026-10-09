@@ -34,6 +34,8 @@ Enable **Remember choices on this browser** to retain the questionnaire selectio
 
 You do not need accounts with all three clouds to work on or test TerraForma locally. A configuration for your own deployment needs the selected cloud's account/subscription/project reference; the local test suite uses example references without authenticating to those accounts.
 
+Development builds include [six account-free VM examples](../examples/vm/README.md) for importing and reviewing Linux/Windows inputs across all three providers. These use synthetic references and demonstration keys, require `0.4.0.dev0` development support and must not be deployed as provided.
+
 | Stage | Cloud account needed? |
 | --- | --- |
 | Generate example files and run local unit/provider validation | No cloud credentials; provider downloads need network access |

@@ -87,6 +87,8 @@ Live account checks, VM creation, authenticated guest access, initialization and
 
 Work that can continue now includes shared input contracts, usability, documentation and [hosted-generator preparation](docs/HOSTED_GENERATOR.md). The future website is planned; the current application remains a local workspace.
 
+Try the [six development VM examples](examples/vm/README.md) to inspect Linux/Windows inputs without cloud accounts. They use synthetic references and demonstration keys for preview only.
+
 ## What you get
 
 The Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export.

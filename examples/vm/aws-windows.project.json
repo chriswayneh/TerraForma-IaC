@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "template_version": "0.4.0.dev0",
+  "recipe": {
+    "provider": "aws",
+    "project_name": "aws-windows-demo",
+    "architecture_type": "windows_virtual_machine",
+    "is_public": false,
+    "enable_encryption": true
+  },
+  "inputs": {
+    "aws_account_id": "123456789012",
+    "ssh_public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB",
+    "environment": "development"
+  },
+  "secret_references": {}
+}

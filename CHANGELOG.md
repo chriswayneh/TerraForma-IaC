@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added six account-free development VM examples with synthetic references, explicit preview-only guidance and Azure Windows external-password handling. Updated project-specification version guidance to distinguish released and development generators.
+
+- Compute capability summaries now consistently disclose unsupported Spot/preemptible capacity across AWS, Azure and GCP. Selecting a VM size does not reserve capacity or verify pricing; Terraform output is unchanged.
+
 - Prepared the v0.4.0 live acceptance sequence with explicit Google Cloud trial restrictions and recorded a full account-free installed-package checkpoint. Cloud creation/access/initialization/cleanup gates remain outstanding; no new release is published.
 
 - Clarified account-free local use and continuing offline development in the README. Added a hosted-generator service-boundary checklist with route scope, privacy requirements and offline acceptance checks; public hosting and live VM verification remain pending.

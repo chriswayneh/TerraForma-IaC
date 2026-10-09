@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "template_version": "0.4.0.dev0",
+  "recipe": {
+    "provider": "gcp",
+    "project_name": "gcp-linux-demo",
+    "architecture_type": "virtual_machine",
+    "is_public": false,
+    "enable_encryption": true
+  },
+  "inputs": {
+    "gcp_project_id": "example-project",
+    "environment": "development"
+  },
+  "secret_references": {}
+}

@@ -1,6 +1,6 @@
 # Project specifications
 
-Included in v0.3.0. Saved `0.3.0.dev0` specifications remain accepted with their original template label; new specifications use `0.3.0`. Import regenerates outputs using the installed generator, so compare the regenerated files before use. Receipts record the actual generator version and output hashes.
+Included in v0.3.0. The released generator writes `0.3.0` specifications; development builds write `0.4.0.dev0`. Saved `0.3.0` and `0.3.0.dev0` specifications remain accepted with their original template label. Import regenerates outputs using the installed generator, so compare the regenerated files before use. Receipts record the actual generator version and output hashes.
 
 A project specification records a recipe and its non-secret Terraform inputs. The browser Configure step and terminal `terraforma wizard` ask about each declared variable using the same contract. Required answers must be supplied; defaults can be reviewed and changed. Generation, local validation, and download use those same answers. Sensitive fields show an external environment-variable reference instead of asking for a password.
 

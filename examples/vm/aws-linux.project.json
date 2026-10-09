@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "template_version": "0.4.0.dev0",
+  "recipe": {
+    "provider": "aws",
+    "project_name": "aws-linux-demo",
+    "architecture_type": "virtual_machine",
+    "is_public": false,
+    "enable_encryption": true
+  },
+  "inputs": {
+    "aws_account_id": "123456789012",
+    "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+    "environment": "development"
+  },
+  "secret_references": {}
+}
