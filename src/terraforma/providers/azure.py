@@ -704,8 +704,24 @@ def build_static(builder: TerraformGenerator, common: dict) -> None:
         account_tier="Standard",
         account_replication_type="LRS",
         min_tls_version="TLS1_2",
+        https_traffic_only_enabled=True,
         allow_nested_items_to_be_public=builder.config.is_public,
+        cross_tenant_replication_enabled=False,
+        local_user_enabled=False,
+        sftp_enabled=False,
+        # Shared-key auth and public network access stay at provider defaults: Terraform
+        # uploads index.html through the blob data plane, which needs both unless the
+        # deployer adds Entra data-plane RBAC and a private network path (see docs).
         **common,
+        children=[
+            block(
+                "blob_properties",
+                children=[
+                    block("delete_retention_policy", days=7),
+                    block("container_delete_retention_policy", days=7),
+                ],
+            )
+        ],
     )
     if builder.config.is_public:
         builder.resource(

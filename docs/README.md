@@ -46,6 +46,7 @@ Use a separate `main` installation for these VM enhancements and examples. Offli
 | --- | --- |
 | Understand components and trust boundaries | [Architecture](ARCHITECTURE.md) |
 | Inspect exact test evidence and limitations | [Verification record](VERIFICATION.md) |
+| See which scanner checks generated recipes leave to you | [Scanner checks](SCANNER_CHECKS.md) |
 | Review dependencies and update rules | [Dependency trust](DEPENDENCIES.md) |
 | Understand versions and planned phases | [Roadmap](ROADMAP.md) · [Changelog](../CHANGELOG.md) |
 | Prepare the future hosted generator | [Hosted generator design](HOSTED_GENERATOR.md) |
