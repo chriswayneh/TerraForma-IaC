@@ -1,5 +1,14 @@
 # Verification record
 
+## AWS hardware tenancy — v0.4.0 development checkpoint
+
+- The full default suite passes 2,757 tests with 494 optional/native/platform cases skipped. Four subsequent terminal/offline-preflight cases pass. Both OS families and new/existing networks preserve tenancy answers through generation/import; invalid host and other unsupported values are rejected.
+- All eight Linux/Windows × new/existing-network × unmanaged/dedicated configurations pass Terraform 1.14.0 validation and TFLint 0.61.0. Two provider-mocked plan runs verify requested dedicated tenancy. Structural assertions establish that no host ID, host resource group or Dedicated Host resource is requested; provider-computed host values are not treated as known during plan.
+- Ruff checks and formatting pass across 132 Python files; JavaScript syntax passes. The isolated development wheel is 163,414 bytes, SHA-256 32737bcab6b70ddf73b1e88ceeff4282d54ac97bff5d1cd40739bacb1c061fd5. Its installation passes 27 offline fixture/bundled-UI checks and 116 tenancy/credit/existing-network/preflight regressions using existing runtime dependencies.
+- The browser [resource guide](images/aws-tenancy-guide.png) shows dedicated costs and unverified compatibility using synthetic inputs. No cloud preflight, provisioning, credential/state read, guest command or AI request was performed.
+- Outbound 1d1a76d/run 37867379798 and guidance 57e2e5e/run 37867691252 have five completed successful jobs and native validation still running at this checkpoint. Tenancy CI has not yet run. No new CI completion or release is claimed.
+- Effective tenancy, supported size/region, capacity, licensing, creation, access, changes and cleanup remain pending dedicated-account evidence. v0.3.0 remains the latest release.
+
 ## Outbound guidance — v0.4.0 development checkpoint
 
 - The full default suite passes 2,731 tests with 484 optional/native/platform cases skipped. Six subsequent capability-metadata cases also pass. The resource guide and CLI explain the selected profile and its limits; existing-network guidance makes no claim of unrestricted effective access.

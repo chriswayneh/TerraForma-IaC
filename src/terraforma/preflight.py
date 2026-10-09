@@ -502,6 +502,10 @@ def target_preflight(
         "message": "Account checks are off. Use --verify-target to run a bounded cloud CLI read with its existing credentials.",
         "limitations": "Trusted configured cloud CLI output only. No verification of Terraform credential equivalence, principal permissions, endpoint trust, region/image/SKU availability, quotas, network reachability or deployment readiness. CLI authentication may refresh its local credential cache. This report does not authorize provisioning.",
     }
+    if provider == "aws":
+        report["limitations"] += (
+            " Hardware tenancy support and effective VPC/instance tenancy are not checked."
+        )
     if not verify_target:
         return report
     executable = shutil.which(tool)

@@ -22,6 +22,7 @@ Start with the released guided workflow, then use the technical guides when you 
 | Understand the future VM questions | [VM input design](VM_INPUTS.md) |
 | Include a reviewed local script on development VMs | [VM initialization](VM_INITIALIZATION.md) |
 | Choose outbound ports for a new standalone VM network | [VM outbound profiles](VM_OUTBOUND_ACCESS.md) |
+| Choose AWS standalone VM hardware tenancy | [AWS hardware tenancy](AWS_TENANCY.md) |
 | Prepare future dedicated-account VM release testing | [VM acceptance evidence](VM_ACCEPTANCE.md) |
 | Review optional development image metadata checks | [Operating system image preflight](IMAGE_PREFLIGHT.md) |
 | Review security boundaries or report a vulnerability | [Security policy](../SECURITY.md) |

@@ -125,6 +125,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - Azure standalone Linux/Windows boot and optional data disks expose supported host cache modes with durability guidance. Actual workload behavior and safe cache changes require live verification.
 - Azure Windows offers automatic platform patch assessment separately from automatic OS installation; guest health, assessment and installation success remain unverified.
 - Provider identity and region/zone selection; image families, supported custom images, machine size, architecture, and count.
+- AWS standalone VMs offer [unmanaged or Dedicated Instance tenancy](AWS_TENANCY.md), preserving the unmanaged default. Dedicated Hosts/affinity remain unsupported; tenancy compatibility, capacity, licensing and effective placement require separate live verification.
 - Boot/data disk size, type, encryption, managed-key references, and deletion behavior.
 - AWS/GCP standalone boot disks expose a deletion/retention choice with existing deletion defaults. Data disks and encryption keys remain separate; live retention and restoration are unverified.
 - New or existing networks/subnets, private/public addresses, explicit inbound rules, and egress choices.

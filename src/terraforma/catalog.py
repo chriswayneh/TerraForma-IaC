@@ -173,6 +173,10 @@ def recipe_capabilities(config: WizardConfig) -> dict:
             )
         if standalone and config.provider == "aws":
             fixed.append(
+                "EC2 hardware tenancy is unmanaged by default or explicitly Dedicated Instance. Dedicated mode adds charges and does not allocate a host, isolate EBS storage or establish BYOL eligibility. Existing VPC tenancy can affect placement; compatibility, licensing and capacity remain unverified."
+            )
+            unsupported.extend(["Dedicated Hosts", "Host affinity and host resource groups"])
+            fixed.append(
                 "In new-network mode the VM and optional data disk use the first generated subnet's zone; an optional standard zone name sets that first zone and a second standard zone is required. Existing-subnet mode inherits its zone and rejects a conflicting supplied zone. AWS zone names are account-specific, and live availability/capacity remain unverified."
             )
             unsupported.extend(

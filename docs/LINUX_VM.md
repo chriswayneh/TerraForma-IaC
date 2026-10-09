@@ -37,6 +37,7 @@ Azure standalone VMs also offer **Enable Azure accelerated networking**, off by 
 | Operating system | Supported provider-specific Linux choice; Azure version may be `latest` or an exact `Major.Minor.Build` | x86_64/AMD64 only; AWS accepts a matching AMI ID; GCP accepts a matching exact published name; latest remains available |
 | Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One x86 VM; no autoscaling. Reviewed custom images and bounded initialization are optional development features |
 | AWS gp3 performance | Boot/data disk IOPS and throughput, shown for enabled gp3 disks | Defaults to included 3,000 IOPS/125 MiB/s; regional recipe supports up to 80,000 IOPS/2,000 MiB/s and validates size/performance ratios; Outposts unsupported |
+| AWS hardware tenancy | Provider/VPC default or Dedicated Instance | Unmanaged by default; dedicated mode adds charges. No host allocation/affinity or BYOL verification; see [tenancy guidance](AWS_TENANCY.md) |
 | Data storage | Enable one data disk, size from 32–2048 GiB, supported disk class | Disabled by default; one new empty disk, no formatting/mounting, backup, or recovery policy |
 | Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |

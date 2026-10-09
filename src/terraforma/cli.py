@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import checksum_document, project_artifacts, verify_project
+from terraforma.aws_tenancy import aws_tenancy_guidance
 from terraforma.backend import (
     BACKEND_ADAPTER,
     backend_input_contract,
@@ -523,6 +524,8 @@ def wizard(target_dir: Path | None):
     click.echo(project["verification"])
     if architecture in {"virtual_machine", "windows_virtual_machine"}:
         click.echo(outbound_guidance(specification.inputs))
+        if provider == "aws":
+            click.echo(aws_tenancy_guidance(specification.inputs))
     click.echo(f'Validate with: terraforma run --dir "{directory}"')
 
 

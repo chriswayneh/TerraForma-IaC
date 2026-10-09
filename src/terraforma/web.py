@@ -21,6 +21,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from terraforma import __version__
 from terraforma.ai_engine import AIDiagnosticsEngine, DiagnosticsError, redact_sensitive_text
 from terraforma.artifacts import PROJECT_GITIGNORE, checksum_document, project_artifacts
+from terraforma.aws_tenancy import aws_tenancy_guidance
 from terraforma.backend import (
     MAX_BACKEND_BYTES,
     backend_error_detail,
@@ -338,6 +339,12 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
         project["guide"]["components"].append(
             {"name": "Outbound network profile", "explanation": explanation}
         )
+        if payload.recipe.provider == "aws":
+            tenancy = aws_tenancy_guidance(payload.inputs)
+            project["notes"].append(tenancy)
+            project["guide"]["components"].append(
+                {"name": "EC2 hardware tenancy", "explanation": tenancy}
+            )
     return project
 
 

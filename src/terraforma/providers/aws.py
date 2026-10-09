@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from terraforma.aws_network_attachment import add_aws_attachment_data
+from terraforma.aws_tenancy import declare_aws_tenancy
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 from terraforma.initialization import aws_initialization_payload
@@ -304,6 +305,7 @@ def build_aws(builder: TerraformGenerator) -> None:
         "t3.small" if windows else "t3.micro",
     )
     if standalone:
+        declare_aws_tenancy(builder)
         builder.variable(
             "metadata_hop_limit",
             "IMDSv2 token response network hops. provider_default leaves the hop limit unmanaged, preserving account/AMI/provider behavior; verify the effective setting. one_hop restricts responses to one hop; containers can fail to obtain tokens. two_hops supports an additional container network hop and expands metadata reachability. Require compatible SDKs and restrict workload access to instance credentials. Returning to provider_default does not reset an existing VM's setting. IMDSv2 remains required; this does not configure container isolation or IAM permissions.",
@@ -371,6 +373,13 @@ def build_aws(builder: TerraformGenerator) -> None:
         ),
         instance_type=ref("var.instance_type"),
         monitoring=ref("var.detailed_monitoring"),
+        **{
+            "tenancy": ref(
+                'var.instance_tenancy == "provider_default" ? null : var.instance_tenancy'
+            )
+        }
+        if standalone
+        else {},
         **{
             "iam_instance_profile": ref(
                 "var.enable_workload_identity ? var.workload_identity : null"
