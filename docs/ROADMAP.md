@@ -16,6 +16,7 @@ The stable product connects **configure and export**, **review and approve**, an
 | **Current target** | **v0.4.0** |
 | **Next user milestone** | Configure supported Linux and Windows VMs without editing Terraform in v0.4.0 |
 | **Release blocker** | Dedicated AWS/Azure/GCP accounts and separately authorized live creation, login, initialization and cleanup evidence |
+| **Offline checkpoint** | Six synthetic VM previews, installed-package checks and a source security review recorded in [verification](VERIFICATION.md); live gates remain pending |
 | **Final milestone** | **v1.0.0: stable local and hosted infrastructure workspace** |
 
 TerraForma-IaC already generates Terraform recipes through a local web UI and CLI. It explains the resources, exports the files, validates trusted configurations, and provides an initial local plan reviewer. [Start with the current release](GETTING_STARTED.md).

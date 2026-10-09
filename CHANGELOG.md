@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- HCL object keys now preserve literal interpolation markers, template directives and Unicode. A provider-free native Terraform test verifies exact evaluated keys. Supported recipe keys were already fixed; this corrects the generic renderer's literal contract.
+
 - Added six account-free development VM examples with synthetic references, explicit preview-only guidance and Azure Windows external-password handling. Updated project-specification version guidance to distinguish released and development generators.
 
 - Compute capability summaries now consistently disclose unsupported Spot/preemptible capacity across AWS, Azure and GCP. Selecting a VM size does not reserve capacity or verify pricing; Terraform output is unchanged.

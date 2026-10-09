@@ -8,19 +8,25 @@ class Expression:
     value: str
 
 
+def _literal_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False).replace("${", "$${").replace("%{", "%%{")
+
+
 def value_hcl(value: Any) -> str:
     if isinstance(value, Expression):
         return value.value
     if isinstance(value, dict):
         return (
             "{ "
-            + ", ".join((f"{json.dumps(key)} = {value_hcl(item)}" for key, item in value.items()))
+            + ", ".join(
+                (f"{_literal_string(key)} = {value_hcl(item)}" for key, item in value.items())
+            )
             + " }"
         )
     if isinstance(value, list):
         return "[" + ", ".join(value_hcl(item) for item in value) + "]"
     if isinstance(value, str):
-        return json.dumps(value, ensure_ascii=False).replace("${", "$${").replace("%{", "%%{")
+        return _literal_string(value)
     return json.dumps(value)
 
 

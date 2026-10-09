@@ -1,5 +1,13 @@
 # Verification record
 
+## v0.4.0 source review and literal-key checkpoint
+
+- A Standard Codex Security source review of all 48 files under `src/terraforma` at `4ee27a71f4d05a1c13a52ee26a96c8abc5051822` completed without reportable findings. Independent baseline and focused filesystem/process/AI and HCL-input reviews were reconciled. This is static review of the documented local workflow, not security certification or live cloud acceptance. Trusted native tool/plugin authority, host filesystem protections and public-service deployment remain external assumptions.
+- Subsequent generic HCL renderer work shares literal-string escaping between object keys and values. A provider-free Terraform 1.14.0 test failed before the change and passes afterward, preserving interpolation markers, directives and Unicode exactly. It uses only an output and `command = plan`; no provider, resource, cloud credential or infrastructure operation is involved. The sealed source review applies to the preceding commit, not this later change.
+- Focused generator/project/Terragrunt regressions pass **150 tests**, with **281 optional cases skipped**. The full default suite subsequently passes **2,938 tests**, with **536 optional native/platform cases skipped** and the existing Starlette/HTTPX warning. The additional native literal-key test passes separately. Ruff checks/formatting pass across 138 Python files and local documentation links pass across 45 tracked Markdown files. Earlier installed-package results retain their recorded source scope.
+- Account-free commits `6406995` and `c301d74` now have successful GitHub runs [37883772696](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37883772696) and [37884084686](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37884084686). Example/catalog commit `4ee27a7` has five successful jobs in run 37884546752; native validation remained in progress when checked. This checkpoint's CI must be checked after publication.
+- Dedicated-account Linux/Windows creation, guest login, initialization and cleanup remain outstanding for all three providers. **v0.4.0 remains unreleased.**
+
 ## v0.4.0 example and capability checkpoint
 
 - Six synthetic private-VM specifications compile and pass terminal input inspection, description and fresh-directory generation. Local API imports succeed, retain unverified target identity and produce downloads whose three Terraform files byte-match terminal output. Azure Windows preserves its external `TF_VAR_admin_password` reference. These checks prohibit `subprocess.run` and `subprocess.Popen`; no native tools, cloud resources or guests are exercised.

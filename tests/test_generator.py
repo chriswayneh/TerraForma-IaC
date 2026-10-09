@@ -66,6 +66,43 @@ def test_literal_hcl_cannot_interpolate():
     assert value_hcl('${file("secret")}') == '"$${file(\\"secret\\")}"'
 
 
+def test_native_object_keys_preserve_literal_templates(tmp_path):
+    if os.environ.get("TERRAFORMA_NATIVE_TESTS") != "1":
+        pytest.skip("Set TERRAFORMA_NATIVE_TESTS=1 to run native literal evaluation.")
+    terraform = shutil.which("terraform")
+    if not terraform:
+        pytest.fail("Native tests require terraform on PATH.")
+    values = {
+        '${file("canary.txt")}': "interpolation stays literal",
+        "%{ if true }changed%{ endif }": "directive stays literal",
+        "café 🐬": "Unicode stays literal",
+    }
+    (tmp_path / "canary.txt").write_text("evaluated-key", encoding="utf-8")
+    (tmp_path / "main.tf").write_text(
+        'output "literal" {\n value = ' + value_hcl(values) + "\n}\n", encoding="utf-8"
+    )
+    expected = value_hcl(json.dumps(values, ensure_ascii=False))
+    (tmp_path / "literal.tftest.hcl").write_text(
+        'run "literal_keys" {\n command = plan\n assert {\n'
+        f" condition = output.literal == jsondecode({expected})\n"
+        ' error_message = "Object keys must preserve exact literal text."\n }\n}\n',
+        encoding="utf-8",
+    )
+    for arguments in (
+        ["init", "-backend=false", "-input=false", "-no-color"],
+        ["test", "-no-color"],
+    ):
+        result = subprocess.run(
+            [terraform, *arguments],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_generation_refuses_existing_terraform(tmp_path):
     existing = tmp_path / "old.tf"
     existing.write_text("original")
