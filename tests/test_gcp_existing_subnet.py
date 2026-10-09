@@ -51,8 +51,17 @@ def test_existing_subnet_leaves_network_rules_routes_nat_and_api_unmanaged(windo
         "google_compute_router_nat",
         "google_compute_route",
     ):
-        for resource in resources.get(f'"{kind}"', {}).values():
-            assert resource["count"] == "${var.use_existing_network ? 0 : 1}"
+        for name, resource in resources.get(f'"{kind}"', {}).items():
+            if kind == "google_compute_firewall" and name in (
+                '"outbound_web_dns"',
+                '"outbound_deny_other"',
+            ):
+                assert (
+                    resource["count"]
+                    == '${var.use_existing_network || var.outbound_access != "https_dns" ? 0 : 1}'
+                )
+            else:
+                assert resource["count"] == "${var.use_existing_network ? 0 : 1}"
     vm = resources['"google_compute_instance"']['"this"']
     assert vm["tags"] == '${var.use_existing_network ? [] : ["terraforma-web"]}'
     assert (
@@ -183,7 +192,7 @@ run "attachment_without_network_management" {
     google = google.offline
   }
   assert {
-    condition = length(google_compute_network.this) == 0 && length(google_compute_subnetwork.this) == 0 && length(google_compute_firewall.this) == 0 && length(google_compute_router.this) == 0 && length(google_compute_router_nat.this) == 0 && length(google_project_service.compute) == 0
+    condition = length(google_compute_network.this) == 0 && length(google_compute_subnetwork.this) == 0 && length(google_compute_firewall.this) == 0 && length(google_compute_firewall.outbound_web_dns) == 0 && length(google_compute_firewall.outbound_deny_other) == 0 && length(google_compute_router.this) == 0 && length(google_compute_router_nat.this) == 0 && length(google_project_service.compute) == 0
     error_message = "Existing attachment must not manage network infrastructure, access rules or API enablement."
   }
   assert {

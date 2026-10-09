@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- New standalone AWS, Azure and GCP VM networks offer unrestricted or HTTPS/DNS outbound profiles, preserving provider platform and Windows licensing exceptions. Existing-subnet rules remain separately managed. Local validation and synthetic plans verify declared rules; effective live connectivity remains unverified.
+
 - GCP standalone image preflight now checks declared UEFI compatibility for the generated Shielded VM configuration, including when Secure Boot is disabled. Missing guest-feature metadata stays unknown; malformed/duplicate entries fail closed. No additional cloud command or Terraform change is introduced.
 
 - Combined AWS image/VM metadata checks now compare reported firmware boot modes without additional commands, detect incompatible combinations and preserve unknown support. UEFI-preferred Legacy BIOS fallback receives a separate warning. Actual guest boot remains unverified.

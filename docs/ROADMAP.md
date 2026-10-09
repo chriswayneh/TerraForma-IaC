@@ -128,6 +128,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 - Boot/data disk size, type, encryption, managed-key references, and deletion behavior.
 - AWS/GCP standalone boot disks expose a deletion/retention choice with existing deletion defaults. Data disks and encryption keys remain separate; live retention and restoration are unverified.
 - New or existing networks/subnets, private/public addresses, explicit inbound rules, and egress choices.
+- Development standalone VM recipes offer [outbound profiles](VM_OUTBOUND_ACCESS.md) for new networks: unrestricted ports or HTTPS/DNS with provider platform exceptions. Existing-network rules remain separately managed; custom destination/port policies and live effective connectivity remain outstanding.
 - SSH public keys, identity-based access, or references to external secret mechanisms for Windows administration. The [Azure Windows credential design](AZURE_WINDOWS_DESIGN.md) documents the implemented external password reference, native provider state retention, and protected state controls still needed before managed deployment.
 - Tags/labels, initialization scripts from trusted local files, availability choices, and explanations of cost drivers.
 - Provider-aware questions and validation; advanced options stay behind progressive disclosure.

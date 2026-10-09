@@ -45,6 +45,8 @@ Optional [reviewed initialization scripts](docs/VM_INITIALIZATION.md) are availa
 
 Development builds also offer optional [operating system image checks](docs/IMAGE_PREFLIGHT.md). Separate consent enables bounded cloud CLI metadata reads; missing compatibility fields remain unknown. Offline generation needs no cloud account.
 
+For new standalone VM networks, choose an [outbound port profile](docs/VM_OUTBOUND_ACCESS.md): preserve unrestricted ports or allow HTTPS and DNS with provider platform exceptions. Review workload dependencies; effective connectivity remains unverified.
+
 ## Screenshots
 
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.

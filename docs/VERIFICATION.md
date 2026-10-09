@@ -1,5 +1,14 @@
 # Verification record
 
+## Outbound VM profiles — v0.4.0 development checkpoint
+
+- The full default suite passes 2,706 tests with 484 optional/native/platform cases skipped. Twelve subsequent terminal-questionnaire cases also pass, checking Linux/Windows and new/existing networks across all three providers. Ruff checks and formatting pass across 130 Python files; JavaScript syntax passes.
+- Both profiles pass Terraform 1.14.0 validation and TFLint 0.61.0 in 24 provider/OS/public-private configurations. Twenty-four combined custom-image/identity/disk/initialization/new-existing-network regressions also pass native validation and lint.
+- Twelve provider-mocked plan runs verify restricted ports, ordered denies, Windows licensing exceptions and unchanged unrestricted defaults. The six existing-GCP-network mocked plan runs also pass, including zero management of both new outbound firewall resources. All mock runs use plan only, without cloud operations.
+- Browser verification confirms restricted-profile generation and hiding the control for existing networks. The [questionnaire screenshot](images/vm-outbound-profile.png) uses synthetic inputs. The development wheel is 161,644 bytes, SHA-256 56945215bbe9dde1a278a27c46023e02320360139acc7778779bb212dcfbe70a. Its isolated installation passes 27 saved-project imports and bundled UI checks plus 93 offline regressions using existing runtime dependencies.
+- Earlier image preflight fcde04b/run 37865305438, AWS boot-mode 1e350db/run 37865801762 and GCP firmware 93917cb/run 37866074935 each pass all six GitHub jobs. Outbound checkpoint CI has not yet been run at the time of this record.
+- Effective egress policy, guest updates/activation, creation, login and cleanup remain pending dedicated-account testing. No live operations, credential/state reads or guest execution were performed. v0.3.0 remains the latest release.
+
 ## GCP image firmware — v0.4.0 development checkpoint
 
 - The full default suite passes 2,652 tests with 454 optional/native/platform cases skipped. Twenty-nine additional mocked cases cover Linux/Windows, catalog/custom images, Secure Boot on/off, declared/missing UEFI support, malformed/duplicate features and web-recipe scope. All metadata responses are synthetic; no cloud CLI was invoked.

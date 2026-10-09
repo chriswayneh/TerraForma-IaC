@@ -6,6 +6,7 @@ from terraforma.aws_network_attachment import add_aws_attachment_data
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 from terraforma.initialization import aws_initialization_payload
+from terraforma.outbound import aws_outbound_rules
 from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
@@ -214,7 +215,7 @@ def build_aws(builder: TerraformGenerator) -> None:
         **owned_network,
         name_prefix=ref('"${var.project_name}-web-"'),
         vpc_id=vpc_id,
-        children=[ingress, egress],
+        children=[ingress] + (aws_outbound_rules() if standalone else [egress]),
     )
     if standalone:
         add_aws_attachment_data(builder)

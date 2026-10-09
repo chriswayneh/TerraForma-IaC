@@ -38,6 +38,8 @@ An initialization payload can execute elevated guest commands and make network r
 
 ## Current offline evidence
 
+For the restricted [outbound profile](VM_OUTBOUND_ACCESS.md), test effective HTTPS/DNS access, rejection of another outbound port, required platform/Windows activation traffic, guest updates and initialization dependencies. Confirm private application connectivity and inherited policy effects separately. Local rule declarations cannot establish these outcomes.
+
 The [verification record](VERIFICATION.md) contains structural validation, lint, input round trips, literal payload checks, provider-mocked plans and report-privacy evidence. The combined-input matrix exercises custom images, identity, data disks, labels and initialization across 24 provider/OS/access/network configurations. All mocked runs use plan only; no guest or cloud resource is created.
 
 When dedicated accounts and separately authorized testing are available, append sanitized outcomes to the verification record with tested commit, date and scope. Preserve failures and incomplete checks. Release v0.4.0 only after its documented gates have evidence; v0.3.0 remains the latest release meanwhile.

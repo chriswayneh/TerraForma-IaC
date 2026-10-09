@@ -72,6 +72,7 @@ def input_contract(config: WizardConfig) -> list[dict]:
                     if config.provider == "gcp"
                     else "New network address range (CIDR)",
                     "use_existing_network": "Use an existing subnet",
+                    "outbound_access": "Outbound network profile",
                     "existing_subnetwork_resource": "Existing Azure subnet resource ID"
                     if config.provider == "azure"
                     else "Existing AWS subnet ID"
@@ -173,6 +174,10 @@ def input_contract(config: WizardConfig) -> list[dict]:
                 "environment_variable": f"TF_VAR_{name}" if sensitive else None,
                 **generator.input_constraints[name],
                 "choice_labels": {
+                    "outbound_access": {
+                        "unrestricted": "Unrestricted outbound ports (current default)",
+                        "https_dns": "HTTPS and DNS ports (platform exceptions)",
+                    },
                     "os_image": {
                         "windows-server-2022": "Windows Server 2022 Full Base (desktop)"
                         if config.provider == "aws"
@@ -581,6 +586,14 @@ def compile_project(specification: ProjectSpecification) -> dict:
                         field,
                         "Enable custom-image mode before supplying custom-image references or declarations.",
                     )
+    if (
+        effective.get("use_existing_network")
+        and effective.get("outbound_access", "unrestricted") != "unrestricted"
+    ):
+        raise ProjectInputError(
+            "outbound_access",
+            "Existing-subnet outbound policy remains separately managed. Clear the inactive restricted profile before selecting an existing network.",
+        )
     if effective.get("disk_kms_key") and not effective.get("use_customer_managed_disk_key"):
         raise ProjectInputError(
             "disk_kms_key",

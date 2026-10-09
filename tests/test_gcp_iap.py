@@ -24,7 +24,7 @@ def test_gcp_access_choice_binds_only_one_administrator_port(windows, public, me
     rule = next(
         item['"google_compute_firewall"']['"this"']
         for item in main["resource"]
-        if '"google_compute_firewall"' in item
+        if '"this"' in item.get('"google_compute_firewall"', {})
     )
     assert rule["direction"] == '"INGRESS"' and rule["disabled"] is False
     assert rule["source_ranges"] == (

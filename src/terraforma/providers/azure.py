@@ -11,6 +11,7 @@ from terraforma.configuration import AZURE_RESERVED_USERNAMES
 from terraforma.custom_images import custom_image_preconditions
 from terraforma.hcl import block, ref, value_hcl
 from terraforma.initialization import add_azure_windows_initialization, initialization_precondition
+from terraforma.outbound import azure_outbound_rules, outbound_precondition
 from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
@@ -191,7 +192,8 @@ def build_azure(builder: TerraformGenerator) -> None:
             ]
             if standalone
             else []
-        ),
+        )
+        + (azure_outbound_rules(windows) if standalone else []),
         **common,
     )
     builder.resource(
@@ -478,6 +480,7 @@ def build_azure(builder: TerraformGenerator) -> None:
                         "lifecycle",
                         children=[
                             builder._private_ip_precondition(),
+                            outbound_precondition(),
                             initialization_precondition(windows),
                             azure_attachment_precondition(),
                             azure_identity_precondition(),

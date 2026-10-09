@@ -7,6 +7,7 @@ from terraforma.gcp_network_attachment import (
     add_network_address_moves,
 )
 from terraforma.hcl import block, ref
+from terraforma.outbound import add_gcp_outbound
 from terraforma.resource_labels import resource_labels
 
 if TYPE_CHECKING:
@@ -75,6 +76,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
     builder.variable("zone", "Compute zone in the chosen region.", "us-central1-a")
     windows = builder.config.architecture_type == "windows_virtual_machine"
     if standalone:
+        add_gcp_outbound(builder)
         builder.variable(
             "host_maintenance_policy",
             "Host maintenance behavior for this standard GCP VM. MIGRATE (default) requests live migration when supported; TERMINATE stops the VM during host maintenance. Machine-family support and actual availability require cloud verification. This does not set guest patch schedules or guarantee application continuity. Review the plan before changing an existing VM.",

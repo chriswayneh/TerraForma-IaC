@@ -17,6 +17,7 @@ from terraforma.gcp_network_attachment import (
 from terraforma.hcl import Block, Expression, block, ref, value_hcl
 from terraforma.initialization import declare_initialization, initialization_precondition
 from terraforma.network_inputs import private_ip_condition
+from terraforma.outbound import declare_outbound_access, outbound_precondition
 from terraforma.providers.aws import build_aws
 from terraforma.providers.azure import build_azure
 from terraforma.providers.gcp import build_gcp
@@ -266,6 +267,7 @@ class TerraformGenerator:
                 declare_aws_network_attachment(self)
             declare_resource_labels(self)
             declare_initialization(self)
+            declare_outbound_access(self)
             self.variable(
                 "network_cidr",
                 (
@@ -388,6 +390,7 @@ class TerraformGenerator:
                     error_message="Supply the existing workload identity reference when workload identity is enabled.",
                 ),
                 self._private_ip_precondition(),
+                outbound_precondition(),
                 initialization_precondition(
                     self.config.architecture_type == "windows_virtual_machine"
                 ),
