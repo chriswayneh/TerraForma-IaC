@@ -66,6 +66,15 @@ class BackendChoice(BaseModel):
     backend: Literal["s3", "azurerm", "gcs"]
 
 
+def _creates_nat(config: WizardConfig) -> bool:
+    """AWS public single-server and VM recipes use the public subnet without a NAT gateway."""
+    return not (
+        config.provider == "aws"
+        and config.is_public
+        and config.architecture_type != "load_balanced_tier"
+    )
+
+
 def generate_project(config: WizardConfig) -> dict:
     generator = TerraformGenerator(config)
     files = generator.generate()
@@ -91,7 +100,9 @@ def generate_project(config: WizardConfig) -> dict:
                 else "RDP requires the selected administrator network and an Administrator password recovered separately with your RSA private key through EC2. TerraForma does not collect or decrypt it. Private access needs a routed path."
                 if config.architecture_type == "windows_virtual_machine"
                 else "SSH requires the selected administrator network and its authentication prerequisites. Private access needs a routed path; no VPN or bastion is created.",
-                "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur charges.",
+                "The VM has no application startup script. Compute, disks, public addresses and outbound NAT can incur charges."
+                if _creates_nat(config)
+                else "The VM has no application startup script. Compute, disks and public addresses can incur charges.",
             ]
         )
         if config.provider == "gcp" and config.architecture_type == "virtual_machine":
@@ -102,7 +113,9 @@ def generate_project(config: WizardConfig) -> dict:
         notes.extend(
             [
                 "The web server runs nginx and serves HTTP. Add TLS for sensitive traffic.",
-                "Compute and outbound NAT can incur ongoing charges even when the site is idle.",
+                "Compute and outbound NAT can incur ongoing charges even when the site is idle."
+                if _creates_nat(config)
+                else "Compute can incur ongoing charges even when the site is idle.",
             ]
         )
     if config.architecture_type == "secure_database":

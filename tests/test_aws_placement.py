@@ -55,14 +55,19 @@ def test_placement_reorders_matching_subnets_and_survives_api_import(windows, pu
     subnets = next(entry['"aws_subnet"'] for entry in main["resource"] if '"aws_subnet"' in entry)
     all_subnets = [entry['"aws_subnet"'] for entry in main["resource"] if '"aws_subnet"' in entry]
     public_subnet = subnets['"public"']
-    private_subnet = all_subnets[1]['"private"']
-    assert public_subnet["availability_zone"] == private_subnet["availability_zone"]
     assert "concat([var.availability_zone]" in public_subnet["availability_zone"]
     assert "zone != var.availability_zone" in public_subnet["availability_zone"]
-    assert (
-        public_subnet["count"] == private_subnet["count"] == "${var.use_existing_network ? 0 : 2}"
-    )
-    for subnet in (public_subnet, private_subnet):
+    assert public_subnet["count"] == "${var.use_existing_network ? 0 : 2}"
+    checked = [public_subnet]
+    if public:
+        # Public VMs use the public subnets directly; no unused private subnets are emitted.
+        assert len(all_subnets) == 1
+    else:
+        private_subnet = all_subnets[1]['"private"']
+        assert public_subnet["availability_zone"] == private_subnet["availability_zone"]
+        assert private_subnet["count"] == "${var.use_existing_network ? 0 : 2}"
+        checked.append(private_subnet)
+    for subnet in checked:
         checks = subnet["lifecycle"][0]["precondition"]
         assert "length(data.aws_availability_zones.available.names) >= 2" in checks[0]["condition"]
         assert (

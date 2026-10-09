@@ -47,7 +47,8 @@ def test_aws_encrypted_vm_disks_require_reported_ebs_support(
     [
         (True, False, True),
         (True, True, True),
-        (False, False, False),
+        # Boot disks are always encrypted; the choice only selects the KMS key.
+        (False, False, True),
         (False, True, True),
     ],
 )

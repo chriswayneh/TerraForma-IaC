@@ -78,12 +78,12 @@ Exit `0` means the check was skipped or the CLI reported a matching target; othe
 
 ### Storage encryption choices
 
-The **Storage encryption** choice has provider-specific effects. Review this before changing it; offline generation cannot establish account policy or service defaults, and changes can replace resources.
+Stored data is encrypted on every cloud regardless of this choice; generated Terraform never requests unencrypted storage. The **Storage encryption** choice selects the stronger, provider-specific option on top of that. Review this before changing it; offline generation cannot establish account policy or service defaults, and changes can replace resources.
 
 | Recipe | Effect of the choice |
 | --- | --- |
-| AWS compute | Enables boot-disk encryption with a generated customer-managed KMS key. Off requests unencrypted boot disks; optional standalone data disks remain encrypted. Account defaults or policy can still enforce encryption. |
-| AWS database | Enables database storage encryption with a generated customer-managed KMS key. Off requests unencrypted database storage. |
+| AWS compute | On: boot and optional data disks use a generated customer-managed KMS key (with rotation, an alias and an explicit key policy). Off: disks remain encrypted (`encrypted = true`) with the account's default EBS key. |
+| AWS database | On: RDS storage uses the generated customer-managed KMS key. Off: storage remains encrypted (`storage_encrypted = true`) with the AWS-managed RDS key. |
 | Azure compute | Adds encryption at host to provider-managed disk encryption; requires reported size support and subscription feature registration. |
 | GCP, static sites and Azure databases | Provider-managed encryption remains enforced; this choice does not configure a customer-managed key for those recipes. |
 

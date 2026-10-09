@@ -35,7 +35,7 @@ def test_capacity_question_flows_through_compilation_and_browser(provider, refer
     assert reference in unaligned(result["files"]["main.tf"])
     assert "default = 4" in unaligned(result["files"]["variables.tf"])
     if provider == "aws":
-        assert result["files"]["main.tf"].count(reference) == 2
+        assert unaligned(result["files"]["main.tf"]).count(reference) == 2
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
         token = client.get("/api/session").json()["token"]
         response = client.post(

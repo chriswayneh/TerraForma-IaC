@@ -428,9 +428,6 @@ def inspect_machine(specification, executable, environment, timeout, *, verify_i
                 provider == "aws"
                 and specification.recipe.architecture_type
                 in {"virtual_machine", "windows_virtual_machine"}
-                and (
-                    specification.recipe.enable_encryption or values.get("enable_data_disk") is True
-                )
             ),
             require_aws_boot=(
                 provider == "aws"
