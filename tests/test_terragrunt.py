@@ -169,3 +169,23 @@ def test_native_terragrunt_evaluates_combined_inputs_without_cloud(tmp_path, pro
     assert not evaluated["dependency"]
     assert not evaluated["terraform"]["before_hook"]
     assert not evaluated["terraform"]["after_hook"]
+
+
+@pytest.mark.skipif(shutil.which("terraform") is None, reason="terraform is not on PATH")
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("windows", [False, True])
+def test_exported_terragrunt_files_are_terraform_fmt_canonical(tmp_path, provider, windows):
+    files = terragrunt_artifacts({"dev": combined_spec(provider, windows, False, False)})
+    destination = write_terragrunt_bundle(files, tmp_path / "bundle")
+    for path in sorted(destination.rglob("*")):
+        if path.suffix not in {".hcl", ".tf"}:
+            continue
+        result = subprocess.run(
+            ["terraform", "fmt", "-check", "-no-color", "-"],
+            input=path.read_text(encoding="utf-8"),
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        assert result.returncode == 0, f"{path.relative_to(destination)}: {result.stdout}"
