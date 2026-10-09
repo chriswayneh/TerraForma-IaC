@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | AWS | `~> 6.0` | Existing AWS template family |
 | Azure Windows VM | `~> 4.81` | Validated Windows argument names, including `automatic_updates_enabled` |
+| Azure static site | `~> 4.77` | `azurerm_storage_blob.storage_container_id`, which replaces the deprecated container/account name arguments |
 | Other Azure recipes | `~> 4.0` | Existing non-Windows template family |
 | Google Cloud | `~> 7.0` | Existing Google template family |
 

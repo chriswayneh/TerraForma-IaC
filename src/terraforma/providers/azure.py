@@ -729,7 +729,7 @@ def build_static(builder: TerraformGenerator, common: dict) -> None:
             storage_account_id=ref("azurerm_storage_account.this.id"),
             index_document="index.html",
         )
-        container = '"$web"'
+        container = '"${azurerm_storage_account.this.id}/blobServices/default/containers/$web"'
     else:
         builder.resource(
             "azurerm_storage_container",
@@ -737,12 +737,11 @@ def build_static(builder: TerraformGenerator, common: dict) -> None:
             storage_account_id=ref("azurerm_storage_account.this.id"),
             container_access_type="private",
         )
-        container = "azurerm_storage_container.this.name"
+        container = "azurerm_storage_container.this.id"
     builder.resource(
         "azurerm_storage_blob",
         name="index.html",
-        storage_account_name=ref("azurerm_storage_account.this.name"),
-        storage_container_name=ref(container),
+        storage_container_id=ref(container),
         type="Block",
         source_content=ref("var.index_html"),
         content_type="text/html",

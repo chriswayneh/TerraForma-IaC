@@ -200,6 +200,10 @@ class TerraformGenerator:
             and self.config.architecture_type == "windows_virtual_machine"
         ):
             versions["azure"] = "~> 4.81"
+        elif self.config.provider == "azure" and self.config.architecture_type == "static_site":
+            # azurerm_storage_blob.storage_container_id replaces the deprecated
+            # storage_account_name/storage_container_name arguments from AzureRM 4.77.
+            versions["azure"] = "~> 4.77"
         providers = {
             provider: {"source": f"hashicorp/{provider}", "version": versions[self.config.provider]}
         }
