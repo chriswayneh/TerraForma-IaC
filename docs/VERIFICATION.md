@@ -1,5 +1,13 @@
 # Verification record
 
+## v0.4.0 account-free package checkpoint
+
+- Built source commit `6406995880170ccc956c56df2507269bc674cc32` as a `0.4.0.dev0` wheel using standard build isolation. Build dependencies required network access; no cloud account was used. Installed the wheel into a separate package directory and asserted imports resolved there, using the existing development environment's runtime/test dependencies.
+- The full default suite against that installed package passes **2,938 tests**, with **535 optional native/platform cases skipped**. Native tests were not enabled for this run. One existing Starlette/HTTPX TestClient deprecation warning was reported; it did not fail the checks. This is package-import isolation, not a fresh independent dependency installation.
+- All 48 packaged Python/static files match the source bytes. The wheel is 168,246 bytes, SHA-256 `af5a2c1874a63d33740cc53fd930831d0ab32a1afaa8faf6d9356c492532c371`. Ruff checks and formatting pass across 138 Python files.
+- Runtime source, `pyproject.toml` and the composite Action are unchanged from the native-verified architecture checkpoint `cc9a520`. Roadmap commit `1c92841` passes all six jobs in [CI run 37875993258](https://github.com/chriswayneh/TerraForma-IaC/actions/runs/37875993258), including native validation. Source commit `6406995` has five successful jobs in run 37883772696; native validation remained in progress when inspected. No success is claimed for later documentation commits until checked.
+- The [live acceptance guide](VM_ACCEPTANCE.md) now specifies a six-case baseline sequence and the Google Cloud Free Trial Windows restriction. Live creation, guest access, initialization, effective permissions, recovery and cleanup remain pending dedicated-account evidence and separate authorization. **v0.4.0 remains unreleased; v0.3.0 remains the latest release.**
+
 ## Documentation CI and source verification — v0.4.0 development checkpoint
 
 - The committed local inline-documentation link checker passes across all 43 tracked Markdown files. Three subprocess tests in isolated local Git repositories verify valid/encoded/spaced references, broken screenshot reporting without exposing the target value, and rejection of an existing file outside the repository. No external URL or heading-anchor verification is claimed.

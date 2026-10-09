@@ -16,6 +16,29 @@ Record each tested OS/image and input combination separately. Six default VM cas
 
 ## Before any live test
 
+### Trial-account constraints
+
+An introductory offer is not a guarantee that every supported VM pattern is available or covered. Check the selected account's service restrictions, remaining credit, expiry, VM quotas and licensing before choosing a test. Keep paid upgrades and live operations separately reviewed.
+
+Google Cloud's unupgraded Free Trial cannot create Windows Server VMs. Its Windows acceptance case therefore stays pending until paid billing is deliberately activated and an approved spending boundary is in place. Remaining eligible credit retains its original expiry after activation, but uncovered usage can be billed. See [Google's Free Trial restrictions and upgrade behavior](https://docs.cloud.google.com/free/docs/free-cloud-features). Do not upgrade automatically to clear a test failure.
+
+### Reference test sequence
+
+Start with one small supported Linux case and complete its cleanup before running another. Choose sizes and images only after target-specific checks; no example is assumed to be free or available. For each case, preserve the exact source, generated artifacts, provider lock and reviewed plan privately.
+
+| Order | Case | Required live evidence |
+| --- | --- | --- |
+| 1 | AWS Linux | Creation, authenticated guest access, reviewed initialization effect and cleanup |
+| 2 | Azure Linux | Creation, authenticated guest access, reviewed initialization effect and cleanup |
+| 3 | GCP Linux | Creation, authenticated guest access, reviewed initialization effect and cleanup |
+| 4 | AWS Windows | Creation, authenticated guest access, reviewed initialization effect and cleanup |
+| 5 | Azure Windows | Creation, external-password handling, authenticated guest access, initialization and cleanup |
+| 6 | GCP Windows | Explicit billing eligibility, creation, authenticated guest access, initialization and cleanup |
+
+This sequence is a baseline, not full feature coverage. After each baseline, test the documented optional features and recovery cases listed below. Stop on a failed prerequisite or unexplained residual resource; preserve the failure and its recovery obligations. Do not report a skipped, billing-blocked or account-blocked case as passing.
+
+### Target, state and authorization
+
 Use a dedicated account/subscription/project, independent authenticated cloud tooling and an approved spending boundary. Confirm region, size, image availability, licensing, quotas and permissions for that target. Existing subnet, image, identity and key references require their own ownership and effective-access review.
 
 Prepare protected state storage and a recovery plan before handling a real plan or provisioning. Azure Windows credentials must use the external environment reference and can be retained by the provider in state/plans. AWS Windows password recovery and GCP Windows account setup remain separate authenticated operations. Keep private keys, passwords, raw plans and state out of this repository.

@@ -42,6 +42,8 @@ Reference: [Google provider v7.46.1 instance tests](https://github.com/hashicorp
 
 ## Next milestone
 
+Account-free package verification is recorded in the [verification record](VERIFICATION.md#v040-account-free-package-checkpoint): the installed development wheel passes the full default suite. This closes an offline package check, not any live acceptance gate. Hosted-generator work is a separate future milestone; the immediate release target remains v0.4.0.
+
 When dedicated AWS, Azure and GCP test accounts are available, follow the [acceptance guide](VM_ACCEPTANCE.md) with separately approved targets, spending boundaries, protected state and operations. Account creation alone does not authorize an agent to authenticate, provision or destroy resources. Record sanitized dates, source versions and outcomes without committing credentials, raw plans or state.
 
 The optional [Terragrunt exporter](TERRAGRUNT.md) does not change these gates. Remote state, dependencies and protected automation remain later roadmap work.
