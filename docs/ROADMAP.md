@@ -269,6 +269,8 @@ Target: **v0.10.0**.
 
 Status: planned; the initial website generates and exports configurations.
 
+The [hosted-generator preparation checklist](HOSTED_GENERATOR.md) maps existing local operations to the future export-only service and defines offline acceptance work while cloud accounts are pending.
+
 Keep the lightweight local UI and CLI available. Shared input contracts and generation code serve both modes. Begin with transient projects and no mandatory account; persistent collaboration follows in Phase 9.
 
 | Deliverable | Acceptance requirement |

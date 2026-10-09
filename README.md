@@ -79,6 +79,14 @@ Guided state storage references are checked locally and downloaded as a separate
 
 [Release notes](docs/RELEASE_0.3.0.md) · [Changelog](CHANGELOG.md) · [Verification](docs/VERIFICATION.md)
 
+### Development without cloud accounts
+
+**Cloud test accounts are not configured yet; offline development is continuing.** You do not need AWS, Azure or Google Cloud accounts to use the local questionnaire, generate/export supported configurations or run offline tests. Optional native Terraform/TFLint checks need installed tools and network access for provider downloads, but do not require cloud credentials.
+
+Live account checks, VM creation, authenticated guest access, initialization and cleanup remain pending. Offline validation and mocked plans do not prove deployment success; **v0.4.0 remains unreleased** until its [live acceptance gates](docs/VM_ACCEPTANCE.md) pass.
+
+Work that can continue now includes shared input contracts, usability, documentation and [hosted-generator preparation](docs/HOSTED_GENERATOR.md). The future website is planned; the current application remains a local workspace.
+
 ## What you get
 
 The Configure step asks for each declared recipe variable, and a [project specification](docs/PROJECT_SPECIFICATION.md) carries those answers through generation, validation, and export.

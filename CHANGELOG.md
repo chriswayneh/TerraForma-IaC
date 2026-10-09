@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Clarified account-free local use and continuing offline development in the README. Added a hosted-generator service-boundary checklist with route scope, privacy requirements and offline acceptance checks; public hosting and live VM verification remain pending.
+
 - Reworked the roadmap through v1.0.0 with ten phases, including hosted generation/export, team workspaces and approved user-controlled runners. Existing release and live VM acceptance gates remain unchanged; hosted features are planned.
 
 - Compute recipe size inputs reject recognized Arm identifiers before generation, with matching Terraform variable validation for later overrides. Documented AWS Graviton families, Azure Arm naming features and GCP Arm prefixes share terminal/API/export safeguards; passing the guard does not establish cloud compatibility or availability.
