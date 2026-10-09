@@ -1,5 +1,12 @@
 # Verification record
 
+## Mocked initialization payloads — v0.4.0 development checkpoint
+
+- Six provider/OS fixtures pass native validation/TFLint and twelve Terraform mocked plan runs. Enabled checks decode AWS and Azure Linux payloads, inspect Azure Windows protected command encoding and verify GCP Linux/Windows startup fields. Disabled checks verify the requested payload or extension is absent from its modeled configuration; GCP serial-console disable remains intact.
+- All runs use command=plan with mocked providers and no real credentials, guest execution or cloud resources. AWS's optional/computed user_data_base64 uses an explicit empty mock default when unset; this check does not establish live metadata removal. The native AWS schema confirms that optional/computed property, now explained in the questionnaire and initialization guide.
+- The targeted default initialization suite passes 55 tests with 49 native cases skipped; Ruff checks/formatting pass across 121 Python files. The preceding full default policy suite passes 2,462 tests with 424 skipped. The six new provider-mocked cases are wired into native CI.
+- v0.4.0 creation, login, guest execution and cleanup remain unverified. v0.3.0 remains the latest release.
+
 ## Guest initialization plan review — v0.4.0 development checkpoint
 
 - The full default suite passes 2,462 tests with 424 optional/native/platform cases skipped. Ruff checks and formatting pass across 120 Python files. Eighty-one new regressions cover payloads, references, absence, unknown/malformed values, removals, extension coverage gaps, destructive actions and CLI/API report privacy.

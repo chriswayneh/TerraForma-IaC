@@ -28,6 +28,8 @@ Guest execution uses root or administrator privileges. No script execution, comp
 
 AWS and Azure Linux payload changes can replace the VM and delete boot-disk data. Deletion protection can also block that replacement. Review the plan, backups and recovery before changing content. An optional attached data disk is not automatically formatted or mounted.
 
+Disabling initialization removes its requested content from this generated configuration; it does not reverse guest changes. AWS user_data_base64 is an optional provider-computed field, so an omitted/null value does not prove existing EC2 user data was erased. Review the actual plan and cloud metadata independently. The mocked disabled case uses an explicit empty computed fixture value; it verifies no configured script overrides that fixture, not live metadata cleanup.
+
 ## Content handling
 
 The exact script is saved in project exports and generated variable defaults. It can reach Terraform state, saved plans, cloud metadata and extension settings. Base64 is encoding, not encryption. Azure protected settings protect extension transport but do not remove Terraform state exposure. Keep passwords, tokens, private keys and personal information out of scripts and exports. Private-key pattern rejection is not comprehensive secret detection.

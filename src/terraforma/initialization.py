@@ -29,7 +29,7 @@ def read_initialization_file(path):
 def declare_initialization(builder):
     windows = builder.config.architecture_type == "windows_virtual_machine"
     mechanism = {
-        "aws": "EC2 user data requests first-boot execution by the image's launch agent. Changing this payload requests VM replacement and can delete boot data.",
+        "aws": "EC2 user data requests first-boot execution by the image's launch agent. Changing a configured payload requests VM replacement and can delete boot data. Disabling this option does not establish removal of existing EC2 user data; inspect the plan and cloud metadata independently.",
         "azure": "A Windows Custom Script Extension runs as LocalSystem after guest-agent readiness. Script changes can rerun the extension; no storage credentials or script download URLs are configured."
         if windows
         else "Cloud-init processes custom data during provisioning. Guest-agent/image support is required; changing custom data replaces the VM and can delete boot data.",

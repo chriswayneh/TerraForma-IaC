@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added twelve Terraform mocked plan runs to exercise enabled/disabled initialization for Linux and Windows across AWS, Azure and GCP. All providers are mocked and every run uses plan only. AWS optional/computed user-data behavior is documented explicitly; disabling generation does not establish cloud metadata cleanup or undo guest changes.
+
 - Expanded local plan review to policy `0.12.0`: known, unresolved and removed VM initialization payloads receive explicit manual findings. Azure guest extensions retain a coverage gap and require independent review. Script contents never appear in reports, and no review approves deployment.
 
 - Added optional reviewed local shell/PowerShell initialization to standalone Linux/Windows VMs across AWS, Azure and GCP. Bounded file loading, format checks, explicit review and inactive-content guards preserve offline generation. Browser script changes clear prior review; readable summaries omit content. See [VM initialization](docs/VM_INITIALIZATION.md) for elevated execution, export/state exposure, repeat and replacement behavior. Live guest execution remains unverified.
