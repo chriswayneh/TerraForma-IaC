@@ -151,7 +151,16 @@ def inspect_image(specification, executable, environment, timeout):
             return aws_image_metadata(records[0], values, windows)
         if provider == "azure":
             return azure_image_metadata(records, values, windows)
-        return gcp_image_metadata(records[0], values, windows)
+        return gcp_image_metadata(
+            records[0],
+            values,
+            windows,
+            require_shielded=specification.recipe.architecture_type
+            in {
+                "virtual_machine",
+                "windows_virtual_machine",
+            },
+        )
     except OSError:
         return {"status": "failed"}
     except (ValueError, TypeError, KeyError, IndexError, RecursionError):

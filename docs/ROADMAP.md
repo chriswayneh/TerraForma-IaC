@@ -99,7 +99,7 @@ Status: initial Linux patterns and [AWS/Azure/GCP Windows Server 2022 recipes](W
 
 | VM input area | Development status | Remaining work |
 | --- | --- | --- |
-| Operating system and images | Catalog choices, guided existing-image references and separately consented [image metadata checks](IMAGE_PREFLIGHT.md), including combined AWS image/VM boot-mode comparison | Missing metadata, access/guest-agent compatibility and live boot evidence |
+| Operating system and images | Catalog choices, guided existing-image references and separately consented [image metadata checks](IMAGE_PREFLIGHT.md), including AWS image/VM modes and GCP Shielded VM firmware | Missing metadata, access/guest-agent compatibility and live boot evidence |
 | Capacity and disks | Machine size, boot disk, one optional data disk and documented provider choices | Broader disk/backup choices and live behavior |
 | Workload identity | Existing AWS profile/GCP service account; Azure system or one existing user-assigned identity | Effective permissions and attachment evidence |
 | Networks | New networks or one reviewed existing IPv4-only subnet on AWS, Azure and GCP | Broader composition, effective policy checks and live access |

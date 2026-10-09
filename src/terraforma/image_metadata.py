@@ -205,7 +205,7 @@ def aws_image_metadata(data, values, windows):
     return result
 
 
-def gcp_image_metadata(data, values, windows):
+def gcp_image_metadata(data, values, windows, *, require_shielded=False):
     custom = values.get("use_custom_image", False)
     if custom:
         parts = values["custom_image"].split("/")
@@ -243,6 +243,8 @@ def gcp_image_metadata(data, values, windows):
         if any(not isinstance(item, dict) or not metadata_text(item, "type") for item in features):
             raise ValueError("Image guest feature metadata is malformed.")
         feature_types = {item["type"] for item in features}
+        if len(feature_types) != len(features):
+            raise ValueError("Image guest feature metadata is ambiguous.")
     deprecated = metadata_object(data, "deprecated")
     deprecation = metadata_text(deprecated, "state") if deprecated is not None else None
     if deprecated is not None and deprecation not in {None, "DEPRECATED", "OBSOLETE", "DELETED"}:
@@ -261,6 +263,10 @@ def gcp_image_metadata(data, values, windows):
         if deprecation is None
         else False,
     }
+    if require_shielded:
+        checks["shielded_firmware_compatible"] = (
+            None if feature_types is None else "UEFI_COMPATIBLE" in feature_types
+        )
     return image_result(checks, reference)
 
 

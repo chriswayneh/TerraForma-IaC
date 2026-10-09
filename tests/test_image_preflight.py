@@ -63,7 +63,8 @@ def image_records(spec):
                 "status": "READY",
                 "architecture": "X86_64",
                 "diskSizeGb": "20",
-                "guestOsFeatures": [{"type": "WINDOWS"}] if windows else [],
+                "guestOsFeatures": [{"type": "UEFI_COMPATIBLE"}]
+                + ([{"type": "WINDOWS"}] if windows else []),
                 "private-field": "private-marker",
             }
         ]

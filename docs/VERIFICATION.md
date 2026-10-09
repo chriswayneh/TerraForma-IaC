@@ -1,5 +1,13 @@
 # Verification record
 
+## GCP image firmware — v0.4.0 development checkpoint
+
+- The full default suite passes 2,652 tests with 454 optional/native/platform cases skipped. Twenty-nine additional mocked cases cover Linux/Windows, catalog/custom images, Secure Boot on/off, declared/missing UEFI support, malformed/duplicate features and web-recipe scope. All metadata responses are synthetic; no cloud CLI was invoked.
+- Ruff checks/formatting pass across 127 Python files; JavaScript syntax and 38 tracked Markdown local-link checks pass. This feature adds no provider command and changes no Terraform configuration. Existing vTPM/integrity-monitoring requirements cannot be bypassed by disabling Secure Boot.
+- The development wheel is 159,593 bytes, SHA-256 0b592d684c58c3544425139342bed125f37d5ad968a4f336c389e44e9c90aec7. Its isolated installation passes all 160 image/firmware mocked regressions plus 27 offline imports/bundled-UI checks using existing runtime dependencies.
+- Image checkpoint fcde04b/run 37865305438 and boot-mode checkpoint 1e350db/run 37865801762 were still running when this record was written. The prior 1f2d2a9 checkpoint passes all six jobs. No new CI success or release is claimed.
+- Live cloud image reads, signing/guest-agent behavior, boot/execution, creation/access/cleanup and v0.4.0 acceptance remain pending. v0.3.0 remains the latest release.
+
 ## AWS image/VM boot mode — v0.4.0 development checkpoint
 
 - The full default suite passes 2,623 tests with 454 optional/native/platform cases skipped. Thirty-six additional mocked regressions verify Linux/Windows UEFI, Legacy BIOS, preferred-mode fallback, documented x86 defaults, missing/malformed capabilities, independent consent and CLI/API mismatch reporting. No additional cloud command is introduced.
