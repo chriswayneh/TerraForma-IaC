@@ -34,7 +34,7 @@ def terragrunt_artifacts(units: dict[str, ProjectSpecification]) -> dict[str, st
         source = "../../modules/" + module_id
         files[f"{unit_path}/terragrunt.hcl"] = (
             'terragrunt_version_constraint = "= 1.1.6"\n'
-            'terraform_version_constraint = ">= 1.6, < 2.0"\n\n'
+            'terraform_version_constraint  = ">= 1.6, < 2.0"\n\n'
             'terraform {\n  source = "${get_terragrunt_dir()}/'
             + source
             + '"\n}\n\n'

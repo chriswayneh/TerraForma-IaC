@@ -200,6 +200,10 @@ class TerraformGenerator:
             and self.config.architecture_type == "windows_virtual_machine"
         ):
             versions["azure"] = "~> 4.81"
+        elif self.config.provider == "azure" and self.config.architecture_type == "static_site":
+            # azurerm_storage_blob.storage_container_id replaces the deprecated
+            # storage_account_name/storage_container_name arguments from AzureRM 4.77.
+            versions["azure"] = "~> 4.77"
         providers = {
             provider: {"source": f"hashicorp/{provider}", "version": versions[self.config.provider]}
         }
@@ -305,7 +309,11 @@ class TerraformGenerator:
                     "delete_boot_disk_with_vm",
                     "Delete the boot disk when this VM is deleted. Enabled preserves the existing provider default and can permanently remove boot data during deletion or replacement. Disabled requests retention of the old disk, with ongoing storage charges and separate recovery/cleanup. Retention is not a backup, does not reattach the disk to a replacement VM and does not retain separately managed data disks, keys or network resources. "
                     + (
-                        "AWS encrypted boot disks use a project-managed KMS key; destroying that key can make a retained disk unreadable. Arrange key preservation separately before teardown. "
+                        (
+                            "AWS boot disks are always encrypted. With the encryption option on they use this project's KMS key; destroying that key can make a retained disk unreadable, so arrange key preservation separately before teardown. "
+                            if self.config.enable_encryption
+                            else "AWS boot disks are always encrypted with the account's default EBS key; keep that key's policy intact for retained disks. "
+                        )
                         if self.config.provider == "aws"
                         else "A retained GCP boot disk can conflict with a replacement disk of the same name. Resolve recovery and naming separately before replacement. "
                     )

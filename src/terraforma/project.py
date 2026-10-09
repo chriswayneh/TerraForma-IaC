@@ -789,6 +789,17 @@ def choice_summary(contract: list[dict], effective: dict, supplied: dict) -> lis
     return choices
 
 
+class SpecificationFileError(ValueError):
+    """The project file could not be read as a bounded JSON document."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "The project file is not valid UTF-8 JSON (duplicate keys and non-finite numbers are "
+            "rejected), or it exceeds the 64 KiB size or nesting "
+            "limits; values are omitted from this error."
+        )
+
+
 def load_specification(path: Path) -> ProjectSpecification:
     raw = read_regular_bytes(path, 64 * 1024)
     return parse_specification(raw)
@@ -796,5 +807,9 @@ def load_specification(path: Path) -> ProjectSpecification:
 
 def parse_specification(raw: bytes) -> ProjectSpecification:
     if len(raw) > 64 * 1024:
-        raise ValueError("Project specification exceeds the 64 KiB limit.")
-    return ProjectSpecification.model_validate(strict_json(raw))
+        raise SpecificationFileError()
+    try:
+        document = strict_json(raw)
+    except (ValueError, RecursionError):
+        raise SpecificationFileError() from None
+    return ProjectSpecification.model_validate(document)

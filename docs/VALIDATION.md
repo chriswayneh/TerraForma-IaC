@@ -80,4 +80,5 @@ For organizational use, replace version tags with reviewed full commit SHAs and 
 | Timeout | Review the failing stage; increase `--timeout` only for a trusted operation with an understood download/runtime delay. |
 | File or output bound exceeded | Review the configuration and reduce unnecessary assets/output; bounds are not a success condition. |
 | Provider lock mismatch | Review the real project's provider requirements and lockfile; do not silently upgrade to bypass the failure. |
+| "Text file busy" or a cached-package checksum mismatch with `TF_PLUGIN_CACHE_DIR` set | Terraform's shared plugin cache is not safe for concurrent `init` runs. Validation keeps your cache setting for speed, so avoid running several validations (or other `terraform init` runs) against the same cache at once, then retry. |
 | Validation passes | Continue human review; account permissions, costs, capacity, connectivity and guest behavior remain unverified. |

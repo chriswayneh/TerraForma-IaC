@@ -236,3 +236,23 @@ def test_validation_does_not_block_session_checks_and_rejects_overlap(monkeypatc
             assert (await first).json()["is_valid"]
 
     asyncio.run(execute())
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {},
+        {"X-TerraForma-Token": "wrong"},
+        {"Origin": "https://external.example"},
+    ],
+)
+def test_guard_rejections_carry_security_headers(client, extra):
+    request_headers = {**headers(client), **extra} if "Origin" in extra else extra
+    response = client.post("/api/generate", json=CONFIG, headers=request_headers)
+    assert response.status_code == 403
+    assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "access-control-allow-origin" not in response.headers

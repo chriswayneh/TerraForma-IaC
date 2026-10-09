@@ -34,6 +34,7 @@ from terraforma.preflight import target_preflight
 from terraforma.project import (
     ProjectInputError,
     ProjectSpecification,
+    SpecificationFileError,
     compile_project,
     input_contract,
     load_specification,
@@ -230,6 +231,8 @@ def preflight_command(
             verify_image=verify_image,
             timeout=timeout,
         )
+    except SpecificationFileError as error:
+        raise click.ClickException(str(error)) from None
     except (OSError, ValueError, TypeError, RecursionError):
         raise click.ClickException(
             "A supported, valid project specification and timeout are required; input values are omitted."
@@ -651,6 +654,8 @@ def project_inputs(spec: Path):
     try:
         specification = load_specification(spec)
         contract = input_contract(specification.recipe)
+    except SpecificationFileError as error:
+        raise click.ClickException(str(error)) from None
     except (OSError, ValueError, TypeError, RecursionError):
         raise click.ClickException("Unable to read a supported project specification.") from None
     click.echo(json.dumps(contract, indent=2))
@@ -666,6 +671,8 @@ def generate_specification(spec: Path, target_dir: Path):
     try:
         specification = load_specification(spec)
         result = compile_project(specification)
+    except SpecificationFileError as error:
+        raise click.ClickException(str(error)) from None
     except ProjectInputError as error:
         raise click.ClickException(str(error)) from None
     except ValidationError:
@@ -718,6 +725,8 @@ def export_terragrunt(unit_paths: tuple[str, ...], target_dir: Path):
             units[name] = load_specification(Path(filename))
         files = terragrunt_artifacts(units)
         directory = write_terragrunt_bundle(files, target_dir)
+    except SpecificationFileError as error:
+        raise click.ClickException(str(error)) from None
     except ArtifactCleanupError as error:
         raise click.ClickException(str(error)) from None
     except ProjectInputError as error:
@@ -740,6 +749,8 @@ def describe_project(spec: Path, json_output: bool):
     try:
         specification = load_specification(spec)
         result = compile_project(specification)
+    except SpecificationFileError as error:
+        raise click.ClickException(str(error)) from None
     except ProjectInputError as error:
         raise click.ClickException(str(error)) from None
     except (OSError, ValueError, TypeError, RecursionError):

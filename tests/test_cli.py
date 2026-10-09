@@ -203,3 +203,34 @@ def test_no_ai_and_success_do_not_call_openai(tmp_path, monkeypatch):
         )
         result = CliRunner().invoke(main, ["run", "--dir", str(tmp_path), "--no-ai"])
         assert result.exit_code == (0 if success else 1)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [b"{", b"", b" " * (64 * 1024 + 10), b'{"a": 1, "a": 2}', b"\xff\xfe", b"[" * 100 + b"]" * 100],
+    # Short IDs: pytest stores the test ID in PYTEST_CURRENT_TEST, and Windows
+    # rejects environment variables longer than 32767 characters.
+    ids=["truncated", "empty", "oversize", "duplicate-key", "not-utf8", "deep-nesting"],
+)
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["generate", "--spec", "{spec}", "--dir", "{out}"],
+        ["project-inputs", "--spec", "{spec}"],
+        ["describe", "--spec", "{spec}"],
+        ["preflight", "--spec", "{spec}"],
+        ["export-terragrunt", "--unit", "dev={spec}", "--dir", "{out}"],
+    ],
+    ids=["generate", "project-inputs", "describe", "preflight", "export-terragrunt"],
+)
+def test_unparseable_project_file_reports_json_error(tmp_path, content, arguments):
+    spec = tmp_path / "bad.project.json"
+    spec.write_bytes(content)
+    out = tmp_path / "out"
+    result = CliRunner().invoke(
+        main, [item.format(spec=spec, out=out) for item in arguments], catch_exceptions=False
+    )
+    assert result.exit_code == 1
+    assert "not valid UTF-8 JSON" in result.output
+    assert "project-inputs to inspect" not in result.output
+    assert not out.exists()
