@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 @pytest.mark.parametrize(
@@ -31,8 +32,8 @@ def test_capacity_question_flows_through_compilation_and_browser(provider, refer
     }[provider]
     specification = ProjectSpecification(recipe=config, inputs={**inputs, "instance_count": 4})
     result = compile_project(specification)
-    assert reference in result["files"]["main.tf"]
-    assert "default = 4" in result["files"]["variables.tf"]
+    assert reference in unaligned(result["files"]["main.tf"])
+    assert "default = 4" in unaligned(result["files"]["variables.tf"])
     if provider == "aws":
         assert result["files"]["main.tf"].count(reference) == 2
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:

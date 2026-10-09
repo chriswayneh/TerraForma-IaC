@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_gcp_windows_vm import specification
 
 
@@ -23,7 +24,7 @@ def test_exact_windows_image_preserves_publisher_and_access_options(public, acce
     assert '"windows-cloud/${var.image_version}"' in image
     assert '"windows-cloud/windows-2022"' in image
     assert 'startswith(var.image_version, "windows-server-2022-dc-v")' in result["files"]["main.tf"]
-    assert f'default = "{version}"' in result["files"]["variables.tf"]
+    assert f'default = "{version}"' in unaligned(result["files"]["variables.tf"])
     assert (
         next(item for item in result["choice_summary"] if item["name"] == "image_version")["value"]
         == version

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_windows_vm import specification
 
 
@@ -30,8 +31,8 @@ def test_core_preserves_owner_architecture_hvm_and_boot_lifecycle(public, versio
     assert "Windows_Server-2022-English-Full-Base-*" in str(filters['"name"'])
     assert filters['"architecture"'] == ['"x86_64"']
     assert filters['"virtualization-type"'] == ['"hvm"']
-    assert f'default = "{version}"' in result["files"]["variables.tf"]
-    assert 'default = "windows-server-2022-core"' in result["files"]["variables.tf"]
+    assert f'default = "{version}"' in unaligned(result["files"]["variables.tf"])
+    assert 'default = "windows-server-2022-core"' in unaligned(result["files"]["variables.tf"])
     assert "var.delete_boot_disk_with_vm" in result["files"]["main.tf"]
 
 

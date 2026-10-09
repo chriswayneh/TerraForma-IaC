@@ -8,6 +8,7 @@ import pytest
 from terraforma.catalog import recipe_capabilities
 from terraforma.generator import LINUX_IMAGE_CHOICES, TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
+from tests.hcl_text import unaligned
 
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
@@ -30,7 +31,7 @@ def test_supported_image_selection_and_contract(provider, workload):
         result = compile_project(
             ProjectSpecification(recipe=config, inputs={**inputs, "os_image": choice})
         )
-        assert f'default = "{choice}"' in result["files"]["variables.tf"]
+        assert f'default = "{choice}"' in unaligned(result["files"]["variables.tf"])
         assert "var.os_image" in result["files"]["main.tf"]
         assert result["specification"]["inputs"]["os_image"] == choice
 

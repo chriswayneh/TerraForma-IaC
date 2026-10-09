@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 def specification(public=False, encryption=True, **inputs):
@@ -126,9 +127,9 @@ def test_windows_provider_floor_excludes_older_argument_names():
             provider="azure", project_name="linux-floor", architecture_type="virtual_machine"
         )
     ).generate()["main.tf"]
-    assert '"version" = "~> 4.81"' in windows
-    assert '"version" = "~> 4.0"' in linux
-    assert "automatic_updates_enabled = true" in windows
+    assert '"version" = "~> 4.81"' in unaligned(windows)
+    assert '"version" = "~> 4.0"' in unaligned(linux)
+    assert "automatic_updates_enabled = true" in unaligned(windows)
 
 
 @pytest.mark.parametrize("enabled", [False, True])
@@ -137,11 +138,11 @@ def test_patch_assessment_keeps_os_updates_and_agent_enabled(enabled):
     main = result["files"]["main.tf"]
     assert (
         'patch_assessment_mode = var.enable_patch_assessment ? "AutomaticByPlatform" : "ImageDefault"'
-        in main
+        in unaligned(main)
     )
-    assert 'patch_mode = "AutomaticByOS"' in main
-    assert "automatic_updates_enabled = true" in main
-    assert "provision_vm_agent = true" in main
+    assert 'patch_mode = "AutomaticByOS"' in unaligned(main)
+    assert "automatic_updates_enabled = true" in unaligned(main)
+    assert "provision_vm_agent = true" in unaligned(main)
     assert result["specification"]["inputs"]["enable_patch_assessment"] is enabled
 
 

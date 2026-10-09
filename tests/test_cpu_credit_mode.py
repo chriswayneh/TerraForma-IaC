@@ -10,6 +10,7 @@ from terraforma.cli import collect_recipe_inputs
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_aws_placement import specification
 from tests.test_generator import assert_native_files
 
@@ -48,13 +49,13 @@ def test_credit_choice_survives_generation_and_summary(windows, mode):
     assert definition["label"] == "CPU credit mode"
     assert definition["choices"] == ["provider_default", "standard", "unlimited"]
     assert output["specification"]["inputs"]["cpu_credit_mode"] == mode
-    assert f'default = "{mode}"' in output["files"]["variables.tf"]
+    assert f'default = "{mode}"' in unaligned(output["files"]["variables.tf"])
     assert 'dynamic "credit_specification"' in output["files"]["main.tf"]
     assert (
         'var.cpu_credit_mode == "provider_default" ? [] : [var.cpu_credit_mode]'
         in output["files"]["main.tf"]
     )
-    assert "cpu_credits = credit_specification.value" in output["files"]["main.tf"]
+    assert "cpu_credits = credit_specification.value" in unaligned(output["files"]["main.tf"])
     assert "Explicit CPU credit modes are supported only" in output["files"]["main.tf"]
 
 

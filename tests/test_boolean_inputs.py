@@ -11,6 +11,7 @@ from terraforma.cli import main
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 @pytest.mark.parametrize("enabled", [False, True])
@@ -26,8 +27,8 @@ def test_monitoring_boolean_survives_compilation_export_and_import(enabled, work
     project = compile_project(specification)
     field = next(item for item in input_contract(config) if item["name"] == "detailed_monitoring")
     assert field["kind"] == "boolean" and field["default"] is False
-    assert "monitoring = var.detailed_monitoring" in project["files"]["main.tf"]
-    assert f"default = {str(enabled).lower()}" in project["files"]["variables.tf"]
+    assert "monitoring = var.detailed_monitoring" in unaligned(project["files"]["main.tf"])
+    assert f"default = {str(enabled).lower()}" in unaligned(project["files"]["variables.tf"])
     assert type(project["specification"]["inputs"]["detailed_monitoring"]) is bool
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
         headers = {"X-TerraForma-Token": client.get("/api/session").json()["token"]}
@@ -83,4 +84,4 @@ def test_terminal_boolean_question_writes_actual_boolean(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     manifest = json.loads((tmp_path / "terraforma.project.json").read_text())
     assert manifest["inputs"]["detailed_monitoring"] is True
-    assert "monitoring = var.detailed_monitoring" in (tmp_path / "main.tf").read_text()
+    assert "monitoring = var.detailed_monitoring" in unaligned((tmp_path / "main.tf").read_text())

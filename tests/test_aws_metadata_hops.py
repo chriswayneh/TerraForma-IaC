@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_aws_placement import specification
 
 
@@ -26,10 +27,10 @@ def test_hop_choice_preserves_imdsv2_and_supported_mapping(windows, public, mode
     )
     metadata = instance["metadata_options"][0]
     assert metadata["http_tokens"] == '"required"'
-    assert '"provider_default" = null' in metadata["http_put_response_hop_limit"]
-    assert '"one_hop" = 1' in metadata["http_put_response_hop_limit"]
-    assert '"two_hops" = 2' in metadata["http_put_response_hop_limit"]
-    assert f'default = "{mode}"' in result["files"]["variables.tf"]
+    assert '"provider_default" = null' in unaligned(metadata["http_put_response_hop_limit"])
+    assert '"one_hop" = 1' in unaligned(metadata["http_put_response_hop_limit"])
+    assert '"two_hops" = 2' in unaligned(metadata["http_put_response_hop_limit"])
+    assert f'default = "{mode}"' in unaligned(result["files"]["variables.tf"])
 
 
 @pytest.mark.parametrize("value", [0, 1, 2, True, "64", "three_hops", '${file("secret")}'])
@@ -54,7 +55,9 @@ def test_only_aws_standalone_offers_hop_control(provider, workload):
     )
     assert "metadata_hop_limit" not in {item["name"] for item in input_contract(config)}
     if provider == "aws":
-        assert 'http_tokens = "required"' in TerraformGenerator(config).generate()["main.tf"]
+        assert 'http_tokens = "required"' in unaligned(
+            TerraformGenerator(config).generate()["main.tf"]
+        )
 
 
 def test_import_preserves_unmanaged_default_and_explicit_choice():

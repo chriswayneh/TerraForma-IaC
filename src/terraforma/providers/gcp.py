@@ -216,7 +216,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
     )
     image_source = (
         ref(
-            'var.image_version == "latest" ? {"windows-server-2022" = "windows-cloud/windows-2022", "windows-server-2022-core" = "windows-cloud/windows-2022-core"}[var.os_image] : "windows-cloud/${var.image_version}"'
+            'var.image_version == "latest" ? { "windows-server-2022" = "windows-cloud/windows-2022", "windows-server-2022-core" = "windows-cloud/windows-2022-core" }[var.os_image] : "windows-cloud/${var.image_version}"'
         )
         if windows
         else ref(
@@ -439,7 +439,7 @@ def build_gcp(builder: TerraformGenerator) -> None:
             else ["terraforma-web"],
             **{
                 "metadata": ref(
-                    'merge({"serial-port-enable" = "FALSE"}, var.enable_initialization ? {"windows-startup-script-ps1" = var.initialization_script} : {})'
+                    'merge({ "serial-port-enable" = "FALSE" }, var.enable_initialization ? { "windows-startup-script-ps1" = var.initialization_script } : {})'
                 )
                 if windows
                 else {

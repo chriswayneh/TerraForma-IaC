@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_project_keys import public_key, rsa_integer
 from tests.test_virtual_machine import KEY
 
@@ -60,9 +61,9 @@ def test_windows_access_image_and_no_secret_collection(public, encryption, data_
     assert "get_password_data" not in instance
     assert instance["associate_public_ip_address"] is public
     assert instance["metadata_options"][0]["http_tokens"] == '"required"'
-    assert "disable_api_termination = var.protect_vm" in files["main.tf"]
+    assert "disable_api_termination = var.protect_vm" in unaligned(files["main.tf"])
     assert 'output "administrator_username"' in files["outputs.tf"]
-    assert 'value = "Administrator"' in files["outputs.tf"]
+    assert 'value = "Administrator"' in unaligned(files["outputs.tf"])
     assert 'output "ssh_username"' not in files["outputs.tf"]
     assert not any(item["sensitive"] for item in result["input_contract"])
     assert result["specification"]["secret_references"] == {}

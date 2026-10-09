@@ -12,6 +12,7 @@ from terraforma.generator import WizardConfig
 from terraforma.preflight import target_preflight
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_aws_existing_subnet import subnet_spec
 from tests.test_aws_placement import specification
 from tests.test_generator import assert_native_files
@@ -66,7 +67,7 @@ def test_tenancy_roundtrip_preserves_requested_choice_and_limits(windows, existi
         vm["tenancy"]
         == '${var.instance_tenancy == "provider_default" ? null : var.instance_tenancy}'
     )
-    assert 'default = "' + tenancy + '"' in project["files"]["variables.tf"]
+    assert 'default = "' + tenancy + '"' in unaligned(project["files"]["variables.tf"])
     contract = next(f for f in input_contract(spec.recipe) if f["name"] == "instance_tenancy")
     assert contract["default"] == "provider_default"
     assert contract["choices"] == ["provider_default", "dedicated"]

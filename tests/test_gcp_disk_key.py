@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_gcp_scheduling import specification
 
 KEY = "projects/key-project/locations/us-central1/keyRings/storage/cryptoKeys/vm-disks"
@@ -36,7 +37,7 @@ def test_key_scope_preserves_default_and_uses_external_reference(windows, data_d
     assert not any("iam" in kind for kind in resources)
     assert vm["shielded_instance_config"][0]["enable_vtpm"] is True
     assert "Supply an existing Cloud KMS CryptoKey reference" in result["files"]["main.tf"]
-    assert f"default = {str(enabled).lower()}" in result["files"]["variables.tf"]
+    assert f"default = {str(enabled).lower()}" in unaligned(result["files"]["variables.tf"])
 
 
 @pytest.mark.parametrize(

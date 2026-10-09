@@ -30,6 +30,34 @@ def value_hcl(value: Any) -> str:
     return json.dumps(value)
 
 
+def _aligned_attributes(prefix: str, attributes: dict[str, Any]) -> list[str]:
+    """Render attributes with ``=`` aligned the way ``terraform fmt`` does.
+
+    ``terraform fmt`` pads attribute names so the ``=`` signs line up across a run of
+    consecutive attributes. A heredoc stays in the run, but any other multi-line value (such
+    as an object or list spread over several lines) ends it: that attribute is rendered
+    unpadded and the next attribute starts a new run. Generated values are normally single
+    line; ``tests/test_hcl_format.py`` checks the output against ``terraform fmt``.
+    """
+    rendered = [(name, value_hcl(value)) for name, value in attributes.items()]
+    lines: list[str] = []
+    run: list[tuple[str, str]] = []
+
+    def flush() -> None:
+        width = max((len(name) for name, _ in run), default=0)
+        lines.extend(f"{prefix}{name.ljust(width)} = {text}" for name, text in run)
+        run.clear()
+
+    for name, text in rendered:
+        if "\n" in text and not text.startswith("<<"):
+            flush()
+            lines.append(f"{prefix}{name} = {text}")
+        else:
+            run.append((name, text))
+    flush()
+    return lines
+
+
 @dataclass
 class Block:
     kind: str
@@ -41,9 +69,7 @@ class Block:
         prefix = "  " * indent
         header = " ".join([self.kind, *(json.dumps(label) for label in self.labels)])
         lines = [f"{prefix}{header} {{"]
-        lines.extend(
-            (f"{prefix}  {name} = {value_hcl(value)}" for name, value in self.attributes.items())
-        )
+        lines.extend(_aligned_attributes(f"{prefix}  ", self.attributes))
         lines.extend(child.render(indent + 1) for child in self.children)
         lines.append(f"{prefix}}}")
         return "\n".join(lines)

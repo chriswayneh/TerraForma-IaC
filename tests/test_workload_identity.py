@@ -15,6 +15,7 @@ from terraforma.project import (
     input_contract,
 )
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 REFERENCES = {
@@ -58,12 +59,12 @@ def test_identity_output_export_import_and_guide(provider, enabled):
         )
     )
     if provider == "gcp":
-        assert 'scopes = ["cloud-platform"]' in main
-        assert "allow_stopping_for_update = false" in main
+        assert 'scopes = ["cloud-platform"]' in unaligned(main)
+        assert "allow_stopping_for_update = false" in unaligned(main)
     if provider == "azure":
         assert (
             'type = var.workload_identity_type == "existing_user_assigned" ? "UserAssigned" : "SystemAssigned"'
-            in main
+            in unaligned(main)
         )
         assert 'output "managed_identity_principal_id"' in compiled["files"]["outputs.tf"]
     summary = {item["name"] for item in compiled["choice_summary"]}

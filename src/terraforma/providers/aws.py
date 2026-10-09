@@ -241,7 +241,7 @@ def build_aws(builder: TerraformGenerator) -> None:
                     "filter",
                     name="name",
                     values=ref(
-                        '[{"windows-server-2022" = "Windows_Server-2022-English-Full-Base-*", "windows-server-2022-core" = "Windows_Server-2022-English-Core-Base-*"}[var.os_image]]'
+                        '[{ "windows-server-2022" = "Windows_Server-2022-English-Full-Base-*", "windows-server-2022-core" = "Windows_Server-2022-English-Core-Base-*" }[var.os_image]]'
                     )
                     if windows
                     else ref(
@@ -428,7 +428,7 @@ def build_aws(builder: TerraformGenerator) -> None:
                 http_tokens="required",
                 **{
                     "http_put_response_hop_limit": ref(
-                        '{"provider_default" = null, "one_hop" = 1, "two_hops" = 2}[var.metadata_hop_limit]'
+                        '{ "provider_default" = null, "one_hop" = 1, "two_hops" = 2 }[var.metadata_hop_limit]'
                     )
                 }
                 if standalone

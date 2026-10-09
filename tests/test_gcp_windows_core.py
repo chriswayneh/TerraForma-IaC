@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_gcp_windows_vm import specification
 
 
@@ -37,10 +38,10 @@ def test_core_selection_preserves_access_boot_and_publisher(public, access, vers
     image = vm["boot_disk"][0]["initialize_params"][0]["image"]
     assert '"windows-cloud/windows-2022-core"' in image
     assert '"windows-cloud/${var.image_version}"' in image
-    assert 'default = "windows-server-2022-core"' in result["files"]["variables.tf"]
-    assert f'default = "{version}"' in result["files"]["variables.tf"]
+    assert 'default = "windows-server-2022-core"' in unaligned(result["files"]["variables.tf"])
+    assert f'default = "{version}"' in unaligned(result["files"]["variables.tf"])
     assert vm["shielded_instance_config"][0]["enable_vtpm"] is True
-    assert '"serial-port-enable" = "FALSE"' in vm["metadata"]
+    assert '"serial-port-enable" = "FALSE"' in unaligned(vm["metadata"])
     assert "windows_activation" in result["files"]["main.tf"]
 
 

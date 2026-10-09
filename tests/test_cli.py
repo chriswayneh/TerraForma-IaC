@@ -5,6 +5,7 @@ from click.testing import CliRunner
 
 from terraforma.cli import main, readable_error
 from terraforma.project import ProjectSpecification
+from tests.hcl_text import unaligned
 from tests.test_virtual_machine import KEY
 from tests.test_windows_vm import RSA_KEY
 
@@ -62,8 +63,8 @@ def test_wizard_writes_selected_configuration(tmp_path, monkeypatch):
     result = CliRunner().invoke(main, ["wizard", "--dir", str(tmp_path)])
     assert result.exit_code == 0, result.output
     assert '"google_storage_bucket"' in (tmp_path / "main.tf").read_text()
-    assert 'public_access_prevention = "enforced"' in (tmp_path / "main.tf").read_text()
-    assert 'default = "example-project"' in (tmp_path / "variables.tf").read_text()
+    assert 'public_access_prevention = "enforced"' in unaligned((tmp_path / "main.tf").read_text())
+    assert 'default = "example-project"' in unaligned((tmp_path / "variables.tf").read_text())
 
 
 @pytest.mark.parametrize("workload", ["virtual_machine", "windows_virtual_machine"])
@@ -121,11 +122,11 @@ def test_wizard_collects_numeric_and_choice_inputs(tmp_path, monkeypatch):
     variables = (tmp_path / "variables.tf").read_text()
     assert "serves HTTP" in result.output
     assert "Add TLS" in result.output
-    assert 'default = "us-west-2"' in variables
-    assert 'default = "t3.small"' in variables
-    assert 'default = "ami-0123456789abcdef0"' in variables
-    assert "default = 100" in variables
-    assert 'default = "gp2"' in variables
+    assert 'default = "us-west-2"' in unaligned(variables)
+    assert 'default = "t3.small"' in unaligned(variables)
+    assert 'default = "ami-0123456789abcdef0"' in unaligned(variables)
+    assert "default = 100" in unaligned(variables)
+    assert 'default = "gp2"' in unaligned(variables)
 
 
 def test_wizard_never_prompts_for_password(tmp_path, monkeypatch):

@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_cpu_credit_mode import specification as aws_specification
 from tests.test_gcp_scheduling import specification as gcp_specification
 
@@ -31,7 +32,7 @@ def test_retention_binds_only_the_standalone_boot_disk(provider, windows, delete
         boot["delete_on_termination" if provider == "aws" else "auto_delete"]
         == "${var.delete_boot_disk_with_vm}"
     )
-    assert f"default = {str(delete).lower()}" in result["files"]["variables.tf"]
+    assert f"default = {str(delete).lower()}" in unaligned(result["files"]["variables.tf"])
     assert result["files"]["main.tf"].count("var.delete_boot_disk_with_vm") == 1
     assert any(
         '"aws_ebs_volume"' in item or '"google_compute_disk"' in item for item in main["resource"]

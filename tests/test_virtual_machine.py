@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 
@@ -36,23 +37,23 @@ def test_standalone_vm_exports_explicit_access_without_web_application(provider,
     assert 'output "vm_address"' in outputs
     if provider == "aws":
         assert 'resource "aws_key_pair"' in main
-        assert "public_key = var.ssh_public_key" in main
-        assert "key_name = aws_key_pair.this.key_name" in main
-        assert "from_port = 22" in main and "from_port = 80" not in main
-        assert "user_data_base64 = var.enable_initialization ?" in main
+        assert "public_key = var.ssh_public_key" in unaligned(main)
+        assert "key_name = aws_key_pair.this.key_name" in unaligned(main)
+        assert "from_port = 22" in unaligned(main) and "from_port = 80" not in unaligned(main)
+        assert "user_data_base64 = var.enable_initialization ?" in unaligned(main)
         assert "ec2-user" in outputs and "ubuntu" in outputs
     elif provider == "azure":
-        assert 'destination_port_range = "22"' in main
+        assert 'destination_port_range = "22"' in unaligned(main)
         assert "DenyOtherInbound" in main
-        assert "disable_password_authentication = true" in main
-        assert "custom_data = var.enable_initialization ?" in main
+        assert "disable_password_authentication = true" in unaligned(main)
+        assert "custom_data = var.enable_initialization ?" in unaligned(main)
         assert "var.admin_username" in outputs
     else:
-        assert 'ports = ["22"]' in main and 'ports = ["80"]' not in main
-        assert '"enable-oslogin" = "TRUE"' in main
-        assert '"block-project-ssh-keys" = "TRUE"' in main
+        assert 'ports = ["22"]' in unaligned(main) and 'ports = ["80"]' not in unaligned(main)
+        assert '"enable-oslogin" = "TRUE"' in unaligned(main)
+        assert '"block-project-ssh-keys" = "TRUE"' in unaligned(main)
         assert "35.191.0.0" not in main
-        assert "metadata_startup_script = var.enable_initialization ?" in main
+        assert "metadata_startup_script = var.enable_initialization ?" in unaligned(main)
         assert "ssh_public_key" not in project["specification"]["inputs"]
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
         token = client.get("/api/session").json()["token"]

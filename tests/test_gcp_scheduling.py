@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 def specification(windows=False, **inputs):
@@ -49,8 +50,8 @@ def test_selected_scheduling_survives_api_import_and_binds_only_standard_vm(
     assert scheduling["on_host_maintenance"] == "${var.host_maintenance_policy}"
     assert scheduling["automatic_restart"] == "${var.automatic_restart}"
     assert vm["allow_stopping_for_update"] is False
-    assert f'default = "{policy}"' in result["files"]["variables.tf"]
-    assert f"default = {str(restart).lower()}" in result["files"]["variables.tf"]
+    assert f'default = "{policy}"' in unaligned(result["files"]["variables.tf"])
+    assert f"default = {str(restart).lower()}" in unaligned(result["files"]["variables.tf"])
 
 
 @pytest.mark.parametrize("windows", [False, True])

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.project import compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_vm_protection import specification
 
 
@@ -14,10 +15,13 @@ def test_aws_pin_retains_owner_os_architecture_filters_and_export(version):
     spec = specification("aws", image_version=version)
     result = compile_project(spec)
     main = result["files"]["main.tf"]
-    assert 'owners = var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]' in main
-    assert 'name = "architecture"' in main and 'values = ["x86_64"]' in main
-    assert 'name = "image-id"' in main and "values = [filter.value]" in main
-    assert 'for_each = var.image_version == "latest" ? [] : [var.image_version]' in main
+    assert (
+        'owners = var.os_image == "amazon-linux-2023" ? ["amazon"] : ["099720109477"]'
+        in unaligned(main)
+    )
+    assert 'name = "architecture"' in unaligned(main) and 'values = ["x86_64"]' in unaligned(main)
+    assert 'name = "image-id"' in unaligned(main) and "values = [filter.value]" in unaligned(main)
+    assert 'for_each = var.image_version == "latest" ? [] : [var.image_version]' in unaligned(main)
     assert "al2023-ami-2023.*-x86_64" in main and "ubuntu-noble-24.04-amd64-server-*" in main
     choice = next(item for item in result["choice_summary"] if item["name"] == "image_version")
     assert choice["value"] == version

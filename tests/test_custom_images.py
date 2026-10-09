@@ -15,6 +15,7 @@ from terraforma.project import (
     input_contract,
 )
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_generator import assert_native_files
 from tests.test_virtual_machine import KEY
 from tests.test_windows_vm import RSA_KEY
@@ -75,15 +76,15 @@ def test_custom_image_contract_and_provider_selection(provider, windows):
     assert "var.confirm_custom_image_compatibility" in main
     if provider == "aws":
         assert "data.aws_ami.custom[0].id" in main
-        assert "owners = [var.custom_image_owner_account_id]" in main
-        assert 'name = "is-public"' in main and 'values = ["false"]' in main
+        assert "owners = [var.custom_image_owner_account_id]" in unaligned(main)
+        assert 'name = "is-public"' in unaligned(main) and 'values = ["false"]' in unaligned(main)
         assert "length(self.product_codes) == 0" in main
     elif provider == "azure":
-        assert "source_image_id = var.use_custom_image ? var.custom_image : null" in main
+        assert "source_image_id = var.use_custom_image ? var.custom_image : null" in unaligned(main)
         assert 'dynamic "source_image_reference"' in main
-        assert "for_each = var.use_custom_image ? [] : [1]" in main
+        assert "for_each = var.use_custom_image ? [] : [1]" in unaligned(main)
     else:
-        assert "image = var.use_custom_image ? var.custom_image :" in main
+        assert "image = var.use_custom_image ? var.custom_image :" in unaligned(main)
 
 
 @pytest.mark.parametrize("provider", list(IMAGES))
@@ -148,8 +149,8 @@ def test_azure_exact_gallery_version_bounds_are_accepted_without_weakening_boot(
     result = compile_project(
         specification("azure", windows, custom_image=IMAGES["azure"].replace("1.0.0", version))
     )
-    assert "vtpm_enabled = true" in result["files"]["main.tf"]
-    assert "secure_boot_enabled = var.enable_secure_boot" in result["files"]["main.tf"]
+    assert "vtpm_enabled = true" in unaligned(result["files"]["main.tf"])
+    assert "secure_boot_enabled = var.enable_secure_boot" in unaligned(result["files"]["main.tf"])
     assert "tonumber(part) <= 2147483647" in result["files"]["main.tf"]
 
 

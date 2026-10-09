@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from terraforma.generator import TerraformGenerator, WizardConfig, value_hcl, write_configuration
+from tests.hcl_text import unaligned
 
 CASES = list(
     itertools.product(
@@ -49,9 +50,8 @@ def test_all_templates_parse_and_reference_declared_variables(
     variables = {name.strip('"') for item in parsed["variables.tf"]["variable"] for name in item}
     references = set(re.findall(r"\bvar\.([a-z_]+)", "\n".join(files.values())))
     assert variables == references
-    assert (
-        "database_password" not in "\n".join(files.values())
-        or "sensitive = true" in files["variables.tf"]
+    assert "database_password" not in "\n".join(files.values()) or "sensitive = true" in unaligned(
+        files["variables.tf"]
     )
 
 

@@ -324,7 +324,7 @@ def build_azure(builder: TerraformGenerator) -> None:
             'var.os_image == "ubuntu-22.04" ? "0001-com-ubuntu-server-jammy" : "ubuntu-24_04-lts"'
         ),
         sku=ref(
-            '{"windows-server-2022" = "2022-datacenter-g2", "windows-server-2022-core" = "2022-datacenter-core-g2"}[var.os_image]'
+            '{ "windows-server-2022" = "2022-datacenter-g2", "windows-server-2022-core" = "2022-datacenter-core-g2" }[var.os_image]'
         )
         if windows
         else ref('var.os_image == "ubuntu-22.04" ? "22_04-lts-gen2" : "server"'),

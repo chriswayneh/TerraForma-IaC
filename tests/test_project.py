@@ -12,6 +12,7 @@ from terraforma.cli import main
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 def recipe(provider="aws", workload="static_site"):
@@ -71,7 +72,7 @@ def test_aws_recipes_bind_explicit_account_with_shared_identifier_constraint(wor
     generated = compile_project(
         ProjectSpecification(recipe=config, inputs={"aws_account_id": "123456789012"})
     )
-    assert "allowed_account_ids = [var.aws_account_id]" in generated["files"]["main.tf"]
+    assert "allowed_account_ids = [var.aws_account_id]" in unaligned(generated["files"]["main.tf"])
     account = next(item for item in input_contract(config) if item["name"] == "aws_account_id")
     assert account["required"] and account["default"] is None
     assert account["pattern"] == "^[0-9]{12}$"
@@ -256,7 +257,7 @@ def test_compute_dimensions_are_typed_and_configurable(provider, inputs):
     result = compile_project(
         ProjectSpecification(recipe=recipe(provider, "single_web_server"), inputs=inputs)
     )
-    assert "default = 100" in result["files"]["variables.tf"]
+    assert "default = 100" in unaligned(result["files"]["variables.tf"])
     assert "var.boot_disk_size_gb" in result["files"]["main.tf"]
     assert "var.boot_disk_type" in result["files"]["main.tf"]
     definition = next(

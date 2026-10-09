@@ -2,6 +2,7 @@ import pytest
 
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
+from tests.hcl_text import unaligned
 from tests.test_project_keys import public_key
 
 
@@ -31,20 +32,20 @@ def test_cache_choices_survive_generation_and_saved_inputs(windows, mode):
         )
     )
     main = result["files"]["main.tf"]
-    assert "caching = var.boot_disk_caching" in main
-    assert "caching = var.data_disk_caching" in main
+    assert "caching = var.boot_disk_caching" in unaligned(main)
+    assert "caching = var.data_disk_caching" in unaligned(main)
     assert result["specification"]["inputs"]["boot_disk_caching"] == mode
     assert result["specification"]["inputs"]["data_disk_caching"] == mode
-    assert result["files"]["variables.tf"].count(f'default = "{mode}"') >= 2
+    assert unaligned(result["files"]["variables.tf"]).count(f'default = "{mode}"') >= 2
 
 
 @pytest.mark.parametrize("windows", [False, True])
 def test_empty_data_disk_disables_remote_export_and_public_network_access(windows):
     result = compile_project(specification(windows, enable_data_disk=True))
     main = result["files"]["main.tf"]
-    assert 'network_access_policy = "DenyAll"' in main
-    assert "public_network_access_enabled = false" in main
-    assert 'create_option = "Empty"' in main
+    assert 'network_access_policy = "DenyAll"' in unaligned(main)
+    assert "public_network_access_enabled = false" in unaligned(main)
+    assert 'create_option = "Empty"' in unaligned(main)
     assert '"azurerm_virtual_machine_data_disk_attachment"' in main
     assert '"azurerm_private_endpoint"' not in main
     assert result["required_secret_environment_variables"] == (

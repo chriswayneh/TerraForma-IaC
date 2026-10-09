@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_azure_windows_vm import specification
 
 
@@ -43,8 +44,8 @@ def test_core_selection_preserves_credentials_patch_and_boot_controls(public, ve
     assert vm["patch_mode"] == '"AutomaticByOS"'
     assert vm["automatic_updates_enabled"] is True
     assert vm["provision_vm_agent"] is True
-    assert 'default = "windows-server-2022-core"' in result["files"]["variables.tf"]
-    assert f'default = "{version}"' in result["files"]["variables.tf"]
+    assert 'default = "windows-server-2022-core"' in unaligned(result["files"]["variables.tf"])
+    assert f'default = "{version}"' in unaligned(result["files"]["variables.tf"])
     assert "admin_password" not in result["files"]["outputs.tf"]
 
 
