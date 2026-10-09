@@ -32,6 +32,7 @@ from terraforma.catalog import recipe_capabilities, recipe_catalog
 from terraforma.cli import readable_error
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.guidance import infrastructure_guide
+from terraforma.outbound import outbound_guidance
 from terraforma.plan_review import MAX_PLAN_BYTES, review_bytes
 from terraforma.preflight import target_preflight
 from terraforma.project import (
@@ -330,6 +331,12 @@ def configured_project(payload: WizardConfig | ProjectSpecification) -> dict:
             "Windows Server Core omits the standard desktop. Verify application and "
             "administration-tool compatibility. Switching between Core and desktop images "
             "requires VM replacement; review backups and boot-disk/key lifecycle first."
+        )
+    if payload.recipe.architecture_type in {"virtual_machine", "windows_virtual_machine"}:
+        explanation = outbound_guidance(payload.inputs)
+        project["notes"].append(explanation)
+        project["guide"]["components"].append(
+            {"name": "Outbound network profile", "explanation": explanation}
         )
     return project
 

@@ -75,7 +75,12 @@ def test_api_import_preserves_iap_choice_and_generates_without_an_admin_cidr(win
     assert generated.json()["specification"]["inputs"]["admin_access_method"] == "iap_tunnel"
     assert "allowed_cidr" not in {item["name"] for item in generated.json()["required_inputs"]}
     assert generated.json()["guide"]["route"][0] == "Authorized Google IAP tunnel"
-    assert "grants no access" in generated.json()["guide"]["components"][-1]["explanation"]
+    access = next(
+        component
+        for component in generated.json()["guide"]["components"]
+        if component["name"] == "Administrator access"
+    )
+    assert "grants no access" in access["explanation"]
 
 
 @pytest.mark.parametrize(

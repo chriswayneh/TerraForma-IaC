@@ -1,5 +1,13 @@
 # Verification record
 
+## Outbound guidance — v0.4.0 development checkpoint
+
+- The full default suite passes 2,731 tests with 484 optional/native/platform cases skipped. Six subsequent capability-metadata cases also pass. The resource guide and CLI explain the selected profile and its limits; existing-network guidance makes no claim of unrestricted effective access.
+- Ruff checks and formatting pass across 130 Python files. Terraform output is unchanged from the outbound checkpoint, whose 24 native profile combinations, 24 combined-input configurations and provider-mocked plans remain applicable.
+- The updated development wheel is 162,120 bytes, SHA-256 a7fa8ea36c21dfe78b27008042a520d4b09748f50570e902e28328100dd7f407. Its isolated installation passes 27 offline imports/bundled UI checks and 120 profile/IAP/catalog regressions using existing runtime dependencies.
+- Browser verification confirms the selected profile's [generated guide](images/vm-outbound-guide.png). All inputs are synthetic; no cloud check or deployment was requested. Outbound checkpoint 1d1a76d/run 37867379798 was still running when this record was written; no new CI success or release is claimed.
+- Live effective policy, creation, access and cleanup remain pending. v0.3.0 remains the latest release.
+
 ## Outbound VM profiles — v0.4.0 development checkpoint
 
 - The full default suite passes 2,706 tests with 484 optional/native/platform cases skipped. Twelve subsequent terminal-questionnaire cases also pass, checking Linux/Windows and new/existing networks across all three providers. Ruff checks and formatting pass across 130 Python files; JavaScript syntax passes.

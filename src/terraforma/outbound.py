@@ -1,6 +1,14 @@
 from terraforma.hcl import block, ref, value_hcl
 
 
+def outbound_guidance(inputs):
+    if inputs.get("use_existing_network", False):
+        return "Existing-subnet outbound rules remain separately managed. TerraForma adds no outbound policy and does not verify effective connectivity. Review routing, platform services and workload dependencies separately."
+    if inputs.get("outbound_access", "unrestricted") == "https_dns":
+        return "HTTPS/DNS outbound ports are selected: TCP 443 and TCP/UDP 53 to IPv4 destinations, with provider platform and Windows licensing exceptions. Other new outbound connections can fail, including HTTP, SSH/RDP and private database traffic. Review updates and initialization dependencies. This is not a destination allowlist or a guarantee against data exfiltration; effective connectivity remains unverified. NAT, routing and their charges are unchanged."
+    return "Unrestricted outbound ports preserve the current new-network configuration. This is not a restrictive egress policy. Effective connectivity still depends on routing and cloud policies, and remains unverified. NAT and public-IP choices can incur charges."
+
+
 def declare_outbound_access(builder):
     builder.variable(
         "outbound_access",

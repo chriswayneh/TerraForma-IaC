@@ -5,8 +5,10 @@ import hcl2
 import pytest
 from fastapi.testclient import TestClient
 
+from terraforma.catalog import recipe_capabilities
 from terraforma.cli import collect_recipe_inputs
 from terraforma.generator import WizardConfig
+from terraforma.outbound import outbound_guidance
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
 from tests.test_custom_images import specification
@@ -14,6 +16,47 @@ from tests.test_generator import assert_native_files
 from tests.test_preflight_web import headers
 
 pytest_plugins = ["tests.test_generator"]
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("windows", [False, True])
+@pytest.mark.parametrize("profile", ["unrestricted", "https_dns"])
+def test_generated_guide_explains_selected_profile_without_connectivity_claim(
+    provider, windows, profile
+):
+    spec = specification(provider, windows=windows, custom=False, outbound_access=profile)
+    with TestClient(create_app(), base_url="http://127.0.0.1") as client:
+        response = client.post("/api/generate", headers=headers(client), json=spec.model_dump())
+    assert response.status_code == 200, response.text
+    project = response.json()
+    component = next(
+        c for c in project["guide"]["components"] if c["name"] == "Outbound network profile"
+    )
+    assert component["explanation"] == outbound_guidance(spec.inputs)
+    assert component["explanation"] in project["notes"]
+    assert "unverified" in component["explanation"]
+    if profile == "https_dns":
+        assert "private database traffic" in component["explanation"]
+        assert "not a destination allowlist" in component["explanation"]
+    else:
+        assert "not a restrictive egress policy" in component["explanation"]
+
+
+def test_existing_network_guidance_does_not_claim_unrestricted_effective_policy():
+    text = outbound_guidance({"use_existing_network": True, "outbound_access": "unrestricted"})
+    assert "adds no outbound policy" in text
+    assert "does not verify effective connectivity" in text
+    assert "Unrestricted outbound ports" not in text
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+@pytest.mark.parametrize("windows", [False, True])
+def test_catalog_identifies_port_profile_scope_and_custom_policy_gap(provider, windows):
+    metadata = recipe_capabilities(specification(provider, windows=windows, custom=False).recipe)
+    assert "Custom outbound destination or port policies" in metadata["unsupported"]
+    description = next(text for text in metadata["fixed_choices"] if "HTTPS/DNS" in text)
+    assert "not destination allowlists" in description
+    assert "effective connectivity remains unverified" in description
 
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])

@@ -27,6 +27,7 @@ from terraforma.generator import (
     write_configuration,
 )
 from terraforma.network_inputs import selected_vm_cidr, usable_vm_address, vm_subnet
+from terraforma.outbound import outbound_guidance
 from terraforma.plan_review import load_and_review
 from terraforma.preflight import target_preflight
 from terraforma.project import (
@@ -520,6 +521,8 @@ def wizard(target_dir: Path | None):
         "Saved the non-secret project specification, generation receipt, and checksums alongside them."
     )
     click.echo(project["verification"])
+    if architecture in {"virtual_machine", "windows_virtual_machine"}:
+        click.echo(outbound_guidance(specification.inputs))
     click.echo(f'Validate with: terraforma run --dir "{directory}"')
 
 

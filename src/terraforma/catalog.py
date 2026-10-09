@@ -37,10 +37,14 @@ def recipe_capabilities(config: WizardConfig) -> dict:
                 else "AWS shared VPC, cross-account, Outposts, Local Zone or Wavelength subnets",
                 "Existing IPv6/dual-stack networks",
                 "Managing existing-network access rules or NAT",
+                "Custom outbound destination or port policies",
             ]
         )
     if compute:
         if standalone:
+            fixed.append(
+                "New VM networks offer unrestricted outbound ports or HTTPS/DNS with provider platform and Windows licensing exceptions. Existing-network policies remain separately managed. These IPv4 port profiles are not destination allowlists; effective connectivity remains unverified."
+            )
             fixed.append(
                 "Optional owner, application and cost-center labels use a portable lowercase format. AWS uses provider default tags, Azure tags its new supported resources, and GCP labels its new VM and optional managed data disk. Existing infrastructure is not retagged; billing policy and live labels remain unverified."
             )

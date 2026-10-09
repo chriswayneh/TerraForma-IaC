@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- The generated resource guide and terminal output explain the selected outbound profile, workload-dependency risks and separately managed existing-network policy. Capability metadata identifies custom destination/port policies as unsupported.
+
 - New standalone AWS, Azure and GCP VM networks offer unrestricted or HTTPS/DNS outbound profiles, preserving provider platform and Windows licensing exceptions. Existing-subnet rules remain separately managed. Local validation and synthetic plans verify declared rules; effective live connectivity remains unverified.
 
 - GCP standalone image preflight now checks declared UEFI compatibility for the generated Shielded VM configuration, including when Secure Boot is disabled. Missing guest-feature metadata stays unknown; malformed/duplicate entries fail closed. No additional cloud command or Terraform change is introduced.

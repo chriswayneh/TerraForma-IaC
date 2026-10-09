@@ -33,4 +33,8 @@ Review the Terraform plan before changing deployed rules. Switching from a deplo
 
 ## Verification
 
+The generated resource guide and CLI output summarize the selected profile and its limits. Existing-network guidance describes separately managed policy rather than claiming unrestricted effective access.
+
+![Selected outbound profile in the generated resource guide](images/vm-outbound-guide.png)
+
 Both profiles pass native Terraform validation and TFLint across 24 provider/OS/public-private configurations. Provider-mocked plans check restricted ports, ordered denies, Windows exceptions and unchanged unrestricted defaults. Existing-network mocked plans verify that no new outbound firewall is managed. These are local, synthetic checks; creation, effective policy, updates, activation, access and cleanup remain pending [dedicated-account acceptance testing](VM_ACCEPTANCE.md).
