@@ -81,7 +81,7 @@ def test_supported_burstable_families_accept_explicit_modes(family, mode):
 def test_other_families_reject_explicit_modes_before_generation(family, mode):
     with pytest.raises(ProjectInputError) as error:
         compile_project(specification(False, instance_type=family, cpu_credit_mode=mode))
-    assert error.value.field == "cpu_credit_mode"
+    assert error.value.field == ("instance_type" if family == "t4g.small" else "cpu_credit_mode")
 
 
 def test_default_keeps_credit_setting_unmanaged_for_non_burstable_instances():

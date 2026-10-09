@@ -15,6 +15,7 @@ from terraforma.file_input import read_regular_bytes
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.initialization import validate_initialization_script
 from terraforma.json_input import strict_json
+from terraforma.machine_architecture import validate_machine_architecture
 from terraforma.network_inputs import selected_vm_cidr, usable_vm_address
 
 
@@ -292,6 +293,7 @@ def validate_input(name: str, value: str, kind: str):
         raise ValueError("Private keys cannot be stored as project inputs.")
     if kind != "multiline" and any(ord(char) < 32 for char in value):
         raise ValueError("Single-line inputs cannot contain control characters.")
+    validate_machine_architecture(name, value)
     if kind == "ipv4_cidr":
         ipaddress.IPv4Network(value, strict=True)
     elif kind in {"ipv4_address", "optional_ipv4_address"}:

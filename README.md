@@ -45,6 +45,8 @@ Optional [reviewed initialization scripts](docs/VM_INITIALIZATION.md) are availa
 
 Development builds also offer optional [operating system image checks](docs/IMAGE_PREFLIGHT.md). Separate consent enables bounded cloud CLI metadata reads; missing compatibility fields remain unknown. Offline generation needs no cloud account.
 
+Current compute recipes require x86-64. Development [machine architecture checks](docs/MACHINE_ARCHITECTURE.md) reject known Arm size identifiers before generation; other sizes still require account-specific compatibility and availability checks.
+
 For new standalone VM networks, choose an [outbound port profile](docs/VM_OUTBOUND_ACCESS.md): preserve unrestricted ports or allow HTTPS and DNS with provider platform exceptions. Review workload dependencies; effective connectivity remains unverified.
 
 Development questionnaires keep VM protection visible and group optional operations/identity controls under [advanced options](docs/VM_INPUTS.md). Imported custom settings open for review; closing the section preserves its answers and defaults.

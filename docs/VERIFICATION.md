@@ -1,5 +1,13 @@
 # Verification record
 
+## Machine architecture guards — v0.4.0 development checkpoint
+
+- The full default suite passes 2,917 tests with 535 optional/native/platform cases skipped. Subsequently added CLI cases and expanded NVIDIA Grace/Azure case-variant coverage pass in the final focused set: 176 architecture/CPU-credit/Terragrunt tests, with 29 optional cases skipped. These later cases are not included in the full-suite count.
+- Six catalog Linux/Windows configurations pass Terraform 1.14.0 validation and TFLint 0.61.0. Forty additional Terraform test runs use only generated size variables and `command = plan`, with no provider or resource declarations: all recognized Arm overrides fail at variable validation, while x86 examples and unknown identifiers pass this limited guard. Passing does not establish provider compatibility or availability.
+- Shared input validation rejects recognized Arm families for catalog/custom image recipes, identifies the invalid field without repeating its value, prevents terminal file writes, and rejects browser compile/import and Terragrunt export. Native Terraform validation uses the same patterns; Azure case variants cannot bypass the naming guard. Primary provider references and snapshot limitations appear in [machine architecture checks](MACHINE_ARCHITECTURE.md).
+- Ruff checks/formatting pass across 136 Python files; local links pass across 42 Markdown files. The development wheel is 167,876 bytes, SHA-256 `68249c034f75b1f59d1d526312c2fd5bc5365425d62ffb9ef4fd260857ffb264`. An isolated installation with existing dependencies passes 27 offline imports/UI-route checks and 190 architecture/Terragrunt/combined-input tests, with 51 optional cases skipped.
+- Advanced-disclosure commit 75f9a34/run 37869375653 now passes all six GitHub jobs. The preceding Terragrunt/T8i run 37870504698 was still in progress when inspected; this checkpoint's CI has not yet been verified. No new release or live acceptance is claimed. Dedicated-account creation, guest access, initialization and cleanup remain pending.
+
 ## Optional Terragrunt export and T8i credits — v0.4.0 development checkpoint
 
 - The default suite passes 2,822 tests with 520 optional/native/platform cases skipped. A subsequent writer failure-recovery test passes, preserving existing user files and removing only owned partial output. Six subsequently added native Terragrunt tests pass separately; they are not included in the default-suite count.

@@ -21,6 +21,7 @@ from terraforma.gcp_network_attachment import (
 )
 from terraforma.hcl import Block, Expression, block, ref, value_hcl
 from terraforma.initialization import declare_initialization, initialization_precondition
+from terraforma.machine_architecture import MACHINE_SIZE_FIELDS, machine_architecture_validation
 from terraforma.network_inputs import private_ip_condition
 from terraforma.outbound import declare_outbound_access, outbound_precondition
 from terraforma.providers.aws import build_aws
@@ -80,6 +81,11 @@ class TerraformGenerator:
         if sensitive:
             attributes["sensitive"] = True
         validations = []
+        if name == MACHINE_SIZE_FIELDS[self.config.provider]:
+            validations.append(machine_architecture_validation(self.config.provider))
+            attributes["description"] += (
+                " This recipe requires x86-64; known Arm families are rejected. Other sizes remain unverified until account-specific checks."
+            )
         if minimum is not None and maximum is not None:
             validations.append(
                 block(
