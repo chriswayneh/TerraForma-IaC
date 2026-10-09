@@ -410,10 +410,8 @@ function updateGuidance() {
     : config.provider === "azure"
       ? "Also enable encryption at host. Requires subscription and VM-size support."
       : config.architecture_type === "secure_database"
-        ? "Encrypt database storage with a customer-managed KMS key. Turning this off requests unencrypted storage. Changes can require replacement; review the plan and account policy."
-        : ["virtual_machine", "windows_virtual_machine"].includes(config.architecture_type)
-          ? "Encrypt the boot disk with a customer-managed KMS key. Turning this off requests an unencrypted boot disk; optional data disks remain encrypted. Review account policy and replacement risks."
-          : "Encrypt VM boot disks with a customer-managed KMS key. Turning this off requests unencrypted boot disks. Review account policy and replacement risks.";
+        ? "Database storage is always encrypted. On: a generated customer-managed KMS key. Off: the AWS-managed RDS key. Changes can require replacement; review the plan."
+        : "Disks are always encrypted. On: a generated customer-managed KMS key. Off: the account's default EBS key. Changes can require replacement; review the plan.";
   const notes = {
     windows_virtual_machine: config.provider === "gcp" ? "RDP uses the selected administrator network or Google IAP tunnel. Set the requested user password separately through Google Cloud after provisioning; TerraForma does not create the account or collect its password. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. Review Windows activation prerequisites." : config.provider === "azure" ? "RDP is restricted to your administrator network. Supply TF_VAR_admin_password externally. AzureRM stores the password in state and saved plans; protect them before use. TerraForma configures no protected backend." : "RDP is restricted to your administrator network. Supply an RSA public key and recover the Administrator password separately through EC2 with its matching private key. Private VMs require a routed access path. No password or private key is collected.",
     virtual_machine: config.provider === "gcp" ? "SSH uses the selected administrator network or Google IAP tunnel with OS Login IAM access. Direct private access needs routing; IAP needs tunnel IAM and guest authentication. Initialization is optional." : "SSH is restricted to your administrator network. AWS/Azure need your public key. Private VMs require a routed access path. Initialization is optional.",

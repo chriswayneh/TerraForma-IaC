@@ -50,7 +50,7 @@ Built-in TFLint Terraform rules run by default. Cloud-specific rules require exp
 
 ## Optional AI explanations
 
-The browser's **Explain failures with AI** and the CLI's `--ai` option are off by default. If enabled, failed logs are sent to OpenAI using `OPENAI_API_KEY` from the server/CLI environment. Redaction is best effort; logs can include source snippets or unrecognized sensitive data. Leave AI off where external diagnostic transmission is inappropriate.
+The browser's **Explain failures with AI** and the CLI's `--ai` option are off by default. If enabled, failed logs are sent to OpenAI using `OPENAI_API_KEY` from the server/CLI environment. Redaction is best effort; logs can include source snippets or unrecognized sensitive data. Leave AI off where external diagnostic transmission is inappropriate. The model defaults to `gpt-4o`; set `TERRAFORMA_OPENAI_MODEL` in the same environment to use a different OpenAI chat-completions model that supports structured JSON output.
 
 Suggestions are advice only. TerraForma does not apply suggested edits or execute suggested commands. No key is needed for local validation.
 
@@ -67,7 +67,9 @@ steps:
       explain_with_ai: 'false'
 ```
 
-For organizational use, replace version tags with reviewed full commit SHAs and review the [dependency trust guidance](DEPENDENCIES.md). Do not validate untrusted pull-request code with privileged credentials. Cloud-specific plugins and checks require their own review.
+For organizational use, replace version tags with reviewed full commit SHAs and review the [dependency trust guidance](DEPENDENCIES.md). Cloud-specific plugins and checks require their own review.
+
+> **Warning: do not run this Action on untrusted code with secrets or write access.** Validation runs `terraform init` and `tflint --init` on the target directory, which downloads and executes the providers, modules and TFLint plugins that directory declares, including a `.tflint.hcl` it supplies. Do not use it in `pull_request_target` or `workflow_run` workflows that check out fork code, and do not pass `openai_api_key` or cloud credentials to jobs that validate forks. For fork pull requests, use the plain `pull_request` trigger with read-only `permissions: contents: read` and no secrets.
 
 ## Troubleshooting
 

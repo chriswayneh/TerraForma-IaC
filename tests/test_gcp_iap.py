@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectInputError, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_gcp_scheduling import specification
 
 
@@ -38,7 +39,7 @@ def test_gcp_access_choice_binds_only_one_administrator_port(windows, public, me
     summary = {item["name"]: item for item in result["choice_summary"]}
     assert summary["admin_access_method"]["value"] == method
     assert ("allowed_cidr" in summary) is (method == "administrator_network")
-    assert f'default = "{method}"' in result["files"]["variables.tf"]
+    assert f'default = "{method}"' in unaligned(result["files"]["variables.tf"])
 
 
 @pytest.mark.parametrize("windows", [False, True])

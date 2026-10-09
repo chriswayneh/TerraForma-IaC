@@ -1,5 +1,10 @@
 name: 'TerraForma IaC Safeguard'
-description: 'Validates workspace configurations, executes linter checks, and translates failures using AI.'
+# SECURITY: validation runs `terraform init` and `tflint --init` on target_dir, which downloads and
+# executes the providers, modules and TFLint plugins that the directory declares. Do not run this
+# Action on untrusted pull-request code in `pull_request_target`/`workflow_run` workflows or in any
+# job that has secrets (including openai_api_key), cloud credentials or write permissions.
+# See docs/VALIDATION.md#github-action.
+description: 'Validates trusted Terraform with terraform validate and TFLint, with optional AI explanations. Not for untrusted PR code.'
 author: 'chriswayneh'
 inputs:
   openai_api_key:

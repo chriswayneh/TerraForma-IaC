@@ -30,5 +30,5 @@ def declare_resource_labels(builder):
 def resource_labels(base):
     fields = ", ".join(f"{key} = var.{name}" for name, (key, _) in LABEL_FIELDS.items())
     return ref(
-        f'merge({value_hcl(base)}, {{for key, value in {{{fields}}} : key => value if value != ""}})'
+        f'merge({value_hcl(base)}, {{ for key, value in {{ {fields} }} : key => value if value != "" }})'
     )

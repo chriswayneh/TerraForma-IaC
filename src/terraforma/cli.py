@@ -461,15 +461,16 @@ def wizard(target_dir: Path | None):
         )
     elif architecture == "secure_database":
         click.echo(
-            "For AWS databases, this enables storage encryption with a customer-managed KMS key. Turning it off requests unencrypted storage; review account policy and replacement risks."
+            "AWS database storage is always encrypted. This option uses a generated customer-managed KMS key; turning it off uses the AWS-managed RDS key instead. Changing it can replace the database; review the plan."
         )
     else:
         click.echo(
-            "For AWS compute, this encrypts VM boot disks with a customer-managed KMS key. Turning it off requests unencrypted boot disks. Optional standalone data disks remain encrypted; review account policy and replacement risks."
+            "AWS boot and data disks are always encrypted. This option uses a generated customer-managed KMS key; turning it off uses the account's default EBS key instead. Changing it can replace disks; review the plan."
         )
     encryption = ask(
         questionary.confirm(
-            "Enable storage encryption (provider defaults still apply)?", default=True
+            "Use the stronger encryption option for this cloud (customer-managed key on AWS, encryption at host on Azure)?",
+            default=True,
         )
     )
     if architecture == "secure_database":

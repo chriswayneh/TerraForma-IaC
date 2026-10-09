@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_trusted_launch import specification
 
 
@@ -16,7 +17,9 @@ def test_azure_image_version_preserves_pin_and_publisher_in_export(version):
     spec.inputs["image_version"] = version
     result = compile_project(spec)
     main = result["files"]["main.tf"]
-    assert 'publisher = "Canonical"' in main and "version = var.image_version" in main
+    assert 'publisher = "Canonical"' in unaligned(
+        main
+    ) and "version = var.image_version" in unaligned(main)
     assert 'variable "image_version"' in result["files"]["variables.tf"]
     choice = next(item for item in result["choice_summary"] if item["name"] == "image_version")
     assert choice["value"] == version

@@ -11,6 +11,7 @@ from terraforma.project import (
     input_contract,
     validate_answer,
 )
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 BAD_FORMATS = [
@@ -50,11 +51,11 @@ def test_selected_username_is_used_for_vm_key_and_output(workload):
         )
     )
     main = project["files"]["main.tf"]
-    assert "admin_username = var.admin_username" in main
-    assert "username = var.admin_username" in main
-    assert 'default = "cloud-operator"' in project["files"]["variables.tf"]
+    assert "admin_username = var.admin_username" in unaligned(main)
+    assert "username = var.admin_username" in unaligned(main)
+    assert 'default = "cloud-operator"' in unaligned(project["files"]["variables.tf"])
     if workload == "virtual_machine":
-        assert "value = var.admin_username" in project["files"]["outputs.tf"]
+        assert "value = var.admin_username" in unaligned(project["files"]["outputs.tf"])
 
 
 def test_native_username_conditions_match_questionnaire(tmp_path):

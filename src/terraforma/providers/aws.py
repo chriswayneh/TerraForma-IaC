@@ -117,19 +117,22 @@ def build_aws(builder: TerraformGenerator) -> None:
         map_public_ip_on_launch=True,
         children=zone_checks,
     )
-    builder.resource(
-        "aws_subnet",
-        "private",
-        count=subnet_count,
-        vpc_id=vpc_id,
-        cidr_block=ref(
-            "cidrsubnet(aws_vpc.this[0].cidr_block, 8, count.index + 10)"
-            if standalone
-            else "cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)"
-        ),
-        availability_zone=ref(zone_expression),
-        children=zone_checks,
-    )
+    # Private subnets are only referenced by private placements (behind NAT or a private
+    # database subnet group) and by the load-balanced tier's instances.
+    if builder.config.architecture_type == "load_balanced_tier" or not builder.config.is_public:
+        builder.resource(
+            "aws_subnet",
+            "private",
+            count=subnet_count,
+            vpc_id=vpc_id,
+            cidr_block=ref(
+                "cidrsubnet(aws_vpc.this[0].cidr_block, 8, count.index + 10)"
+                if standalone
+                else "cidrsubnet(aws_vpc.this.cidr_block, 8, count.index + 10)"
+            ),
+            availability_zone=ref(zone_expression),
+            children=zone_checks,
+        )
     builder.resource("aws_internet_gateway", **owned_network, vpc_id=vpc_id)
     builder.resource(
         "aws_route_table",
@@ -148,11 +151,31 @@ def build_aws(builder: TerraformGenerator) -> None:
         ),
     )
     if builder.config.enable_encryption:
+        builder.main.append(block("data", "aws_partition", "current"))
+        # Explicit form of the AWS default key policy: the target account administers and
+        # uses the key through IAM policies. No other principal is granted access.
         builder.resource(
             "aws_kms_key",
             description="TerraForma storage encryption",
             enable_key_rotation=True,
             deletion_window_in_days=30,
+            policy=ref(
+                "jsonencode({ "
+                'Version = "2012-10-17", '
+                "Statement = [{ "
+                'Sid = "EnableAccountIamPolicies", '
+                'Effect = "Allow", '
+                'Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${var.aws_account_id}:root" }, '
+                'Action = "kms:*", '
+                'Resource = "*" '
+                "}] "
+                "})"
+            ),
+        )
+        builder.resource(
+            "aws_kms_alias",
+            name=ref('"alias/terraforma-${var.project_name}"'),
+            target_key_id=ref("aws_kms_key.this.key_id"),
         )
     if builder.config.architecture_type == "secure_database":
         build_database(builder)
@@ -241,7 +264,7 @@ def build_aws(builder: TerraformGenerator) -> None:
                     "filter",
                     name="name",
                     values=ref(
-                        '[{"windows-server-2022" = "Windows_Server-2022-English-Full-Base-*", "windows-server-2022-core" = "Windows_Server-2022-English-Core-Base-*"}[var.os_image]]'
+                        '[{ "windows-server-2022" = "Windows_Server-2022-English-Full-Base-*", "windows-server-2022-core" = "Windows_Server-2022-English-Core-Base-*" }[var.os_image]]'
                     )
                     if windows
                     else ref(
@@ -344,7 +367,7 @@ def build_aws(builder: TerraformGenerator) -> None:
     disk = {
         "volume_type": ref("var.boot_disk_type"),
         "volume_size": ref("var.boot_disk_size_gb"),
-        "encrypted": builder.config.enable_encryption,
+        "encrypted": True,
     }
     if standalone:
         disk.update(
@@ -428,7 +451,7 @@ def build_aws(builder: TerraformGenerator) -> None:
                 http_tokens="required",
                 **{
                     "http_put_response_hop_limit": ref(
-                        '{"provider_default" = null, "one_hop" = 1, "two_hops" = 2}[var.metadata_hop_limit]'
+                        '{ "provider_default" = null, "one_hop" = 1, "two_hops" = 2 }[var.metadata_hop_limit]'
                     )
                 }
                 if standalone
@@ -615,10 +638,11 @@ def build_database(builder: TerraformGenerator) -> None:
     attributes = {
         "identifier": ref("var.project_name"),
         "engine": "postgres",
+        "engine_version": "16",
         "instance_class": "db.t3.micro",
         "allocated_storage": 20,
         "storage_type": "gp3",
-        "storage_encrypted": builder.config.enable_encryption,
+        "storage_encrypted": True,
         "username": "terraforma",
         "password": ref("var.database_password"),
         "db_name": "app",

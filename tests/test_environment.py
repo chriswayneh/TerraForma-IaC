@@ -2,6 +2,7 @@ import pytest
 
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project
+from tests.hcl_text import unaligned
 
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
@@ -39,11 +40,11 @@ def test_environment_answer_maps_to_generated_label_and_target(provider, workloa
             inputs=inputs,
         )
     )
-    assert 'default = "production"' in result["files"]["variables.tf"]
+    assert 'default = "production"' in unaligned(result["files"]["variables.tf"])
     assert result["target"]["environment"] == "production"
     assert result["target"]["identity_verified"] is False
     label_key = "environment" if provider == "gcp" else "Environment"
-    assert f'"{label_key}" = var.environment' in result["files"]["main.tf"]
+    assert f'"{label_key}" = var.environment' in unaligned(result["files"]["main.tf"])
 
 
 @pytest.mark.parametrize(

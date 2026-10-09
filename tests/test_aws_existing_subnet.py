@@ -63,7 +63,7 @@ def test_existing_subnet_and_group_leave_network_ownership_separate(windows, pub
     for address in OWNED:
         kind, name = address.split(".")
         if name not in resources.get(kind, {}):
-            assert public and address in OWNED[-4:]
+            assert public and (address in OWNED[-4:] or address == "aws_subnet.private")
             continue
         assert resources[kind][name]["count"] in (
             "${var.use_existing_network ? 0 : 1}",

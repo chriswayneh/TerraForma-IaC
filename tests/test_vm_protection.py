@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 
@@ -33,7 +34,7 @@ def specification(provider, **answers):
 def test_vm_protection_preserves_choice_and_explains_lifecycle(provider, attribute, enabled):
     spec = specification(provider, protect_vm=enabled)
     project = compile_project(spec)
-    assert f"{attribute} = var.protect_vm" in project["files"]["main.tf"]
+    assert f"{attribute} = var.protect_vm" in unaligned(project["files"]["main.tf"])
     field = next(item for item in input_contract(spec.recipe) if item["name"] == "protect_vm")
     assert field["kind"] == "boolean" and field["default"] is True
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:
@@ -57,7 +58,9 @@ def test_vm_protection_preserves_choice_and_explains_lifecycle(provider, attribu
 def test_vm_protection_defaults_on(provider):
     project = compile_project(specification(provider))
     assert 'variable "protect_vm"' in project["files"]["variables.tf"]
-    assert "default = true" in project["files"]["variables.tf"].split('variable "protect_vm"')[1]
+    assert "default = true" in unaligned(
+        project["files"]["variables.tf"].split('variable "protect_vm"')[1]
+    )
 
 
 @pytest.mark.parametrize("provider", ["aws", "gcp"])

@@ -12,6 +12,7 @@ from terraforma.project import (
     input_contract,
 )
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 
 def specification(enabled=True, image="debian-12", public=False):
@@ -35,10 +36,10 @@ def specification(enabled=True, image="debian-12", public=False):
 def test_secure_boot_answer_changes_output_and_survives_browser_export_import(enabled):
     spec = specification(enabled)
     result = compile_project(spec)
-    assert "enable_secure_boot = var.enable_secure_boot" in result["files"]["main.tf"]
-    assert "enable_vtpm = true" in result["files"]["main.tf"]
-    assert "enable_integrity_monitoring = true" in result["files"]["main.tf"]
-    assert "allow_stopping_for_update = false" in result["files"]["main.tf"]
+    assert "enable_secure_boot = var.enable_secure_boot" in unaligned(result["files"]["main.tf"])
+    assert "enable_vtpm = true" in unaligned(result["files"]["main.tf"])
+    assert "enable_integrity_monitoring = true" in unaligned(result["files"]["main.tf"])
+    assert "allow_stopping_for_update = false" in unaligned(result["files"]["main.tf"])
     choice = next(item for item in result["choice_summary"] if item["name"] == "enable_secure_boot")
     assert choice["value"] == ("Enabled" if enabled else "Disabled")
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:

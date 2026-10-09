@@ -10,6 +10,7 @@ from terraforma.cli import collect_recipe_inputs
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 
@@ -117,8 +118,10 @@ def test_aws_data_disk_is_encrypted_and_never_forces_detach():
     disk = main.split('resource "aws_ebs_volume" "data"')[1].split(
         'resource "aws_volume_attachment"'
     )[0]
-    assert "encrypted = true" in disk
-    assert "force_detach = false" in main and "stop_instance_before_detaching = true" in main
+    assert "encrypted = true" in unaligned(disk)
+    assert "force_detach = false" in unaligned(
+        main
+    ) and "stop_instance_before_detaching = true" in unaligned(main)
 
 
 @pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])

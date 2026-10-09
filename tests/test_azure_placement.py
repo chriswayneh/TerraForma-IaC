@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 from tests.test_azure_disk_caching import specification
 
 
@@ -37,7 +38,7 @@ def test_placement_binds_vm_disk_nat_and_addresses_and_survives_import(windows, 
     assert resources['"azurerm_nat_gateway"']['"this"']["zones"] == zone_list
     assert resources['"azurerm_public_ip"']['"egress"']["zones"] == zone_list
     assert resources['"azurerm_public_ip"']['"web"']["zones"] == zone_list
-    assert f'default = "{zone}"' in result["files"]["variables.tf"]
+    assert f'default = "{zone}"' in unaligned(result["files"]["variables.tf"])
 
 
 @pytest.mark.parametrize("windows", [False, True])

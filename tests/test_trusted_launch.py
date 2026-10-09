@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from terraforma.generator import WizardConfig
 from terraforma.project import ProjectSpecification, compile_project, input_contract
 from terraforma.web import create_app
+from tests.hcl_text import unaligned
 
 KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
 
@@ -33,8 +34,8 @@ def specification(enabled=True, image="ubuntu-22.04", public=False):
 def test_trusted_launch_choice_survives_export_import(enabled):
     spec = specification(enabled)
     result = compile_project(spec)
-    assert "secure_boot_enabled = var.enable_secure_boot" in result["files"]["main.tf"]
-    assert "vtpm_enabled = true" in result["files"]["main.tf"]
+    assert "secure_boot_enabled = var.enable_secure_boot" in unaligned(result["files"]["main.tf"])
+    assert "vtpm_enabled = true" in unaligned(result["files"]["main.tf"])
     choice = next(item for item in result["choice_summary"] if item["name"] == "enable_secure_boot")
     assert choice["value"] == ("Enabled" if enabled else "Disabled")
     with TestClient(create_app(), base_url="http://127.0.0.1") as client:

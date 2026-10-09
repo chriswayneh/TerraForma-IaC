@@ -34,7 +34,7 @@ For local configuration inspection with installed tools, select Terraform explic
 terragrunt render --config environment-bundle/units/dev/terragrunt.hcl --json --tf-path terraform
 ```
 
-Use the full path to Terraform if it is not on PATH. Render evaluates the generated configuration; it does not prove that the cloud account supports it. With these generated files, there are no hooks, external module downloads, dependencies or remote-state reads. Review any edits before rendering: arbitrary Terragrunt configurations can contain executable functions and hooks.
+Use the full path to Terraform if it is not on PATH. Render evaluates the generated configuration; it does not prove that the cloud account supports it. `tests/test_terragrunt.py` runs this render check for AWS, Azure and GCP Linux and Windows units when `TERRAFORMA_NATIVE_TESTS=1` and `terragrunt` is on PATH. CI does not install Terragrunt yet, so this check currently runs only locally; `init`, `plan` and `apply` through Terragrunt are not exercised. With these generated files, there are no hooks, external module downloads, dependencies or remote-state reads. Review any edits before rendering: arbitrary Terragrunt configurations can contain executable functions and hooks.
 
 **State is local in each unit's `.terragrunt-cache`.** Preserve this directory across runs; deleting it can lose the state needed to manage infrastructure. Separate unit directories do not guarantee distinct cloud targets or resource names. Configure reviewed remote state before production or team use. The exporter does not set up a bucket, change permissions, migrate state or enable backend bootstrapping.
 

@@ -117,6 +117,6 @@ def add_azure_windows_initialization(builder):
         type="CustomScriptExtension",
         type_handler_version="1.10",
         auto_upgrade_minor_version=True,
-        protected_settings=ref(f"jsonencode({{commandToExecute = {encoded_command}}})"),
+        protected_settings=ref(f"jsonencode({{ commandToExecute = {encoded_command} }})"),
         children=[block("lifecycle", children=[initialization_precondition(True)])],
     )
