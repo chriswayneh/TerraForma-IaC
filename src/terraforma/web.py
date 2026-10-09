@@ -66,6 +66,14 @@ class BackendChoice(BaseModel):
     backend: Literal["s3", "azurerm", "gcs"]
 
 
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Cache-Control": "no-store",
+}
+
+
 def _creates_nat(config: WizardConfig) -> bool:
     """AWS public single-server and VM recipes use the public subnet without a NAT gateway."""
     return not (
@@ -540,20 +548,23 @@ def create_app() -> FastAPI:
                 except ValueError:
                     same_origin = False
                 if not same_origin:
-                    return Response("Cross-origin requests are not allowed.", status_code=403)
+                    return Response(
+                        "Cross-origin requests are not allowed.",
+                        status_code=403,
+                        media_type="text/plain",
+                        headers=SECURITY_HEADERS,
+                    )
             if not secrets.compare_digest(
                 request.headers.get("x-terraforma-token", "").encode("utf-8"), token.encode("ascii")
             ):
-                return Response("Open the local app to start a new session.", status_code=403)
+                return Response(
+                    "Open the local app to start a new session.",
+                    status_code=403,
+                    media_type="text/plain",
+                    headers=SECURITY_HEADERS,
+                )
         response = await call_next(request)
-        response.headers.update(
-            {
-                "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
-                "X-Content-Type-Options": "nosniff",
-                "Referrer-Policy": "no-referrer",
-                "Cache-Control": "no-store",
-            }
-        )
+        response.headers.update(SECURITY_HEADERS)
         return response
 
     @app.get("/")
