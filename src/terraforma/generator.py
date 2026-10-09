@@ -335,9 +335,9 @@ class TerraformGenerator:
                     if self.config.architecture_type == "windows_virtual_machine"
                     else "Administrator network permitted to connect on SSH port 22. "
                 )
-                + "Use a private IPv4 network or one public IPv4 address with /32. "
-                + "Public /32 input is supported for generation, but local plan review blocks administrator access from outside private ranges, including a single public address. "
-                + "Valid input does not approve deployment. Private VMs require an existing routed access path; this recipe does not create a VPN or bastion.",
+                + "Accepts a private (RFC1918) IPv4 network or one public IPv4 /32; "
+                + "local plan review blocks any non-private source, including a public /32. "
+                + "Private VMs need an existing routed access path; no VPN or bastion is created.",
                 None if self.config.is_public else "10.0.0.0/16",
                 visible_when={"admin_access_method": "administrator_network"}
                 if self.config.provider == "gcp"

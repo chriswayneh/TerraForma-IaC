@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Review fixes: generated Terraform now passes `terraform fmt -check` (checked natively for every recipe and example). AWS disks and RDS storage are always encrypted; the encryption choice selects a generated KMS key (now with an explicit key policy and alias) or the AWS-managed key. RDS pins PostgreSQL 16. AWS public recipes no longer create unused private subnets or mention NAT they do not create. The Azure static-site storage account sets HTTPS-only, soft delete and no local users explicitly. Added Dependabot, a `pip-audit` CI job, native Terragrunt render checks in CI, `TERRAFORMA_OPENAI_MODEL`, an untrusted-code warning for the GitHub Action and a [scanner checks](docs/SCANNER_CHECKS.md) page. Removed three leftover AI planning documents that described a different product.
+
 - Reorganized the project home and documentation for first-time operators and security reviewers: released-version quick start, a first export walkthrough, file explanations, troubleshooting, terminology, a security/adoption overview and a dedicated validation guide. Release and development capabilities remain distinct.
 
 - HCL object keys now preserve literal interpolation markers, template directives and Unicode. A provider-free native Terraform test verifies exact evaluated keys. Supported recipe keys were already fixed; this corrects the generic renderer's literal contract.
