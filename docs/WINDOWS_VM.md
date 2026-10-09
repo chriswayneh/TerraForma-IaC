@@ -1,6 +1,8 @@
 # Windows virtual machines
 
-v0.4.0 development adds optional [existing GCP subnet attachment](GCP_EXISTING_SUBNET.md). Existing network access, egress and Windows activation connectivity remain separately managed and unverified.
+Development main supports reviewed existing-subnet attachment in [AWS](AWS_EXISTING_SUBNET.md), [Azure](AZURE_EXISTING_SUBNET.md) and [GCP](GCP_EXISTING_SUBNET.md). Existing network access, egress and Windows activation connectivity remain separately managed and unverified.
+
+The tables below describe development main. v0.3.0 remains the latest release; see its [release notes](RELEASE_0.3.0.md) for released scope. Development also supports [reviewed initialization](VM_INITIALIZATION.md) and new-network [outbound profiles](VM_OUTBOUND_ACCESS.md). These profiles preserve provider platform/Windows licensing exceptions; updates and application dependencies still need review.
 
 v0.4.0 development adds guided [existing custom-image inputs](CUSTOM_IMAGES.md). This optional path requires an image compatibility declaration; image trust, provisioning agents, password recovery and access remain unverified.
 
@@ -51,7 +53,7 @@ The computer name is an explicit input, independent of the longer project/resour
 | Boot disk | 50 GiB default, 30–2,048 GiB; gp3 or gp2 |
 | gp3 performance | Same guided IOPS/throughput limits and ratio checks as the Linux recipe |
 | Data disk | One optional new empty disk; initialization, formatting, backup and retention stay separate |
-| Network | New configurable private IPv4 network; public/private access and optional fixed private address |
+| Network | New configurable private IPv4 network or reviewed existing subnet/security group; public/private access and optional fixed private address. Existing-network policies remain separately managed |
 | Administrator access | RDP on TCP 3389 from a private administrator subnet or one public IPv4 /32 address |
 | Credentials | Existing RSA public key only; password recovery happens separately in EC2 |
 | Workload identity | Optional existing IAM instance profile; policies and pass-role permission require review |
@@ -84,7 +86,7 @@ The standard Windows VM exposes host maintenance (`MIGRATE` or `TERMINATE`) and 
 | VM size | Configurable, default `e2-standard-2`; availability, licensing and price require review |
 | Boot disk | 64 GiB default/minimum through 2,048 GiB; pd-balanced, pd-standard or pd-ssd |
 | Data disk | One optional new empty persistent disk; no initialization, backup or retention policy |
-| Network | New regional private subnet; optional public IP and fixed private address |
+| Network | New regional private subnet or reviewed existing project/region subnet; optional public IP and fixed private address. Existing-network policies remain separately managed |
 | Administrator access | Restricted RDP on TCP 3389 through the selected direct network or IAP tunnel; no SSH key or Linux OS Login configuration |
 | Credentials | Requested local username, default `terraforma`; separate Google credential setup after provisioning |
 | Activation | Private Google Access, an Internet-gateway route to `35.190.247.13/32`, and tagged TCP 1688 egress |

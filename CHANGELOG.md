@@ -2,6 +2,8 @@
 
 ## Unreleased — v0.4.0 development
 
+- Linux/Windows guides distinguish development main from the released v0.3.0 scope and reflect reviewed existing subnets, custom images, initialization, outbound profiles and AWS gp3 performance support.
+
 - The generated resource guide and terminal output explain the selected outbound profile, workload-dependency risks and separately managed existing-network policy. Capability metadata identifies custom destination/port policies as unsupported.
 
 - New standalone AWS, Azure and GCP VM networks offer unrestricted or HTTPS/DNS outbound profiles, preserving provider platform and Windows licensing exceptions. Existing-subnet rules remain separately managed. Local validation and synthetic plans verify declared rules; effective live connectivity remains unverified.

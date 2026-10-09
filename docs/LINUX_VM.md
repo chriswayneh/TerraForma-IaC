@@ -1,6 +1,8 @@
 # Linux virtual machines
 
-v0.4.0 development adds optional [existing GCP subnet attachment](GCP_EXISTING_SUBNET.md), leaving inherited rules, routing, NAT and API enablement separately managed. Live attachment and access remain unverified.
+Development main supports reviewed existing-subnet attachment in [AWS](AWS_EXISTING_SUBNET.md), [Azure](AZURE_EXISTING_SUBNET.md) and [GCP](GCP_EXISTING_SUBNET.md). Inherited rules, routing and egress remain separately managed. Live attachment and access remain unverified.
+
+The tables below describe development main. v0.3.0 remains the latest release; see its [release notes](RELEASE_0.3.0.md) for released scope. Development also supports [reviewed initialization](VM_INITIALIZATION.md) and new-network [outbound profiles](VM_OUTBOUND_ACCESS.md).
 
 v0.4.0 development adds guided [existing custom-image inputs](CUSTOM_IMAGES.md). This optional path requires an image compatibility declaration; image trust, boot and access remain unverified.
 
@@ -31,16 +33,17 @@ Azure standalone VMs also offer **Enable Azure accelerated networking**, off by 
 | Decision | What you provide | What stays fixed |
 | --- | --- | --- |
 | Target | AWS account ID, Azure subscription UUID, or Google Cloud project ID; environment label | Credentials use the cloud provider's normal credential chain; identity remains unverified offline |
-| Placement | Region/location; optional AWS standard zone, Azure regional/zone 1–3, or GCP zone; new private network address range | Subnet layout is derived by the recipe; existing-network attachment is not supported |
+| Placement | Region/location; optional AWS standard zone, Azure regional/zone 1–3, or GCP zone; new network range or reviewed existing subnet | New subnet layout is derived; existing-network rules and routing remain separately managed |
 | Operating system | Supported provider-specific Linux choice; Azure version may be `latest` or an exact `Major.Minor.Build` | x86_64/AMD64 only; AWS accepts a matching AMI ID; GCP accepts a matching exact published name; latest remains available |
-| Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One VM; no autoscaling, custom images, or custom initialization |
+| Capacity and storage | VM size, boot-disk size/type, supported encryption choice | One x86 VM; no autoscaling. Reviewed custom images and bounded initialization are optional development features |
 | AWS gp3 performance | Boot/data disk IOPS and throughput, shown for enabled gp3 disks | Defaults to included 3,000 IOPS/125 MiB/s; regional recipe supports up to 80,000 IOPS/2,000 MiB/s and validates size/performance ratios; Outposts unsupported |
 | Data storage | Enable one data disk, size from 32–2048 GiB, supported disk class | Disabled by default; one new empty disk, no formatting/mounting, backup, or recovery policy |
 | Monitoring | AWS: enable or disable detailed EC2 monitoring; disabled by default | No monitoring agent, log collection, or alarms; Azure/GCP monitoring options remain planned |
 | Deletion protection | AWS/GCP: protect the standalone VM from specified deletion paths; enabled by default | No backup, whole-project protection, or Azure VM deletion lock is configured |
 | Workload identity | AWS instance profile, Azure system-assigned identity (or one existing user-assigned identity in v0.4.0 development), or GCP user-managed service account | Disabled by default; no IAM/RBAC grants or credential keys are created |
 | Network access | Public/private address choice and administrator CIDR | SSH port 22; no web ingress; private access needs an existing routed path |
-| Private address | Optional fixed IPv4 address, or automatic cloud allocation | Must be usable in the generated VM subnet; availability and independent address reservation are not checked |
+| Private address | Optional fixed IPv4 address, or automatic cloud allocation | Must be usable in the selected new or declared existing subnet; availability and independent address reservation are not checked |
+| Outbound network | Unrestricted ports or HTTPS/DNS with provider platform exceptions for new networks | Existing-network policy remains separately managed; custom destination/port policies and effective live connectivity are not verified |
 | Azure NIC performance | Optional accelerated networking, off by default | Requires supported VM size and guest drivers; changing an existing VM can require stopping and deallocating it |
 | Authentication | AWS/Azure: an existing Ed25519 or RSA public key; Azure: administrator username (default `terraforma`); GCP: OS Login IAM prerequisites | No private key is generated or collected; password authentication stays disabled |
 
@@ -90,7 +93,7 @@ Choose **Attach a data disk** to reveal size and storage-class questions. These 
 
 The `data_disk_id` output identifies the disk when enabled. Attachment alone does not provide a mounted filesystem: identify the actual device, then arrange filesystem setup, mounting, backups, and recovery through your reviewed workload workflow. The tool performs none of those guest operations. Disk class and size compatibility, quotas, permissions, and costs require account preflight.
 
-This disk is managed by the exported Terraform project. Teardown can delete it, and VM deletion protection does not protect every disk or connected resource. Review data preservation before detaching, replacing, disabling, or removing it. Multiple disks, existing volumes/snapshots, custom IOPS/throughput, disk shrinking, and web-tier data disks remain unsupported.
+This disk is managed by the exported Terraform project. Teardown can delete it, and VM deletion protection does not protect every disk or connected resource. Review data preservation before detaching, replacing, disabling, or removing it. Multiple disks, existing volumes/snapshots, custom performance outside the AWS gp3 settings, disk shrinking, and web-tier data disks remain unsupported.
 
 Newly generated Azure optional data disks set `network_access_policy = "DenyAll"` and `public_network_access_enabled = false` to restrict remote import/export. They still attach as empty managed disks. This recipe has no disk export or private-endpoint workflow; it does not change OS disk export controls, create backups, prove guest encryption or protect state. Review [managed disk access controls](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk) and a saved plan before changing an existing disk.
 
@@ -108,7 +111,7 @@ Choose a private IPv4 range that does not overlap networks you intend to connect
 | Azure | `/16` through `/20`, default `10.0.0.0/16` | One workload subnet adds eight prefix bits at index 1. The default yields `10.0.1.0/24`. |
 | GCP | `/16` through `/28`, default `10.0.1.0/24` | One regional subnet uses the selected range directly. The VPC itself has no enclosing CIDR. |
 
-These are recipe bounds rather than the providers' complete capabilities. Individual subnet sizing, additional ranges, IPv6 and attachment to existing networks remain planned. Changing an exported project's range can replace network and dependent resources; review the Terraform plan and access/data preservation before applying changes. The administrator CIDR remains a separate access decision and is not automatically changed to match this range.
+These are recipe bounds rather than the providers' complete capabilities. Individual new-subnet sizing, additional ranges and IPv6 remain unsupported. Development existing-subnet attachment uses the separately reviewed inputs linked above; it does not adopt network ownership. Changing a deployed new-network project's range or ownership mode can destroy network resources and replace dependent resources; use separate state and review access/data preservation. The administrator CIDR remains a separate access decision and is not automatically changed to match this range.
 
 Provider references: [AWS VPC address ranges](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html), [Azure networking FAQ](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-faq), and [GCP subnets](https://docs.cloud.google.com/vpc/docs/subnets).
 
