@@ -42,6 +42,11 @@ def redact_sensitive_text(text: str) -> str:
     return text
 
 
+DEFAULT_MODEL = "gpt-4o"
+MODEL_ENVIRONMENT_VARIABLE = "TERRAFORMA_OPENAI_MODEL"
+_MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}")
+
+
 class AIDiagnosticsEngine:
     endpoint = "https://api.openai.com/v1/chat/completions"
     max_response_bytes = 64 * 1024
@@ -50,7 +55,7 @@ class AIDiagnosticsEngine:
         self,
         api_key: str | None = None,
         *,
-        model: str = "gpt-4o",
+        model: str | None = None,
         timeout: float = 30,
         max_attempts: int = 3,
         client: httpx.AsyncClient | None = None,
@@ -70,7 +75,14 @@ class AIDiagnosticsEngine:
             raise ValueError(
                 "Use 1–5 integer attempts and a finite HTTP timeout up to 120 seconds."
             )
-        self.model = model
+        selected = (
+            model if model is not None else os.environ.get(MODEL_ENVIRONMENT_VARIABLE, "")
+        ).strip() or DEFAULT_MODEL
+        if not _MODEL_NAME.fullmatch(selected):
+            raise DiagnosticsError(
+                f"Set {MODEL_ENVIRONMENT_VARIABLE} to an OpenAI model name such as {DEFAULT_MODEL}."
+            )
+        self.model = selected
         self.timeout = timeout
         self.max_attempts = max_attempts
         self.client = client

@@ -131,7 +131,7 @@ The `main` branch contains unreleased features. [The roadmap](docs/ROADMAP.md) l
 | Install, create a first project or fix a startup problem | [Getting started](docs/GETTING_STARTED.md) |
 | Assess the local tool before organizational use | [Security overview](docs/SECURITY_OVERVIEW.md) |
 | Understand cloud authentication | [Cloud authentication](docs/CLOUD_AUTHENTICATION.md) |
-| Validate files or use the GitHub Action | [Validation guide](docs/VALIDATION.md) |
+| Validate files or use the GitHub Action (trusted code only) | [Validation guide](docs/VALIDATION.md#github-action) |
 | Review a plan or prepare state storage inputs | [Plan review](docs/PLAN_REVIEW.md) · [State protection](docs/STATE_PROTECTION.md) |
 | Explore development VM inputs and Terragrunt export | [Documentation index](docs/README.md) |
 | Contribute code or report a problem | [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) |

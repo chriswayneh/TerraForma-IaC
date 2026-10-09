@@ -241,3 +241,20 @@ def test_redaction_of_environment_values_and_private_key(monkeypatch):
     assert "test-secret-token" not in clean
     assert '"my-key"' not in clean
     assert "\nprivate\n" not in clean
+
+
+def test_model_defaults_and_environment_override(monkeypatch):
+    monkeypatch.delenv("TERRAFORMA_OPENAI_MODEL", raising=False)
+    assert AIDiagnosticsEngine(api_key="k").model == "gpt-4o"
+    monkeypatch.setenv("TERRAFORMA_OPENAI_MODEL", " gpt-4.1-mini ")
+    assert AIDiagnosticsEngine(api_key="k").model == "gpt-4.1-mini"
+    assert AIDiagnosticsEngine(api_key="k", model="gpt-4o").model == "gpt-4o"
+    monkeypatch.setenv("TERRAFORMA_OPENAI_MODEL", "")
+    assert AIDiagnosticsEngine(api_key="k").model == "gpt-4o"
+
+
+@pytest.mark.parametrize("value", ["bad model", "-leading", "x" * 129, "model\nname"])
+def test_invalid_model_name_is_rejected(monkeypatch, value):
+    monkeypatch.setenv("TERRAFORMA_OPENAI_MODEL", value)
+    with pytest.raises(DiagnosticsError):
+        AIDiagnosticsEngine(api_key="k")
