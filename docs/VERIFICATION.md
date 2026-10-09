@@ -1,5 +1,14 @@
 # Verification record
 
+## Optional Terragrunt export and T8i credits — v0.4.0 development checkpoint
+
+- The default suite passes 2,822 tests with 520 optional/native/platform cases skipped. A subsequent writer failure-recovery test passes, preserving existing user files and removing only owned partial output. Six subsequently added native Terragrunt tests pass separately; they are not included in the default-suite count.
+- Terragrunt 1.1.6, downloaded from its official release and checked against its published SHA256SUMS, evaluates all six combined provider/OS exports. Effective inputs match the compiled project exactly, including literal initialization-script interpolation. Local module references resolve; no remote state, dependencies or hooks are configured. All 30 exporter tests pass with native checks enabled. No cloud, plan, apply or destroy command runs in these checks.
+- Matching recipes share local modules; environment answers remain separate. New output directories are required. Paths and reserved device names are rejected, external secret references remain external, and generated checksums cover exported text. This is local export support, not completion of the multi-environment automation phase. Backend configuration and live acceptance remain pending.
+- The preceding T8i change passes twelve Linux/Windows × tenancy × CPU-credit-mode Terraform 1.14.0/TFLint 0.61.0 checks and six provider-mocked plan runs. Four additional terminal input cases pass. Shared family-prefix validation now includes documented T8i support; synthetic `t8i.small` inputs do not establish actual SKU or regional availability.
+- Ruff checks and formatting pass across 134 Python files; local links pass across 41 Markdown files. The final development wheel is 166,739 bytes, SHA-256 `092ec7268d113b0ffdcf3501a8cfe6cd4dbf878417717d7a24cbd27188e59bcf`. An isolated installation using existing runtime dependencies passes 27 offline imports/UI-route checks and 118 exporter/CPU-credit/combined-VM tests, with 56 optional cases skipped.
+- Prior tenancy commit 8899f09/run 37868363894 and combined-matrix commit 6915827/run 37868692011 have completed successfully. Advanced-disclosure run 37869375653 remained running when checked. This checkpoint's GitHub CI result is not yet claimed. v0.3.0 remains the latest release; no live creation, login, guest execution or cleanup evidence is claimed.
+
 ## Advanced VM disclosure — v0.4.0 development checkpoint
 
 - The full default suite passes 2,791 tests with 506 optional/native/platform cases skipped. Ruff checks and formatting pass across 132 Python files; JavaScript syntax passes. No provider, contract or Terraform output changed, so the prior combined native/plan evidence remains applicable.

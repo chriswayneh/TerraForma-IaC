@@ -314,7 +314,7 @@ def build_aws(builder: TerraformGenerator) -> None:
         )
         builder.variable(
             "cpu_credit_mode",
-            "CPU credit setting for supported x86 T2, T3 and T3a instances. provider_default leaves this setting unmanaged; verify the effective setting in your account. standard can reduce performance when credits run out. unlimited can add surplus-credit charges. Returning to provider_default stops managing this setting and does not reset an existing VM's mode. Other instance families require provider_default. This does not estimate cost or verify capacity.",
+            "CPU credit setting for supported x86 T2, T3, T3a and T8i instances. provider_default leaves this setting unmanaged; verify the effective setting in your account. standard can reduce performance when credits run out. unlimited can add surplus-credit charges. Returning to provider_default stops managing this setting and does not reset an existing VM's mode. Other instance families require provider_default. This does not estimate cost or verify capacity.",
             "provider_default",
             choices=("provider_default", "standard", "unlimited"),
         )

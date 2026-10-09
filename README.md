@@ -51,6 +51,8 @@ Development questionnaires keep VM protection visible and group optional operati
 
 ## Screenshots
 
+Development CLI builds also support optional [Terragrunt environment export](docs/TERRAGRUNT.md). Matching recipes share local module code while keeping each unit's inputs separate. Remote state and protected execution remain planned.
+
 The local workspace guides cloud, workload, and configuration choices, then previews the generated Terraform files.
 
 ![TerraForma-IaC local workspace](docs/images/workspace.png)

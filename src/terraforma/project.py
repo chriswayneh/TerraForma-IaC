@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from terraforma.artifacts import create_receipt
 from terraforma.catalog import recipe_capabilities
+from terraforma.configuration import AWS_CPU_CREDIT_PREFIXES
 from terraforma.file_input import read_regular_bytes
 from terraforma.generator import TerraformGenerator, WizardConfig
 from terraforma.initialization import validate_initialization_script
@@ -607,11 +608,11 @@ def compile_project(specification: ProjectSpecification) -> dict:
     if (
         specification.recipe.provider == "aws"
         and effective.get("cpu_credit_mode", "provider_default") != "provider_default"
-        and not effective["instance_type"].startswith(("t2.", "t3.", "t3a."))
+        and not effective["instance_type"].startswith(AWS_CPU_CREDIT_PREFIXES)
     ):
         raise ProjectInputError(
             "cpu_credit_mode",
-            "Choose provider_default for this instance family; explicit credit modes support only x86 T2, T3 and T3a.",
+            "Choose provider_default for this instance family; explicit credit modes support only x86 T2, T3, T3a and T8i.",
         )
     if (
         specification.recipe.provider == "azure"
@@ -716,6 +717,11 @@ def compile_project(specification: ProjectSpecification) -> dict:
     )
     return {
         "files": files,
+        "terraform_inputs": {
+            variable.labels[0]: variable.attributes["default"]
+            for variable in generator.variables
+            if "default" in variable.attributes and not variable.attributes.get("sensitive", False)
+        },
         "receipt": create_receipt(specification.model_dump(), files),
         "specification": specification.model_dump(),
         "input_contract": contract,

@@ -41,6 +41,7 @@ from terraforma.project import (
 )
 from terraforma.readiness import local_readiness
 from terraforma.sandbox import ValidationSandbox
+from terraforma.terragrunt import terragrunt_artifacts, write_terragrunt_bundle
 
 
 @click.group()
@@ -690,6 +691,44 @@ def generate_specification(spec: Path, target_dir: Path):
             f"Supply {name} through your environment before planning; its value was not collected or saved."
         )
     click.echo(result["verification"])
+
+
+@main.command("export-terragrunt")
+@click.option(
+    "--unit",
+    "unit_paths",
+    multiple=True,
+    required=True,
+    help="Repeat NAME=PROJECT.json for each environment or independently managed project.",
+)
+@click.option(
+    "--dir", "target_dir", required=True, type=click.Path(file_okay=False, path_type=Path)
+)
+def export_terragrunt(unit_paths: tuple[str, ...], target_dir: Path):
+    """Export optional Terragrunt units without executing infrastructure commands."""
+    try:
+        if not 1 <= len(unit_paths) <= 12:
+            raise ValueError("Choose between one and twelve units.")
+        units = {}
+        for item in unit_paths:
+            name, separator, filename = item.partition("=")
+            if not separator or not filename or name in units:
+                raise ValueError("Use unique NAME=PROJECT.json unit arguments.")
+            units[name] = load_specification(Path(filename))
+        files = terragrunt_artifacts(units)
+        directory = write_terragrunt_bundle(files, target_dir)
+    except ArtifactCleanupError as error:
+        raise click.ClickException(str(error)) from None
+    except ProjectInputError as error:
+        raise click.ClickException(str(error)) from None
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise click.ClickException(
+            "Unable to export units. Use unique supported names, valid project specifications and a new writable directory; input values are omitted."
+        ) from None
+    click.echo(f"Created Terragrunt units in {directory}")
+    click.echo(
+        "Review targets and external secret references in terraforma.units.json. No infrastructure commands ran. Configure reviewed remote state before production use."
+    )
 
 
 @main.command("describe")

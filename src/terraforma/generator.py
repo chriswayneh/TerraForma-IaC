@@ -8,7 +8,12 @@ from terraforma.aws_network_attachment import (
 )
 from terraforma.azure_identity import declare_azure_identity_inputs
 from terraforma.azure_network_attachment import declare_azure_network_attachment
-from terraforma.configuration import AZURE_RESERVED_USERNAMES, LINUX_IMAGE_CHOICES, WizardConfig
+from terraforma.configuration import (
+    AWS_CPU_CREDIT_PREFIXES,
+    AZURE_RESERVED_USERNAMES,
+    LINUX_IMAGE_CHOICES,
+    WizardConfig,
+)
 from terraforma.custom_images import custom_image_preconditions, declare_custom_image_inputs
 from terraforma.gcp_network_attachment import (
     declare_gcp_network_attachment,
@@ -411,9 +416,9 @@ class TerraformGenerator:
         return block(
             "precondition",
             condition=ref(
-                'var.cpu_credit_mode == "provider_default" || anytrue([for family in ["t2.", "t3.", "t3a."] : startswith(var.instance_type, family)])'
+                f'var.cpu_credit_mode == "provider_default" || anytrue([for family in {value_hcl(list(AWS_CPU_CREDIT_PREFIXES))} : startswith(var.instance_type, family)])'
             ),
-            error_message="Explicit CPU credit modes are supported only for x86 T2, T3 and T3a instances; choose provider_default for other families.",
+            error_message="Explicit CPU credit modes are supported only for x86 T2, T3, T3a and T8i instances; choose provider_default for other families.",
         )
 
     def _private_ip_precondition(self) -> Block:

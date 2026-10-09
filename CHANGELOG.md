@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.4.0 development
 
+- Added optional `export-terragrunt` CLI support for up to twelve validated project specifications. Matching recipes share local Terraform code; per-unit inputs, target summaries, external secret references and checksums are exported without executing infrastructure commands. Remote state and dependency-aware execution remain planned.
+
+- AWS explicit CPU credit modes now include the documented x86 T8i family. Compilation and generated Terraform preconditions share one family-prefix list; unsupported families still require unmanaged credit mode. Regional availability and guest compatibility remain unverified.
+
 - Browser questionnaires place optional operations and identity settings behind an expandable section while keeping VM protection visible. Imported non-default options open for review, invalid advanced fields are revealed for correction, and collapsing the section preserves values.
 
 - Expanded the combined VM verification matrix to both outbound profiles and AWS Dedicated Instance tenancy, with terminal collection checks for reviewed script files and all selected operational inputs.

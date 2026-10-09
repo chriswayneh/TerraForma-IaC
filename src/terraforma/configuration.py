@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+AWS_CPU_CREDIT_PREFIXES = ("t2.", "t3.", "t3a.", "t8i.")
+
 LINUX_IMAGE_CHOICES = {
     "aws": ("amazon-linux-2023", "ubuntu-24.04"),
     "azure": ("ubuntu-22.04", "ubuntu-24.04"),

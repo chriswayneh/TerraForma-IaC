@@ -201,6 +201,8 @@ Target: **v0.8.0**.
 
 Status: planned; Terragrunt remains optional.
 
+An initial development [Terragrunt exporter](TERRAGRUNT.md) provides local shared modules, independently configured units, external secret references and checksums. Remote state, dependencies, approvals and execution remain planned; this does not satisfy the phase exit criteria or the v0.4.0 live acceptance gates.
+
 - Reusable project modules and dev/test/prod configuration overlays with isolated state.
 - Generate Terragrunt units/stacks when resource dependencies and environment reuse justify them.
 - Pin supported Terraform/Terragrunt versions and document generated layout.
