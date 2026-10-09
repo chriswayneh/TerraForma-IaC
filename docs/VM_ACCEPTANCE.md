@@ -2,6 +2,8 @@
 
 Status: live acceptance is pending for v0.4.0. Offline checks cannot establish creation, login, guest initialization or cleanup. No cloud test accounts are configured for this work.
 
+The [release-readiness audit](VM_RELEASE_READINESS.md) maps the current input inventory and offline evidence to each remaining gate.
+
 ## Release gates
 
 | Provider | Linux creation and login | Windows creation and login | Initialization and lifecycle | Cleanup |
