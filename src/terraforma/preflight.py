@@ -75,6 +75,24 @@ def azure_zone_compatibility(machine: dict, location: str, zone: str) -> bool | 
     return zone in zones
 
 
+def azure_restriction_applies(restriction: dict, location: str, zone: str | None) -> bool:
+    """Match an Azure SKU restriction to the selected placement; unclear metadata stays restricted."""
+    information = restriction.get("restrictionInfo")
+    if not isinstance(information, dict):
+        return True
+    locations = information.get("locations")
+    if not isinstance(locations, list) or any(not isinstance(item, str) for item in locations):
+        return True
+    if location.lower() not in [item.lower() for item in locations]:
+        return False
+    if restriction["type"] == "Location":
+        return True
+    zones = information.get("zones")
+    if not isinstance(zones, list) or any(not isinstance(item, str) for item in zones):
+        return True
+    return zone is not None and zone in zones
+
+
 def aws_boot_compatibility(machine: dict) -> bool | None:
     compatibility = []
     for name, required, allowed in (
@@ -216,7 +234,9 @@ def machine_report(
         if value not in {None, "x64", "Arm64", "arm64"}:
             raise ValueError("Unsupported architecture metadata.")
         compatible = value == "x64" if value is not None else None
-        restricted = bool(restrictions)
+        restricted = any(
+            azure_restriction_applies(item, location, availability_zone) for item in restrictions
+        )
         if availability_zone is not None:
             zone_compatible = azure_zone_compatibility(machine, location, availability_zone)
             report["availability_zone_compatible"] = zone_compatible

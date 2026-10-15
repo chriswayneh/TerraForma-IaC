@@ -473,7 +473,14 @@ def build_aws(builder: TerraformGenerator) -> None:
             else []
         )
         + ([builder._identity_precondition()] if standalone else []),
-        **{"depends_on": [ref("aws_route_table_association.private")]} if private else {},
+        # Boot scripts install packages, so wait for the subnet's internet route either way.
+        depends_on=[
+            ref(
+                "aws_route_table_association.private"
+                if private
+                else "aws_route_table_association.public"
+            )
+        ],
     )
     if standalone:
         builder.resource(

@@ -34,7 +34,8 @@ def redact_sensitive_text(text: str) -> str:
     )
     text = re.sub(r"\b(?:sk-[A-Za-z0-9_-]{16,}|(?:AKIA|ASIA)[A-Z0-9]{16})\b", "[REDACTED]", text)
     text = re.sub(
-        r'(?im)([\w-]*(?:password|secret|token|api_key|access_key|private_key)[\w-]*\s*[=:]\s*)("[^"\n]*"|\S+)',
+        # Keys may be bare (HCL, env, YAML) or quoted (JSON), so JSON documents are covered too.
+        r'(?im)(["\']?[\w-]*(?:password|passwd|secret|token|api_key|apikey|access_key|private_key|credential)[\w-]*["\']?\s*[=:]\s*)("(?:\\.|[^"\\\n])*"|\'[^\'\n]*\'|[^\s,}\]]+)',
         r'\1"[REDACTED]"',
         text,
     )

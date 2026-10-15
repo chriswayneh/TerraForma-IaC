@@ -419,7 +419,7 @@ def test_image_specific_requirements(provider, change, expected, monkeypatch):
         elif change == "product":
             image["ProductCodes"] = [{"ProductCodeId": "private-marker"}]
         elif change == "deprecated":
-            image["DeprecationTime"] = "2099-01-01T00:00:00Z"
+            image["DeprecationTime"] = "2020-01-01T00:00:00Z"
         elif change == "extra_disk":
             image["BlockDeviceMappings"].append(
                 {"DeviceName": "/dev/sdb", "Ebs": {"VolumeSize": 20}}
