@@ -337,7 +337,13 @@ def build_gcp(builder: TerraformGenerator) -> None:
                     disk_type=ref("var.boot_disk_type"),
                 ),
                 network,
-                image_lifecycle,
+                # The group manager references this template, so a replacement must exist
+                # before the old template is deleted or Google rejects the deletion.
+                block(
+                    "lifecycle",
+                    create_before_destroy=True,
+                    children=list(image_lifecycle.children),
+                ),
             ],
         )
         builder.resource(

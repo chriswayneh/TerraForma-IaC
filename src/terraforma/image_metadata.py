@@ -1,6 +1,7 @@
 import fnmatch
 import hashlib
 import re
+from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 from terraforma.project import input_contract
@@ -29,6 +30,19 @@ def metadata_list(data, key):
 
 def compatible(value, expected):
     return None if value is None else value == expected
+
+
+def deprecation_acceptable(value, now=None):
+    """AWS sets a future DeprecationTime on most public AMIs; only a past one disqualifies."""
+    if value is None:
+        return True
+    try:
+        moment = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return moment > (now or datetime.now(UTC))
 
 
 def combine(*checks):
@@ -150,7 +164,7 @@ def aws_image_metadata(data, values, windows):
         "os_compatible": compatible(platform or None, "windows")
         if windows
         else platform in {None, ""},
-        "deprecation_acceptable": not bool(metadata_text(image, "DeprecationTime")),
+        "deprecation_acceptable": deprecation_acceptable(metadata_text(image, "DeprecationTime")),
         "boot_type_compatible": combine(
             compatible(metadata_text(image, "RootDeviceType"), "ebs"),
             compatible(metadata_text(image, "VirtualizationType"), "hvm"),

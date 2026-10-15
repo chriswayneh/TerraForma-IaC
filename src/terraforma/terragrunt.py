@@ -7,6 +7,23 @@ from terraforma.generator import ArtifactCleanupError, TerraformGenerator
 from terraforma.hcl import value_hcl
 from terraforma.project import ProjectSpecification, compile_project
 
+# Pin local state to the unit directory. Terragrunt runs Terraform inside a .terragrunt-cache
+# directory derived from the module source, and the module path is a content digest, so the
+# default local state would move to an empty directory whenever the recipe changed.
+STATE_BLOCK = (
+    'generate "terraforma_state" {\n'
+    '  path      = "terraforma_state.tf"\n'
+    '  if_exists = "overwrite_terragrunt"\n'
+    "  contents  = <<EOF\n"
+    "terraform {\n"
+    '  backend "local" {\n'
+    '    path = "${get_terragrunt_dir()}/terraform.tfstate"\n'
+    "  }\n"
+    "}\n"
+    "EOF\n"
+    "}\n\n"
+)
+
 
 def terragrunt_artifacts(units: dict[str, ProjectSpecification]) -> dict[str, str]:
     if not 1 <= len(units) <= 12:
@@ -38,6 +55,7 @@ def terragrunt_artifacts(units: dict[str, ProjectSpecification]) -> dict[str, st
             'terraform {\n  source = "${get_terragrunt_dir()}/'
             + source
             + '"\n}\n\n'
+            + STATE_BLOCK
             + "inputs = "
             + value_hcl(project["terraform_inputs"])
             + "\n"
@@ -57,7 +75,7 @@ def terragrunt_artifacts(units: dict[str, ProjectSpecification]) -> dict[str, st
         {
             "schema_version": 1,
             "units": summaries,
-            "state": "local-per-unit-cache",
+            "state": "local-per-unit-directory",
             "execution": "not-performed",
             "dependencies": "not-inferred",
         }
@@ -69,7 +87,8 @@ def terragrunt_artifacts(units: dict[str, ProjectSpecification]) -> dict[str, st
         "Review terraforma.units.json and each saved project before running anything. "
         "Install Terragrunt separately and select Terraform explicitly with TG_TF_PATH. "
         "No command was executed during export.\n\n"
-        "State remains local in each unit's .terragrunt-cache. Preserve that directory across runs; "
+        "State stays local in each unit directory (units/NAME/terraform.tfstate), outside .terragrunt-cache, "
+        "so recipe changes and cache cleanup keep the same state. Back up that file; "
         "deleting it can lose the state needed to manage created resources. "
         "Configure reviewed remote state before team or production use. This export creates no backend, "
         "dependency, hook, credential or permission. Never run all units without reviewing every target.\n\n"
