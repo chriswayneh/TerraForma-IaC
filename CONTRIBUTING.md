@@ -33,3 +33,16 @@ Validate all affected provider/workload/access/encryption combinations. Terrafor
 ## Reporting issues
 
 Include the operating system, Python version, tool versions, the selected provider/workload, and steps to reproduce. Remove credentials and sensitive values from logs before sharing them. For suspected vulnerabilities, follow [SECURITY.md](SECURITY.md).
+
+## Crediting AI tools in commits
+
+From now on, a commit made with AI help carries a `Co-authored-by` trailer for each tool that helped, on its own line at the end of the commit message. Examples:
+
+```text
+Co-authored-by: Codex <codex@openai.com>
+Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Grok Bot
+Co-authored-by: Cursor cloud agent
+```
+
+If a tool has an official noreply address, use it. If it does not have one, write the tool name on its own, as in the Grok Bot and Cursor lines above. Do not make up an email address.
