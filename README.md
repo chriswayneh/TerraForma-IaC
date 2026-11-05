@@ -14,6 +14,12 @@ You can start without Terraform experience or a cloud account.
 
 </div>
 
+## Demo
+
+<p align="center"><img src="docs/assets/demo.gif" alt="TerraForma-IaC v0.3.0 demo: doctor, describe, and offline generate from fictional aws-web example" width="100%"></p>
+
+The GIF replays real v0.3.0 offline generation from `examples/aws-web.project.json` (fictional account `123456789012`). No cloud credentials. [Run the demo](docs/demo.md).
+
 ## Quick start
 
 You need **Git and Python 3.11 or newer**. Terraform, TFLint, cloud credentials and an AI key are optional for this first run. Installation downloads Python dependencies.
