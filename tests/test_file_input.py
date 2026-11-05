@@ -1,6 +1,5 @@
 import os
 import stat
-from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
@@ -30,10 +29,15 @@ def test_directory_input_is_rejected_as_nonregular(tmp_path, reader):
         reader(tmp_path)
 
 
+def _nonregular_fstat(_descriptor):
+    # Real os.stat_result so pytest capture teardown can still read st_size.
+    return os.stat_result((stat.S_IFIFO, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+
 def test_opened_descriptor_is_rechecked_without_reading_replaced_input(tmp_path, monkeypatch):
     path = tmp_path / "input.json"
     path.write_bytes(b"private-marker")
-    monkeypatch.setattr(os, "fstat", lambda descriptor: SimpleNamespace(st_mode=stat.S_IFIFO))
+    monkeypatch.setattr(os, "fstat", _nonregular_fstat)
     with pytest.raises(ValueError, match="regular file"):
         read_regular_bytes(path, 64)
     path.unlink()
@@ -57,7 +61,11 @@ def test_fifo_is_rejected_without_opening_it(tmp_path, monkeypatch, reader):
 def test_cli_file_read_errors_omit_input_values(tmp_path, monkeypatch, command):
     path = tmp_path / "input.json"
     path.write_bytes(b"private-marker")
-    monkeypatch.setattr(os, "fstat", lambda descriptor: SimpleNamespace(st_mode=stat.S_IFCHR))
+    monkeypatch.setattr(
+        os,
+        "fstat",
+        lambda descriptor: os.stat_result((stat.S_IFCHR, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+    )
     arguments = (
         ["generate", "--spec", str(path), "--dir", str(tmp_path / "output")]
         if command == "generate"
